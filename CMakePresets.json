@@ -1,0 +1,132 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "InComs gcc DBG",
+            "displayName": "InCom's gcc DBG",
+            "hidden": false,
+            "inherits": [
+                "gcc_DBG",
+                "InComs"
+            ],
+            "cacheVariables": {
+                "CMAKE_EXE_LINKER_FLAGS": "-Wl,-Bstatic,--whole-archive -Wl,-Bdynamic,--no-whole-archive"
+            }
+        },
+        {
+            "name": "InComs gcc REL",
+            "displayName": "InCom's gcc REL",
+            "hidden": false,
+            "inherits": [
+                "gcc_REL",
+                "InComs"
+            ],
+            "cacheVariables": {
+                "CMAKE_EXE_LINKER_FLAGS": "-static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,-Bdynamic,--no-whole-archive"
+            }
+        },
+        {
+            "name": "MSVC_DBG",
+            "displayName": "MSVC DBG",
+            "hidden": false,
+            "inherits": [
+                "_common"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "MSVC_REL",
+            "displayName": "MSVC REL",
+            "hidden": false,
+            "inherits": [
+                "_common"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "gcc_DBG",
+            "displayName": "gcc DBG",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_gcc"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "gcc_REL",
+            "displayName": "gcc REL",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_gcc"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "clang_DBG",
+            "displayName": "clang DBG",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_clang"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "clang_REL",
+            "displayName": "clang REL",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_clang"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "_common",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true
+            }
+        },
+        {
+            "name": "_gcc",
+            "hidden": true,
+            "description": "Using: C = gcc.exe, CXX = g++.exe",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "_clang",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "InComs",
+            "hidden": true,
+            "environment": {
+                "PATH": "C:/msys64/ucrt64/bin;$penv{PATH}"
+            }
+        }
+    ]
+}
