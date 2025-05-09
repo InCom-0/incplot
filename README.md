@@ -16,7 +16,7 @@ Automatically infers what to display and how based on the data piped in.
 * Cross platform on sensible mainstream (Windows, Linux, MacOS)
 * User can optionally specify some or all arguments in any (sensible) combination
 * Accepts piped in data in [JSON](https://en.wikipedia.org/wiki/JSON), [JSON Lines](https://jsonlines.org/), [NDJSON](https://github.com/ndjson), [CSV](https://en.wikipedia.org/wiki/Comma-separated_values), [TSV](https://en.wikipedia.org/wiki/Tab-separated_values)
-* Very very fast
+* Blazingly fast
 * Full true color support internally, reasonably modern terminal emulators have support for it
 * Automatic sizing
 * Automatic value labels and scaling with [metric prefixes](https://en.wikipedia.org/wiki/Metric_prefix)
@@ -28,9 +28,9 @@ Automatically infers what to display and how based on the data piped in.
 ## Non-Features ##
 
 * No data wrangling or analysis of any kind
-* Not intended for plotting huge datasets
 * Doesn't offer 'all the plot types in existence', but rather just several of the most useful types
-* Accepts flat numbers, strings and booleans only
+* Accepts flat numbers, strings and booleans only (ie. doesn't parse 'complex' data types such as date/time formats from string back into their numeric representation)
+* Doesn't understand or work with 'units' (ie. 10km will be treated as string not value 10 with unit 'kilometers')
 * No export of the rendered plot into other formats (such as pictures)
 * Doesn't (and cannot) make data 'look good' if the data is fundamentally unsuitable for plotting
 * Doesn't (and cannot) show 100% visual accuracy due to inherent limitations of terminal interfaces
