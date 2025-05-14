@@ -8,10 +8,7 @@
             "inherits": [
                 "gcc_DBG",
                 "InComs"
-            ],
-            "cacheVariables": {
-                "CMAKE_EXE_LINKER_FLAGS": "-Wl,-Bstatic,--whole-archive -Wl,-Bdynamic,--no-whole-archive"
-            }
+            ]
         },
         {
             "name": "InComs gcc REL",
@@ -23,28 +20,6 @@
             ],
             "cacheVariables": {
                 "CMAKE_EXE_LINKER_FLAGS": "-static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,-Bdynamic,--no-whole-archive"
-            }
-        },
-        {
-            "name": "MSVC_DBG",
-            "displayName": "MSVC DBG",
-            "hidden": false,
-            "inherits": [
-                "_common"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "MSVC_REL",
-            "displayName": "MSVC REL",
-            "hidden": false,
-            "inherits": [
-                "_common"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {

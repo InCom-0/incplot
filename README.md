@@ -34,13 +34,11 @@ Automatically infers what to display and how based on the data piped in.
 * No export of the rendered plot into other formats (such as pictures)
 * Doesn't (and cannot) make data 'look good' if the data is fundamentally unsuitable for plotting
 * Doesn't (and cannot) show 100% visual accuracy due to inherent limitations of terminal interfaces
-* Not guaranteed to work well on ancient terminal emulators without (true) color support
+* Not guaranteed to work well on (arguably) ancient terminal emulators without (true) color support
 
 ## Features under consideration ##
 
 * Automatic discovery of terminal colors (usually dubbed 'color theme') ... this would enable matching colors with your existing setup 'out of the box', would be super nice
-
-## Disclaimer ##
 
 ## General information ##
 
