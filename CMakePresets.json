@@ -5,7 +5,7 @@
             "name": "MSYS2 UCRT gcc DBG",
             "hidden": false,
             "inherits": [
-                "gcc DBG",
+                "gcc_DBG",
                 "InComs"
             ]
         },
@@ -13,15 +13,14 @@
             "name": "MSYS2 UCRT gcc REL",
             "hidden": false,
             "inherits": [
-                "gcc REL",
-                "InComs"
-            ],
-            "cacheVariables": {
-                "CMAKE_EXE_LINKER_FLAGS": "-static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,-Bdynamic,--no-whole-archive"
-            }
+                "gcc_REL",
+                "InComs",
+                "MSYS2_portable_library_linking"
+            ]
         },
         {
-            "name": "gcc DBG",
+            "name": "gcc_DBG",
+            "displayName": "gcc DBG",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -32,7 +31,8 @@
             }
         },
         {
-            "name": "gcc REL",
+            "name": "gcc_REL",
+            "displayName": "gcc REL",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -43,7 +43,8 @@
             }
         },
         {
-            "name": "clang DBG",
+            "name": "clang_DBG",
+            "displayName": "clang DBG",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -54,7 +55,8 @@
             }
         },
         {
-            "name": "clang REL",
+            "name": "clang_REL",
+            "displayName": "clang REL",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -95,6 +97,13 @@
             "hidden": true,
             "environment": {
                 "PATH": "C:/msys64/ucrt64/bin;$penv{PATH}"
+            }
+        },
+        {
+            "name": "MSYS2_portable_library_linking",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_EXE_LINKER_FLAGS": "-static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,-Bdynamic,--no-whole-archive"
             }
         }
     ]
