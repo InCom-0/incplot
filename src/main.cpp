@@ -2,11 +2,12 @@
 #include <unistd.h>
 
 #include <incplot.hpp>
+#include <cross_platform.hpp>
 
 int main(int argc, char *argv[]) {
 
     // NOT RUNNING IN CONSOLE TERMINAL
-    if (not incplot::detail::is_inTerminal()) {
+    if (not is_inTerminal()) {
         std::print("{}",
                    "Console screen buffer size equals 0.\nPlease run from inside terminal console window ... exiting");
         std::exit(1);

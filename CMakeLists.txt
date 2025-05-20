@@ -8,10 +8,10 @@ add_executable(incplot)
 
 list(TRANSFORM INCPLOT_LIB_SRC PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
-target_sources(incplot PRIVATE src/main.cpp)
+target_sources(incplot PRIVATE src/main.cpp src/cross_platform.cpp)
 target_sources(incplot
     PRIVATE
-        FILE_SET priv_headers
+        FILE_SET pub_headers
         TYPE HEADERS
         BASE_DIRS
             include)
