@@ -5,9 +5,6 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 
 add_executable(incplot)
-
-list(TRANSFORM INCPLOT_LIB_SRC PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/src/)
-
 target_sources(incplot PRIVATE src/main.cpp src/cross_platform.cpp)
 target_sources(incplot
     PRIVATE
@@ -16,7 +13,7 @@ target_sources(incplot
         BASE_DIRS
             include)
 
-target_compile_features(incplot PUBLIC cxx_std_23)
+target_compile_features(incplot PRIVATE cxx_std_23)
 
 
 include(CMake_dependencies.cmake) ### Loads and declares the requires external libraries using both vcpkg and CMake's FetchContent.
