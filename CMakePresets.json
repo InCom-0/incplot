@@ -6,7 +6,7 @@
             "hidden": false,
             "inherits": [
                 "gcc_DBG",
-                "InComs"
+                "MSYS_default_into_PATH"
             ]
         },
         {
@@ -14,8 +14,7 @@
             "hidden": false,
             "inherits": [
                 "gcc_REL",
-                "InComs",
-                "MSYS2_portable_library_linking"
+                "MSYS_default_into_PATH"
             ]
         },
         {
@@ -93,17 +92,10 @@
             }
         },
         {
-            "name": "InComs",
+            "name": "MSYS_default_into_PATH",
             "hidden": true,
             "environment": {
                 "PATH": "C:/msys64/ucrt64/bin;$penv{PATH}"
-            }
-        },
-        {
-            "name": "MSYS2_portable_library_linking",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_EXE_LINKER_FLAGS": "-static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,-Bdynamic,--no-whole-archive"
             }
         }
     ]

@@ -16,14 +16,20 @@ int main(int argc, char *argv[]) {
 
     argparse::ArgumentParser ap("incplot", "1.0", argparse::default_arguments::help);
     incplot::CL_Args::finishAp(ap);
-    auto const &dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
+    auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
 
     // STD INPUT IS NOT PIPE
     if (isatty(fileno(stdin))) {
-        std::print("{}\n{}\n{}\n\n{}\n", "You need to 'pipe in' data on the standard input.",
+        std::print("{}\n{}\n{}\n\n{}\n", "You need to 'pipe in' data on the standard input\n",
                    "This is usually done using the '|' operator", "Pass '-h' to obtain more detailed help",
                    "... exiting");
         std::exit(1);
+    }
+
+    auto [rowsInTerm, colsInTerm] = get_rowColCount();
+    for (auto &dpctr : dpctrs) {
+        dpctr.availableWidth  = colsInTerm;
+        dpctr.availableHeight = rowsInTerm;
     }
 
 

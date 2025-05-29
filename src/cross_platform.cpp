@@ -9,23 +9,26 @@
 #include <unistd.h>
 #endif
 
-bool is_inTerminal() {
+std::pair<int, int> get_rowColCount() {
 #if defined(_WIN64)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    // auto width  = (int)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
-    // auto height = (int)(csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
 
-    if (csbi.dwSize.X == 0 || csbi.dwSize.Y == 0) { return false; }
-    else { return true; }
+    return std::make_pair(static_cast<int>(csbi.dwSize.Y), static_cast<int>(csbi.dwSize.X));
 
 #elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
     winsize ws;
 
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0) {
-        if (ws.ws_row == 0 || ws.ws_col == 0) { return false; }
-        else { return true; }
+        if (ws.ws_row == 0 || ws.ws_col == 0) { return std::make_pair(0, 0); }
+        else { return std::make_pair(static_cast<int>(ws.ws_row), static_cast<int>(ws.ws_col)); }
     }
-    else { return false; }
+    { return std::make_pair(0, 0); }
 #endif
+}
+
+bool is_inTerminal() {
+    auto sizePair = get_rowColCount();
+    if (sizePair.first < 1 || sizePair.second < 1) { return false; }
+    else { return true; }
 }

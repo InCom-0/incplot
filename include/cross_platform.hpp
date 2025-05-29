@@ -1,3 +1,6 @@
 #pragma once
 
-bool is_inTerminal();
+#include <utility>
+
+std::pair<int, int> get_rowColCount();
+bool                is_inTerminal();
