@@ -3,6 +3,7 @@
 
 #include <cross_platform.hpp>
 #include <incplot.hpp>
+#include <auto/versiondef.h>
 
 
 int main(int argc, char *argv[]) {
@@ -14,7 +15,7 @@ int main(int argc, char *argv[]) {
         std::exit(1);
     }
 
-    argparse::ArgumentParser ap("incplot", "1.0", argparse::default_arguments::help);
+    argparse::ArgumentParser ap("incplot", INCPLOT_VERSION_MEDIUM, argparse::default_arguments::all);
     incplot::CL_Args::finishAp(ap);
     auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
 
@@ -31,7 +32,6 @@ int main(int argc, char *argv[]) {
         dpctr.availableWidth  = colsInTerm;
         dpctr.availableHeight = rowsInTerm;
     }
-
 
     std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
 
