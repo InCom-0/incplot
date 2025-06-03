@@ -2,23 +2,23 @@
     "version": 8,
     "configurePresets": [
         {
-            "name": "MSYS2 UCRT gcc DBG",
+            "name": "MSYS2_UCRT_gcc_Debug",
             "hidden": false,
             "inherits": [
-                "gcc_DBG",
+                "gcc_Debug",
                 "MSYS_default_into_PATH"
             ]
         },
         {
-            "name": "MSYS2 UCRT gcc REL",
+            "name": "MSYS2_UCRT_gcc_Release",
             "hidden": false,
             "inherits": [
-                "gcc_REL",
+                "gcc_Release",
                 "MSYS_default_into_PATH"
             ]
         },
         {
-            "name": "gcc_DBG",
+            "name": "gcc_Debug",
             "displayName": "gcc DBG",
             "hidden": false,
             "inherits": [
@@ -30,7 +30,7 @@
             }
         },
         {
-            "name": "gcc_REL",
+            "name": "gcc_Release",
             "displayName": "gcc REL",
             "hidden": false,
             "inherits": [
@@ -42,7 +42,7 @@
             }
         },
         {
-            "name": "clang_DBG",
+            "name": "clang_Debug",
             "displayName": "clang DBG",
             "hidden": false,
             "inherits": [
@@ -54,7 +54,7 @@
             }
         },
         {
-            "name": "clang_REL",
+            "name": "clang_Release",
             "displayName": "clang REL",
             "hidden": false,
             "inherits": [

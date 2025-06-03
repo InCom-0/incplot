@@ -1,0 +1,226 @@
+name: Build
+
+on:
+  schedule:
+    - cron: '37 8 * * *'
+  pull_request:
+  workflow_dispatch:
+
+
+jobs:
+  
+# MSVC TURNED OFF UNTIL MSVC SUPPORTS THE required C++23 features 
+  # Windows-MSVC:
+  #   name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.buildenv}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
+  #   runs-on: ${{matrix.runs-on}}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       runs-on: ["windows-2025"]
+  #       sys: [windows]
+  #       icon: ['🟦']
+  #       buildenv: [VS2022]
+
+  #       compiler: ["MSVC"]
+  #       platform: ["x86_64"]
+  #       mode: ["cxx23"]
+  #       build-type: ["Release", "Debug"]
+  #       target : ["all"]
+  #       cmake-override: [""]
+  #       include:
+  #         - compiler: "MSVC"
+  #           compiler-ver: ["19"]
+
+  #   steps:
+  #   - name: '🧰 Checkout'
+  #     uses: actions/checkout@v4
+
+  #   - uses: seanmiddleditch/gha-setup-ninja@master
+  #   - uses: TheMrMilchmann/setup-msvc-dev@v3
+  #     with:
+  #       arch: ${{matrix.platform}}
+
+  #   - name: 'Configure'
+  #     shell: bash
+  #     run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+
+  #   - name: '🚧 Build'
+  #     run: cmake --build build --target ${{matrix.target}}
+
+
+
+# Based on https://github.com/msys2/setup-msys2/blob/main/examples/cmake.yml
+  Windows-MSYS:
+    name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.buildenv}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
+    runs-on: ${{matrix.runs-on}}
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: ["windows-2025"]
+        sys: [windows]
+        icon: ['🟦']
+
+        buildenv: [msys2]
+        msystem: [ucrt64]
+        compiler: ["gcc", "clang"]
+        build-type: ["Release", "Debug"]
+        platform: ["x86_64"]
+        target : ["all"]
+        cmake-override: [""]
+        include:
+          - compiler: "gcc"
+            compiler-ver: "15"
+            add-to-pacboy: ""
+          - compiler: "clang"
+            compiler-ver: "20"
+            add-to-pacboy: "clang:p"
+    
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+
+    - name: '${{ matrix.icon }} Setup MSYS2'
+      uses: msys2/setup-msys2@v2.27.0
+      with:
+        msystem: ${{matrix.msystem}}
+        update: true
+        install: >-
+          git
+          make
+        pacboy: >-
+          toolchain:p
+          ${{matrix.add-to-pacboy}}
+          cmake:p
+          ninja:p
+
+    - name: 'Configure'
+      run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+
+    - name: '🚧 Build'
+      run: cmake --build build --target ${{matrix.target}}
+
+# Based on https://github.com/tcbrindle/flux/blob/main/.github/workflows/linux.yml
+  Linux-Ubuntu:
+    name: ${{ matrix.icon }} linux (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
+    runs-on: ${{matrix.runs-on}}
+    strategy:
+      fail-fast: false
+      matrix:
+        icon: ['🟧']
+        sys: [linux]
+        runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
+        compiler: ["gcc", "clang"]
+        compiler-ver: ["14", "20"]
+        build-type: ["Release", "Debug"]
+        target : ["all"]
+        cmake-override: [""]
+
+        include:
+          - runs-on: ubuntu-24.04
+            platform: "x86_64"
+          - runs-on: ubuntu-24.04-arm
+            platform: "arm64"
+
+          - compiler: "gcc"
+            compiler-ver: "14"
+            install: |
+              sudo apt install gcc-14 g++-14
+              sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 --slave /usr/bin/g++ g++ /usr/bin/g++-14 --slave /usr/bin/gcov gcov /usr/bin/gcov-14
+              sudo update-alternatives --set gcc /usr/bin/gcc-14
+          - compiler: "clang"
+            compiler-ver: "20"
+            install: |
+              setup-cpp --compiler llvm-20
+
+        exclude:
+          - compiler: "gcc"
+            compiler-ver: "20"
+          - compiler: "clang"
+            compiler-ver: "14"
+          - compiler: "clang"
+            compiler-ver: "15"
+
+
+    steps:
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+
+    - name: Setup Cpp
+      uses: aminya/setup-cpp@v1
+      with:
+        setup-cpp: true
+
+    - name: Create Build Environment
+      run: |
+        ${{matrix.install}}
+
+    - name: Configure
+      run: |
+        cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+
+    - name: '🚧 Build'
+      run: cmake --build build --target ${{matrix.target}}
+
+
+  macOS:
+    name: ${{ matrix.icon }} macos (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        icon: ['⬛']
+        sys: [macos]
+        runs-on: [macos-14, macos-13]
+        compiler: ["gcc"]
+        compiler-ver: ["14"]
+        build-type: ["Release", "Debug"]
+        target : ["incplot"]
+
+        include:
+          - runs-on: macos-14
+            platform: "arm64"
+          - runs-on: macos-13
+            platform: "x86_64"
+
+          - compiler: "gcc"
+            compiler-ver: "14"
+            cmake-override: "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
+            install:
+          # - compiler: "clang"
+          #   compiler-ver: "20"
+          #   cmake-override: ""
+          #   install: |
+          #     setup-cpp --compiler llvm-20
+
+        exclude:
+          - compiler: "gcc"
+            compiler-ver: "20"
+          - compiler: "clang"
+            compiler-ver: "14"
+          - compiler: "clang"
+            compiler-ver: "15"
+
+
+    steps:
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+
+    - name: Setup Cpp
+      uses: aminya/setup-cpp@v1
+      with:
+        setup-cpp: true
+
+    - name: Create Build Environment
+      run: |
+        ${{matrix.install}}
+
+    - name: Configure
+      run: |
+        cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+
+    - name: '🚧 Build'
+      run: cmake --build build --target ${{matrix.target}}
