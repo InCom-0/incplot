@@ -40,7 +40,7 @@ add_custom_command(
   VERBATIM)
 
 add_custom_target(ENSUREAutoFileDeps ALL DEPENDS ${COM_OUTPUT})
-
+add_dependencies(incplot ENSUREAutoFileDeps)
 
 
 install(TARGETS incplot RUNTIME DESTINATION bin
