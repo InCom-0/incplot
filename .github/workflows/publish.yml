@@ -115,6 +115,9 @@ jobs:
               sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 --slave /usr/bin/g++ g++ /usr/bin/g++-14 --slave /usr/bin/gcov gcov /usr/bin/gcov-14
               sudo update-alternatives --set gcc /usr/bin/gcc-14
 
+    outputs:
+      version: ${{ steps.build.outputs.version }}
+      
     steps:
     - name: '🧰 Checkout'
       uses: actions/checkout@v4
@@ -140,7 +143,12 @@ jobs:
           build/${{matrix.target}}_${{matrix.sys}}_${{matrix.platform}}.tar.gz
         retention-days: 1
 
-
+    - name: Export version
+      id: build
+      run: |
+        printf 'version<<END\n' >> $GITHUB_OUTPUT
+        ./build/incplot --version | head -n 0 >> $GITHUB_OUTPUT
+        printf 'END\n' >> $GITHUB_OUTPUT
 
   macOS:
     needs: setup
