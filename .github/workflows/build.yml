@@ -3,7 +3,7 @@ name: Build
 on:
   schedule:
     - cron: '37 8 * * *'
-  pull_request:
+    
   workflow_dispatch:
 
 
@@ -46,7 +46,6 @@ jobs:
 
   #   - name: '🚧 Build'
   #     run: cmake --build build --target ${{matrix.target}}
-
 
 
 # Based on https://github.com/msys2/setup-msys2/blob/main/examples/cmake.yml
@@ -102,6 +101,7 @@ jobs:
 
     - name: '🚧 Build'
       run: cmake --build build --target ${{matrix.target}}
+
 
 # Based on https://github.com/tcbrindle/flux/blob/main/.github/workflows/linux.yml
   Linux-Ubuntu:
