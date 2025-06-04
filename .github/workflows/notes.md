@@ -4,11 +4,13 @@ ${INCPLOT_VERSION}
 
 ## Install
 
+1. Download the appropriate binary archive for your platform
+2. Extract
+3. Run `incplot` in your terminal emulator of choice
+
 ### Manual
 
 ### Package Managers
-
-- Install by [package manager](https://github.com/neovim/neovim/blob/master/INSTALL.md#install-from-package)
 
 
 ## SHA256 Checksums
