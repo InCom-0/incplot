@@ -8,16 +8,16 @@
 
 int main(int argc, char *argv[]) {
 
+    argparse::ArgumentParser ap("incplot", INCPLOT_VERSION_MEDIUM, argparse::default_arguments::all);
+    incplot::CL_Args::finishAp(ap);
+    auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
+
     // NOT RUNNING IN CONSOLE TERMINAL
     if (not is_inTerminal()) {
         std::print("{}\n{}\n{}\n", "Console screen buffer size equals 0.",
                    "Please run from inside terminal console window", " ... exiting");
         std::exit(1);
     }
-
-    argparse::ArgumentParser ap("incplot", INCPLOT_VERSION_MEDIUM, argparse::default_arguments::all);
-    incplot::CL_Args::finishAp(ap);
-    auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
 
     // STD INPUT IS NOT PIPE
     if (isatty(fileno(stdin))) {
