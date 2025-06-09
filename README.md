@@ -8,7 +8,7 @@ Automatically infers what to display and how based on the data piped in.
 
 </div>
 
-<img alt="scatter" src="https://raw.githubusercontent.com/InCom-0/incplot/b16595c8d07edae816b7a91967bb197da79b5eae/images/readme/img001.png" width=160>
+<img alt="scatter" src="https://raw.githubusercontent.com/InCom-0/incplot/b16595c8d07edae816b7a91967bb197da79b5eae/images/readme/img001.png" width=300>
 
 ## Features ##
 
