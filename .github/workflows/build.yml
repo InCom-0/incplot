@@ -174,14 +174,14 @@ jobs:
       matrix:
         icon: ['⬛']
         sys: [macos]
-        runs-on: [macos-14, macos-13]
+        runs-on: [macos-15, macos-13]
         compiler: ["gcc"]
         compiler-ver: ["14"]
         build-type: ["Release", "Debug"]
         target : ["incplot"]
 
         include:
-          - runs-on: macos-14
+          - runs-on: macos-15
             platform: "arm64"
           - runs-on: macos-13
             platform: "x86_64"
