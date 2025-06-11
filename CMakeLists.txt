@@ -26,7 +26,7 @@ target_sources(incplot
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
-include(CMake_dependencies.cmake) ### Loads and declares the requires external libraries using both vcpkg and CMake's FetchContent.
+include(CMake_dependencies.cmake) ### Loads and declares the requires external libraries using CMake's FetchContent.
 target_link_libraries(incplot PRIVATE incplot-lib "-lstdc++exp")
 
 
