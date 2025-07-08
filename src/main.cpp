@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 
     // STD INPUT IS NOT PIPE
     if (isatty(fileno(stdin))) {
-        std::print("{}\n{}\n{}\n\n{}\n", "You need to 'pipe in' data on the standard input\n",
+        std::print("{}\n{}\n{}\n\n{}\n", "You need to 'pipe in' data on standard input\n",
                    "This is usually done using the '|' operator", "Pass '-h' to obtain more detailed help",
                    "... exiting");
         std::exit(1);
