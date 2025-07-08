@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
                    "... exiting");
         std::exit(1);
     }
+    
 
     auto [rowsInTerm, colsInTerm] = get_rowColCount();
     for (auto &dpctr : dpctrs) {
