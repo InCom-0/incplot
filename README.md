@@ -20,6 +20,7 @@ Automatically infers what to display and how based on the data piped in.
 * Accepts piped in data in [JSON](https://en.wikipedia.org/wiki/JSON), [JSON Lines](https://jsonlines.org/), [NDJSON](https://github.com/ndjson), [CSV](https://en.wikipedia.org/wiki/Comma-separated_values), [TSV](https://en.wikipedia.org/wiki/Tab-separated_values)
 * Blazingly fast
 * Full true color support
+* Automatic but configurable filtering of extreme values
 * Automatic sizing
 * Automatic value labels and scaling with [metric prefixes](https://en.wikipedia.org/wiki/Metric_prefix)
 * Automatic string label sizing (ie. shortening where necessary)
