@@ -26,14 +26,22 @@ set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_RESOURCE_FILE_README ${PROJECT_SOURCE_DIR}/README.md)
 
 
-if(WIN32)
+if(MINGW)
   if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
-    set(CPACK_PACKAGE_FILE_NAME "incplot_windows_x86_64")
+    set(CPACK_PACKAGE_FILE_NAME "incplot_windows_gnu_x86_64")
   endif()
   if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM64")
-    set(CPACK_PACKAGE_FILE_NAME "incplot_windows_arm64")
+    set(CPACK_PACKAGE_FILE_NAME "incplot_windows_gnu_arm64")
   endif()
 
+  set(CPACK_GENERATOR ZIP)
+elseif(MSVC)
+  if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+    set(CPACK_PACKAGE_FILE_NAME "incplot_windows_msvc_x86_64")
+  endif()
+  if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM64")
+    set(CPACK_PACKAGE_FILE_NAME "incplot_windows_msvc_arm64")
+  endif()
   set(CPACK_GENERATOR ZIP)
 
   # WIX
