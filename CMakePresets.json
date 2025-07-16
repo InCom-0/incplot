@@ -2,20 +2,58 @@
     "version": 8,
     "configurePresets": [
         {
-            "name": "MSYS2_UCRT_gcc_Debug",
+            "name": "MSYS2_ucrt_gcc_Debug",
             "hidden": false,
             "inherits": [
-                "gcc_Debug",
-                "MSYS_default_into_PATH"
+                "_common",
+                "_gcc",
+                "_debug",
+                "MSYS_ucrt_PATH"
             ]
         },
         {
-            "name": "MSYS2_UCRT_gcc_Release",
+            "name": "MSYS2_ucrt_gcc_Release",
             "hidden": false,
             "inherits": [
-                "gcc_Release",
-                "MSYS_default_into_PATH"
+                "_common",
+                "_gcc",
+                "_release",
+                "MSYS_ucrt_PATH"
             ]
+        },
+        {
+            "name": "MSVC_Debug",
+            "displayName": "MSVC DBG",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_MSVC",
+                "_debug"
+            ]
+        },
+        {
+            "name": "MSVC_Release",
+            "displayName": "MSVC REL",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_MSVC",
+                "_release"
+            ]
+        },
+        {
+            "name": "MSVC_Release_TRACY",
+            "displayName": "MSVC REL Tracy",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_MSVC",
+                "_release",
+                "MSYS_ucrt_PATH"
+            ],
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-DTRACY_ENABLE -DTRACY_NO_EXIT"
+            }
         },
         {
             "name": "gcc_Debug",
@@ -23,11 +61,9 @@
             "hidden": false,
             "inherits": [
                 "_common",
-                "_gcc"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
+                "_gcc",
+                "_debug"
+            ]
         },
         {
             "name": "gcc_Release",
@@ -35,11 +71,9 @@
             "hidden": false,
             "inherits": [
                 "_common",
-                "_gcc"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
+                "_gcc",
+                "_release"
+            ]
         },
         {
             "name": "clang_Debug",
@@ -47,11 +81,9 @@
             "hidden": false,
             "inherits": [
                 "_common",
-                "_clang"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
+                "_clang",
+                "_debug"
+            ]
         },
         {
             "name": "clang_Release",
@@ -59,11 +91,9 @@
             "hidden": false,
             "inherits": [
                 "_common",
-                "_clang"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
+                "_clang",
+                "_release"
+            ]
         },
         {
             "name": "_common",
@@ -75,12 +105,33 @@
             }
         },
         {
+            "name": "_release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "_debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
             "name": "_gcc",
             "hidden": true,
             "description": "Using: C = gcc.exe, CXX = g++.exe",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "gcc",
                 "CMAKE_CXX_COMPILER": "g++"
+            },
+            "vendor": {
+                "visualStudio": {
+                    "cmake.debugConfig": {
+                        "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe"
+                    }
+                }
             }
         },
         {
@@ -92,7 +143,15 @@
             }
         },
         {
-            "name": "MSYS_default_into_PATH",
+            "name": "_MSVC",
+            "hidden": true,
+            "toolchainFile": "toolchain/Windows.MSVC.toolchain.cmake",
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "/utf-8 /EHsc"
+            }
+        },
+        {
+            "name": "MSYS_ucrt_PATH",
             "hidden": true,
             "environment": {
                 "PATH": "C:/msys64/ucrt64/bin;$penv{PATH}"

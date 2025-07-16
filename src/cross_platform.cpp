@@ -1,14 +1,19 @@
 #include <cross_platform.hpp>
+#include <cstdio>
 
-#if defined(_WIN64)
+#if defined(__MINGW64__)
 #include <windows.h>
-
+#include <unistd.h>
 #elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+#elif defined(_WIN64)
+#include <windows.h>
+#include <io.h>
 #endif
 
+namespace incom::crossplatform::console {
 std::pair<int, int> get_rowColCount() {
 #if defined(_WIN64)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -32,3 +37,19 @@ bool is_inTerminal() {
     if (sizePair.first < 1 || sizePair.second < 1) { return false; }
     else { return true; }
 }
+
+bool is_stdin_inTerminal() {
+#if defined(__linux__) || defined(__MINGW64__) || (defined(__APPLE__) && defined(__MACH__))
+    return isatty(fileno(stdin));
+#elif defined(_WIN64)
+    return _isatty(_fileno(stdin));
+#endif
+};
+
+void set_cocp() {
+#if defined(_WIN64)
+    SetConsoleOutputCP(CP_UTF8);
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+#endif
+}
+} // namespace incom::crossplatform::console
