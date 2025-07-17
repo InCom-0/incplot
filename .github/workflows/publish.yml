@@ -1,7 +1,6 @@
 name: Publish
 
 on:
-
   workflow_dispatch:
     inputs:
       tag_name:
@@ -24,6 +23,55 @@ jobs:
         id: build
         run: |
           printf "build_type=Release\n" >> $GITHUB_OUTPUT
+            # Based on https://github.com/msys2/setup-msys2/blob/main/examples/cmake.yml
+
+# Windows-MSVC
+  Windows-MSVC:
+    needs: setup
+    name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}})
+    runs-on: ${{matrix.runs-on}}
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: ["windows-2025"]
+        sys: [windows]
+        icon: ['⬜']
+        buildenv: [VS2022]
+
+        compiler: ["MSVC"]
+        platform: ["x86_64"]
+        mode: ["cxx23"]
+        build-type: ["Release"]
+        target : ["incplot"]
+        cmake-override: [""]
+        include:
+          - compiler: "MSVC"
+            compiler-ver: "19"
+
+    steps:
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+
+    - uses: TheMrMilchmann/setup-msvc-dev@v3
+      with:
+        arch: ${{matrix.platform}}
+
+    - name: 'Configure'
+      shell: bash
+      run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+
+    - name: '🚧 Build'
+      run: cmake --build build --target ${{matrix.target}}
+
+    - name: Package
+      run: cpack --config build/CPackConfig.cmake
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{matrix.target}}_${{matrix.sys}}_msvc_${{matrix.platform}}
+        path: |
+          build/${{matrix.target}}_${{matrix.sys}}_msvc_${{matrix.platform}}.zip
+        retention-days: 1
 
 
 
@@ -38,7 +86,7 @@ jobs:
         runs-on: ["windows-2025"]
         sys: [windows]
         icon: ['🟦']
-        buildenv: [msys2]
+        buildenv: [MSYS2]
 
         msystem: [ucrt64]
         compiler: ["gcc"]
@@ -84,9 +132,9 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: ${{matrix.target}}_${{matrix.sys}}_${{matrix.platform}}
+        name: ${{matrix.target}}_${{matrix.sys}}_gnu_${{matrix.platform}}
         path: |
-          build/${{matrix.target}}_${{matrix.sys}}_${{matrix.platform}}.zip
+          build/${{matrix.target}}_${{matrix.sys}}_gnu_${{matrix.platform}}.zip
         retention-days: 1
 
 
@@ -172,7 +220,7 @@ jobs:
         sys: [macos]
         runs-on: [macos-14, macos-13]
         compiler: ["gcc"]
-        compiler-ver: ["14"]
+        compiler-ver: ["15"]
         build-type: ["Release"]
         target : ["incplot"]
 
@@ -183,13 +231,19 @@ jobs:
             platform: "x86_64"
 
           - compiler: "gcc"
-            compiler-ver: "14"
-            cmake-override: "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
+            compiler-ver: "15"
+            cmake-override: "-DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15"
             install:
 
     steps:
     - name: '🧰 Checkout'
       uses: actions/checkout@v4
+
+    - name: Setup Cpp
+      uses: aminya/setup-cpp@v1
+      with:
+        setup-cpp: true
+        compiler: ${{matrix.compiler}}-${{matrix.compiler-ver}}
 
     - name: Create Build Environment
       run: |
@@ -214,7 +268,7 @@ jobs:
 
 
   publish:
-    needs: [Windows-MSYS, Linux-Ubuntu, macOS]
+    needs: [Windows-MSVC, Windows-MSYS, Linux-Ubuntu, macOS]
     runs-on: ubuntu-latest
     env:
       GH_REPO: ${{ github.repository }}
@@ -269,4 +323,4 @@ jobs:
           echo '```' >> "$RUNNER_TEMP/notes.md"
           cat shasum.txt >> "$RUNNER_TEMP/notes.md"
           echo '```' >> "$RUNNER_TEMP/notes.md"
-          gh release create $TAG_NAME $PRERELEASE --notes-file "$RUNNER_TEMP/notes.md" --title "$INCPLOT_VERSION" --target $GITHUB_SHA incplot_linux_x86_64/* incplot_linux_arm64/* incplot_windows_x86_64/* incplot_macos_arm64/* incplot_macos_x86_64/* shasum.txt
+          gh release create $TAG_NAME $PRERELEASE --notes-file "$RUNNER_TEMP/notes.md" --title "$INCPLOT_VERSION" --target $GITHUB_SHA incplot_linux_x86_64/* incplot_linux_arm64/* incplot_windows_msvc_x86_64/* incplot_windows_gnu_x86_64/* incplot_macos_arm64/* incplot_macos_x86_64/* shasum.txt

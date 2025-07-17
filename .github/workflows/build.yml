@@ -9,43 +9,42 @@ on:
 
 jobs:
   
-# MSVC TURNED OFF UNTIL MSVC SUPPORTS THE required C++23 features 
-  # Windows-MSVC:
-  #   name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.buildenv}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
-  #   runs-on: ${{matrix.runs-on}}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       runs-on: ["windows-2025"]
-  #       sys: [windows]
-  #       icon: ['🟦']
-  #       buildenv: [VS2022]
+# Windows-MSVC
+  Windows-MSVC:
+    name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
+    runs-on: ${{matrix.runs-on}}
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: ["windows-2025"]
+        sys: [windows]
+        icon: ['⬜']
+        buildenv: [VS2022]
 
-  #       compiler: ["MSVC"]
-  #       platform: ["x86_64"]
-  #       mode: ["cxx23"]
-  #       build-type: ["Release", "Debug"]
-  #       target : ["all"]
-  #       cmake-override: [""]
-  #       include:
-  #         - compiler: "MSVC"
-  #           compiler-ver: ["19"]
+        compiler: ["MSVC"]
+        platform: ["x86_64"]
+        mode: ["cxx23"]
+        build-type: ["Release", "Debug"]
+        target : ["all"]
+        cmake-override: [""]
+        include:
+          - compiler: "MSVC"
+            compiler-ver: "19"
 
-  #   steps:
-  #   - name: '🧰 Checkout'
-  #     uses: actions/checkout@v4
+    steps:
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
 
-  #   - uses: seanmiddleditch/gha-setup-ninja@master
-  #   - uses: TheMrMilchmann/setup-msvc-dev@v3
-  #     with:
-  #       arch: ${{matrix.platform}}
+    - uses: TheMrMilchmann/setup-msvc-dev@v3
+      with:
+        arch: ${{matrix.platform}}
 
-  #   - name: 'Configure'
-  #     shell: bash
-  #     run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+    - name: 'Configure'
+      shell: bash
+      run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
-  #   - name: '🚧 Build'
-  #     run: cmake --build build --target ${{matrix.target}}
+    - name: '🚧 Build'
+      run: cmake --build build --target ${{matrix.target}}
 
 
 # Based on https://github.com/msys2/setup-msys2/blob/main/examples/cmake.yml
@@ -59,7 +58,7 @@ jobs:
         sys: [windows]
         icon: ['🟦']
 
-        buildenv: [msys2]
+        buildenv: [MSYS2]
         msystem: [ucrt64]
         compiler: ["gcc", "clang"]
         build-type: ["Release", "Debug"]
@@ -156,6 +155,7 @@ jobs:
       with:
         setup-cpp: true
 
+
     - name: Create Build Environment
       run: |
         ${{matrix.install}}
@@ -178,7 +178,7 @@ jobs:
         sys: [macos]
         runs-on: [macos-14, macos-13]
         compiler: ["gcc"]
-        compiler-ver: ["14"]
+        compiler-ver: ["15"]
         build-type: ["Release", "Debug"]
         target : ["incplot"]
 
@@ -189,8 +189,8 @@ jobs:
             platform: "x86_64"
 
           - compiler: "gcc"
-            compiler-ver: "14"
-            cmake-override: "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
+            compiler-ver: "15"
+            cmake-override: "-DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15"
             install:
           # - compiler: "clang"
           #   compiler-ver: "20"
@@ -215,6 +215,7 @@ jobs:
       uses: aminya/setup-cpp@v1
       with:
         setup-cpp: true
+        compiler: ${{matrix.compiler}}-${{matrix.compiler-ver}}
 
     - name: Create Build Environment
       run: |
