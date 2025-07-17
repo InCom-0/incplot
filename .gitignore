@@ -3,7 +3,7 @@ build*/
 !build2/
 CMakeUserPresets.json
 CMakeFiles/
-cmake.config/auto
+cmake.config/
 
 # CLion
 .idea/
@@ -12,6 +12,7 @@ cmake-build*/
 # VS Code
 .vscode/
 .cache/
+.VSCodeCounter/
 
 # VS
 .vs/
