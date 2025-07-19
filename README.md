@@ -89,3 +89,9 @@ The common case of having extreme values in the data that would normally prevent
 ## Technical information ##
 
 Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal. All external dependencies (mostly lightweight header only libraries related to parsing) are included in [incplot-lib](https://github.com/InCom-0/incplot-lib)
+
+## License
+This code is free to use under the terms of the [MIT license](https://github.com/InCom-0/incplot/blob/main/LICENSE.txt).
+
+## Acknowledgement
+Main inspirations drawn from: [YouPlot](https://github.com/red-data-tools/YouPlot) and [UnicodePlots.jl](https://github.com/JuliaPlots/UnicodePlots.jl).
