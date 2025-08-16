@@ -67,7 +67,7 @@ jobs:
         cmake-override: [""]
         include:
           - compiler: "gcc"
-            compiler-ver: "15"
+            compiler-ver: "14"
             add-to-pacboy: ""
           - compiler: "clang"
             compiler-ver: "20"
@@ -140,6 +140,8 @@ jobs:
         exclude:
           - compiler: "gcc"
             compiler-ver: "20"
+          - compiler: "gcc"
+            compiler-ver: "21"
           - compiler: "clang"
             compiler-ver: "14"
           - compiler: "clang"
