@@ -22,7 +22,7 @@ target_sources(incplot
         FILE_SET priv_auto_config
         TYPE HEADERS
         BASE_DIRS
-            cmake.config)
+            cmake/config)
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
@@ -30,11 +30,11 @@ add_subdirectory(sub/incplot-lib)
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib "-lstdc++exp")
 
 
-set(COM_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake.config/auto/versiondef.h)
+set(COM_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/auto/versiondef.h)
 
 add_custom_command(
   OUTPUT ${COM_OUTPUT}
-  COMMAND ${CMAKE_COMMAND} -D TOP_DIR=${CMAKE_CURRENT_SOURCE_DIR} -D VER_MAJOR=${INCPLOT_VERSION_MAJOR} -D VER_MINOR=${INCPLOT_VERSION_MINOR} -D VER_PATCH=${INCPLOT_VERSION_PATCH} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake.config/versionUpdate.cmake
+  COMMAND ${CMAKE_COMMAND} -D TOP_DIR=${CMAKE_CURRENT_SOURCE_DIR} -D VER_MAJOR=${INCPLOT_VERSION_MAJOR} -D VER_MINOR=${INCPLOT_VERSION_MINOR} -D VER_PATCH=${INCPLOT_VERSION_PATCH} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/versionUpdate.cmake
   DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
   VERBATIM)
@@ -49,5 +49,5 @@ install(TARGETS incplot RUNTIME DESTINATION bin
 install(FILES README.md LICENSE.txt DESTINATION bin)
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-  add_subdirectory(cmake.packaging)
+  add_subdirectory(cmake/packaging)
 endif()

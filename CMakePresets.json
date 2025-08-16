@@ -142,7 +142,7 @@
         {
             "name": "_MSVC",
             "hidden": true,
-            "toolchainFile": "toolchain/Windows.MSVC.toolchain.cmake",
+            "toolchainFile": "cmake/toolchain/Windows.MSVC.toolchain.cmake",
             "cacheVariables": {
                 "CMAKE_CXX_FLAGS": "/utf-8 /EHsc"
             }
