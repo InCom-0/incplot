@@ -33,7 +33,9 @@ jobs:
 
     steps:
     - name: '🧰 Checkout'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+      with:
+        submodules: recursive
 
     - uses: TheMrMilchmann/setup-msvc-dev@v3
       with:
@@ -79,7 +81,9 @@ jobs:
     steps:
 
     - name: '🧰 Checkout'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+      with:
+        submodules: recursive
 
     - name: '${{ matrix.icon }} Setup MSYS2'
       uses: msys2/setup-msys2@v2.27.0
@@ -150,7 +154,9 @@ jobs:
 
     steps:
     - name: '🧰 Checkout'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+      with:
+        submodules: recursive
 
     - name: Setup Cpp
       uses: aminya/setup-cpp@v1
@@ -211,7 +217,9 @@ jobs:
 
     steps:
     - name: '🧰 Checkout'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+      with:
+        submodules: recursive
 
     - name: Setup Cpp
       uses: aminya/setup-cpp@v1
