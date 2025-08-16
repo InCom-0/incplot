@@ -26,8 +26,8 @@ target_sources(incplot
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
-include(CMake_dependencies.cmake) ### Loads and declares the requires external libraries using CMake's FetchContent.
-target_link_libraries(incplot PRIVATE incplot-lib "-lstdc++exp")
+add_subdirectory(sub/incplot-lib)
+target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib "-lstdc++exp")
 
 
 set(COM_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake.config/auto/versiondef.h)
