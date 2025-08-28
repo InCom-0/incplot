@@ -186,7 +186,7 @@ jobs:
         sys: [macos]
         runs-on: [macos-14, macos-13]
         compiler: ["gcc"]
-        compiler-ver: ["15"]
+        compiler-ver: ["14"]
         build-type: ["Release", "Debug"]
         target : ["incplot"]
 
@@ -197,8 +197,8 @@ jobs:
             platform: "x86_64"
 
           - compiler: "gcc"
-            compiler-ver: "15"
-            cmake-override: "-DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15"
+            compiler-ver: "14"
+            cmake-override: "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
             install:
           # - compiler: "clang"
           #   compiler-ver: "20"
