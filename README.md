@@ -19,7 +19,7 @@ Automatically infers what to display and how based on the data piped in.<br><br>
 'As quick and as easy as possible' visualization of small to moderate sized data and information.
 </div>
 
-<br><img width="400" alt="scatter" src="https://media.githubusercontent.com/media/InCom-0/incplot/8708dcc3d8eacdf9d079dd3b0b13d8ccc8be8c48/images/readme/scatter.png" /><img width="400" alt="multiline" src="https://media.githubusercontent.com/media/InCom-0/incplot/0925a45f1aaf126df925ab2ccb6986a916d6aea9/images/readme/multiline.png" /><img width="400" alt="barV" src="https://media.githubusercontent.com/media/InCom-0/incplot/0925a45f1aaf126df925ab2ccb6986a916d6aea9/images/readme/barV.png" />
+<br><img width="400" alt="scatter" src="https://media.githubusercontent.com/media/InCom-0/incplot/8708dcc3d8eacdf9d079dd3b0b13d8ccc8be8c48/images/readme/scatter.png" /><img width="400" alt="multiline" src="https://media.githubusercontent.com/media/InCom-0/incplot/0925a45f1aaf126df925ab2ccb6986a916d6aea9/images/readme/multiline.png" /><img width="400" alt="BarHS" src="https://media.githubusercontent.com/media/InCom-0/incplot/4b9366e7476172f3ba1a269c6a7df0dc2b926fb3/images/readme/BarHS.png" /><img width="400" alt="BarVM" src="https://media.githubusercontent.com/media/InCom-0/incplot/4b9366e7476172f3ba1a269c6a7df0dc2b926fb3/images/readme/BarVM.png" /><img width="400" alt="BarHM" src="https://media.githubusercontent.com/media/InCom-0/incplot/4b9366e7476172f3ba1a269c6a7df0dc2b926fb3/images/readme/BarHM.png" /><img width="400" alt="barV" src="https://media.githubusercontent.com/media/InCom-0/incplot/0925a45f1aaf126df925ab2ccb6986a916d6aea9/images/readme/barV.png" />
 
 
 
