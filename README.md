@@ -54,14 +54,18 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 * Reasonable error messages (especially when the user asks for something that is impossible/unsupported)
 
 ## Showcase examples ##
+The examples shown can be run directly as they are.
+<br>
+The data is pulled from this repository but simply just routed through a link shortening service.
+<br><br>
+Please note that incplot checks whether the terminal windows is large enough (mostly meaning wide enough) to display the plot requested. If the users terminal windows is not large enough incplot will output an error message saying so. If that happens, the user can either change the size of the terminal windows so it is sufficient or choose a different plot type that might fit.
 
 ### Same data shown in 5 ways ###
-
 <details>
 <summary>Multiline plot - pure default</summary>
 
 ```bash
-   curl -sL https://kurzlinks.de/german_economy | incplot
+curl -sL https://kurzlinks.de/german_economy | incplot
 ```
 <img width="800" alt="multiline" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_default.png" />
 </details>
@@ -71,7 +75,7 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 <summary>Horizontal stacked bar plot</summary>
 
 ```bash
-   curl -sL https://kurzlinks.de/german_economy | incplot -T
+curl -sL https://kurzlinks.de/german_economy | incplot -T
 ```
 <img width="800" alt="BarHS" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_BarHS.png" />
 </details>
@@ -81,7 +85,7 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 <summary>Vertical simple bar plot</summary>
 
 ```bash
-   curl -sL https://kurzlinks.de/german_economy | incplot -B
+curl -sL https://kurzlinks.de/german_economy | incplot -B
 ```
 <img width="800" alt="BarV" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_BarV.png" />
 </details>
@@ -92,7 +96,7 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 
 ```bash
    # Note that the size (notably width) is substantially larger and we have to limit the columns shown (depends on the users terminal windows size)
-   curl -sL https://kurzlinks.de/german_economy | incplot -H -y 2 3 4 5
+curl -sL https://kurzlinks.de/german_economy | incplot -H -y 2 3 4 5
 ```
 <img width="800" alt="BarV" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_BarHM.png" />
 </details>
@@ -103,7 +107,7 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 
 ```bash
    # Note that some plot types might not be meaningful for every data set
-   curl -sL https://kurzlinks.de/german_economy | incplot -S
+curl -sL https://kurzlinks.de/german_economy | incplot -S
 ```
 <img width="800" alt="BarV" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_Scatter.png" />
 </details>
