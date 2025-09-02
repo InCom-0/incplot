@@ -116,7 +116,7 @@ curl -sL https://kurzlinks.de/german_economy | incplot -S
 ## Hints, tips and tricks ##
 ### Autoguessing ###
 
-Incplot tries to be smart and makes an educated guess as to what it is the user wants displayed. However, it may not always succeed in guessing or guessing right. For this reason it is usually best to pipe in only the data (ie. the data columns) that the user wants displayed. It is especially not advisable to pipe in entire 'databases' worth of data of dozens of columns. If that is what you are starting with it is generally better to use some dataframes library or the tools/features provided by your shell to do the heavy data wrangling upfront before piping the data into incplot.  
+Incplot tries to be smart and makes an educated guess as to what it is the user wants displayed. However, it may not always succeed in guessing or guessing right. For this reason it is usually best to pipe in only the data (ie. the data columns) that the user wants displayed. It is especially not advisable to pipe in entire 'databases' worth of data of dozens of columns. If that is what the user is starting with it is generally better to use some dataframes library or the tools/features provided by your shell to do the heavy data wrangling upfront before piping the data into incplot.  
   
 ### Plot types ###
 Scatter plots tend to work better in smaller plot sizes (the dots are more 'densely' packed then which is typically visually nicer)  

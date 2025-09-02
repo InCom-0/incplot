@@ -26,7 +26,7 @@ target_sources(incplot
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
-add_subdirectory(sub/incplot-lib)
+include(CMake_dependencies.cmake) ### Loads and declares the requires external libraries using CMake's FetchContent.
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib "-lstdc++exp")
 
 
