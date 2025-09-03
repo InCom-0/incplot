@@ -56,13 +56,13 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 ## Showcase examples ##
 The examples shown can be run directly as they are.
 <br>
-The data is pulled from this repository but simply just routed through a link shortening service.
+The data is pulled from this repository only routed through a link shortening service.
 <br><br>
 Please note that incplot checks whether the terminal windows is large enough (mostly meaning wide enough) to display the plot requested. If the users terminal windows is not large enough incplot will output an error message saying so. If that happens, the user can either change the size of the terminal windows so it is sufficient or choose a different plot type that might fit.
 
 ### Same data shown in 5 ways ###
 <details>
-<summary>Multiline plot - pure default</summary>
+<summary>Multiline plot - gets inferred from this data if plot type isn't specified</summary>
 
 ```bash
 curl -sL https://kurzlinks.de/german_economy | incplot
@@ -123,12 +123,16 @@ Scatter plots tend to work better in smaller plot sizes (the dots are more 'dens
   
 (Multi)line plots tend to work better in larger plot sizes (fullscreen even)
 
+Horizontal bar plots (stacked or regular) have most of their width fully dependant on the data itself (ie. number of rows and number of value series selected). In practice this is a limiting factor for many datasets when using these plot types because the terminal windows 'runs outs of' columns very quickly.
+
+Vertical bar plots have their height fully dependant on the data itself (similarly to horizontal bar plots). However, terminal windows can scroll and so it is not really problematic.
+
 ### Extreme values ###
-The common case of having extreme values in the data that would normally prevent drawing 'nice' and useful plots can be taken care of with the optional [-e VAR] command line parameter which instruct incplot to filter out all observations (ie. rows) with any value above and below VAR standard deviations from mean. Defaults to [-e 6]. [-e 0] turns this feature off.
+The common case of having extreme values in the data that would normally prevent drawing 'nice' and useful plots can be taken care of with the optional [-e VAR] command line parameter which instructs incplot to filter out all observations (ie. rows) with any value above and below VAR standard deviations from mean. Defaults to [-e 6]. [-e 0] turns this feature off.
 
 ## Features under consideration ##
 
-* Automatic discovery of terminal colors (usually dubbed 'color theme') ... this would enable matching colors with your existing setup 'out of the box'. However, there are a lot of problemss with it both in technically making it work (would require the tool to somehow query the terminal app or the system which is a cross platform nightmare) and in using colors that are not distinct red, green and blue
+* Automatic discovery of terminal colors (usually dubbed 'color theme') ... this would enable matching colors with your existing setup 'out of the box'. However, there are a lot of problems with it both in technically making it work (would require the tool to somehow query the terminal app or the system which is a cross platform nightmare) and in using colors that are not distinct red, green and blue
 
 ## Non-Features ##
 
