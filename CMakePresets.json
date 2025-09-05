@@ -142,10 +142,7 @@
         {
             "name": "_MSVC",
             "hidden": true,
-            "toolchainFile": "cmake/toolchain/Windows.MSVC.toolchain.cmake",
-            "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "/utf-8 /EHsc"
-            }
+            "toolchainFile": "cmake/toolchain/Windows.MSVC.toolchain.cmake"
         },
         {
             "name": "MSYS_ucrt_PATH",

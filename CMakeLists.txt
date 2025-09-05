@@ -3,11 +3,18 @@ cmake_minimum_required(VERSION 3.30...4.0)
 project(incplot)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  add_compile_options(/utf-8)
+endif()
+
 set(INCPLOT_VERSION_MAJOR 0)
 set(INCPLOT_VERSION_MINOR 2)
 set(INCPLOT_VERSION_PATCH 0)
 
 
+########################################################
+### Target specification ###
+########################################################
 add_executable(incplot)
 target_sources(incplot PRIVATE src/main.cpp src/cross_platform.cpp)
 target_sources(incplot
@@ -26,10 +33,13 @@ target_sources(incplot
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
-include(CMake_dependencies.cmake) ### Loads and declares the requires external libraries using CMake's FetchContent.
+include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CMake's FetchContent.
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib "-lstdc++exp")
 
 
+#############################################################
+### Automatic code generation (for version numbers, etc.) ###
+#############################################################
 set(COM_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/auto/versiondef.h)
 
 add_custom_command(
@@ -43,6 +53,9 @@ add_custom_target(ENSUREAutoFileDeps ALL DEPENDS ${COM_OUTPUT})
 add_dependencies(incplot ENSUREAutoFileDeps)
 
 
+########################################################
+### Install specification (mostly relevant to CPack) ###
+########################################################
 install(TARGETS incplot RUNTIME DESTINATION bin
                         LIBRARY DESTINATION bin)
 
