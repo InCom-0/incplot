@@ -35,6 +35,11 @@ scoop install incoms/incplot
 
 Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/releases/) in the repository itself.
 
+Building incplot requires CMake and it should be possible using the (appropriate) predefined presets.</br>
+Incplot is using very cutting edge features of the standard. Beware that as of September 2025 LLVM's libc++ doesn't (yet) support all the C++23 library features used by incplot. However, both libstdc++ and MSVC STL support all incplot's needs.</br>
+In other words: A. If compiling with Clang, it is imperative to use libstdc++ (which is sort of irregular but possible). B. Almost certainly no-go for the more exotic compilers and toolings.</br>
+These limitations subside on their own as time passes and implementations get fully up to speed on modern C++.
+
 ## Features ##
 
 * Great looking plots 'out of the box'
