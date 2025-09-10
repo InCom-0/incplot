@@ -35,10 +35,6 @@ scoop install incoms/incplot
 
 Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/releases/) in the repository itself.
 
-Building incplot requires CMake and it should be possible using the (appropriate) predefined presets.</br>
-Incplot is using very cutting edge features of the standard. Beware that as of September 2025 LLVM's libc++ doesn't (yet) support all the C++23 library features used by incplot. However, both libstdc++ and MSVC STL support all incplot's needs.</br>
-In other words: A. If compiling with Clang, it is imperative to use libstdc++ (which is sort of irregular but possible). B. Almost certainly no-go for the more exotic compilers and toolings.</br>
-These limitations subside on their own as time passes and implementations get fully up to speed on modern C++.
 
 ## Features ##
 
@@ -46,7 +42,7 @@ These limitations subside on their own as time passes and implementations get fu
 * Zero configuration required, super simple to use
 * No command line arguments necessary most of the time due to automatic inferrence
 * Mainstream platform support (Windows, Linux, MacOS)
-* User can optionally specify some or all arguments in any (sensible) combination
+* Users can optionally specify some or all arguments in any (sensible) combination
 * Accepts piped in data in [JSON](https://en.wikipedia.org/wiki/JSON), [JSON Lines](https://jsonlines.org/), [NDJSON](https://github.com/ndjson), [CSV](https://en.wikipedia.org/wiki/Comma-separated_values), [TSV](https://en.wikipedia.org/wiki/Tab-separated_values)
 * Blazingly fast
 * Full true color support
@@ -121,16 +117,16 @@ curl -sL https://kurzlinks.de/german_economy | incplot -S
 ## Hints, tips and tricks ##
 ### Autoguessing ###
 
-Incplot tries to be smart and makes an educated guess as to what it is the user wants displayed. However, it may not always succeed in guessing or guessing right. For this reason it is usually best to pipe in only the data (ie. the data columns) that the user wants displayed. It is especially not advisable to pipe in entire 'databases' worth of data of dozens of columns. If that is what the user is starting with it is generally better to use some dataframes library or the tools/features provided by your shell to do the heavy data wrangling upfront before piping the data into incplot.  
+Incplot tries to be smart and makes an educated heuristic guess as to what it is the user wants displayed. However, it may not always succeed in guessing or guessing right. For this reason it is usually best to pipe in only the data (ie. the data columns) that the user wants displayed. It is especially not advisable to pipe in entire 'databases' worth of data of dozens of columns. If that is what the user is starting with it is generally advisable to use some dataframes library or the tools/features provided by your shell to do the heavy data wrangling upfront before piping the data into incplot.  
   
 ### Plot types ###
 Scatter plots tend to work better in smaller plot sizes (the dots are more 'densely' packed then which is typically visually nicer)  
   
 (Multi)line plots tend to work better in larger plot sizes (fullscreen even)
 
-Horizontal bar plots (stacked or regular) have most of their width fully dependant on the data itself (ie. number of rows and number of value series selected). In practice this is a limiting factor for many datasets when using these plot types because the terminal windows 'runs outs of' columns very quickly.
+Horizontal bar plots (stacked or regular) have most of their width fully dependant on the data itself (ie. number of rows and number of value series selected). In practice this is a limiting factor for many datasets when using these plot types because the terminal window 'runs outs of' columns very quickly.
 
-Vertical bar plots have their height fully dependant on the data itself (similarly to horizontal bar plots). However, terminal windows can scroll and so it is not really problematic.
+Vertical bar plots have their height fully dependant on the data itself (similarly to horizontal bar plots). However, terminal windows can scroll and so this is considered non-problematic.
 
 ### Extreme values ###
 The common case of having extreme values in the data that would normally prevent drawing 'nice' and useful plots can be taken care of with the optional [-e VAR] command line parameter which instructs incplot to filter out all observations (ie. rows) with any value above and below VAR standard deviations from mean. Defaults to [-e 6]. [-e 0] turns this feature off.
@@ -154,6 +150,13 @@ The common case of having extreme values in the data that would normally prevent
 ## Technical information ##
 
 Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal. All external dependencies (mostly lightweight header only libraries related to parsing) are included in [incplot-lib](https://github.com/InCom-0/incplot-lib)
+
+## Building ##
+
+Building incplot requires CMake and it should be possible using the (appropriate) predefined presets.</br>
+Incplot is using very cutting edge features of the standard. Beware that as of September 2025 LLVM's libc++ doesn't (yet) support all the C++23 library features used by incplot. However, both libstdc++ and MSVC STL support all incplot's needs.</br>
+In other words: A. If compiling with Clang, it is imperative to use libstdc++ (which is sort of irregular but possible). B. It is almost certainly no-go for the more exotic compilers and toolings.</br>
+These limitations will subside on their own as time passes and implementations get fully up to speed on modern C++.
 
 ## License
 This code is free to use under the terms of the [MIT license](https://github.com/InCom-0/incplot/blob/main/LICENSE.txt).
