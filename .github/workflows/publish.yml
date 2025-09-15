@@ -58,6 +58,12 @@ jobs:
       with:
         arch: ${{matrix.platform}}
 
+    - name: Configure git credentials
+      run: |
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: 'Configure'
       shell: bash
       run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
@@ -123,6 +129,12 @@ jobs:
           ${{matrix.add-to-pacboy}}
           cmake:p
           ninja:p
+
+    - name: Configure git credentials
+      run: |
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 'Configure'
       run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
@@ -190,6 +202,12 @@ jobs:
       run: |
         ${{matrix.install}}
 
+    - name: Configure git credentials
+      run: |
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Configure
       run: |
         cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
@@ -255,6 +273,12 @@ jobs:
     - name: Create Build Environment
       run: |
         ${{matrix.install}}
+
+    - name: Configure git credentials
+      run: |
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Configure
       run: |
