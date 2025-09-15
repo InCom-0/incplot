@@ -43,12 +43,12 @@ jobs:
         
     - name: Configure git credentials
       run: |
-        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/" |
+        git lfs install
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
     - name: 'Configure'
-      shell: bash
       run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
     - name: '🚧 Build'
