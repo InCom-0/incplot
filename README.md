@@ -153,10 +153,15 @@ Most of technical details of how the tool works under the hood are described in 
 
 ## Building ##
 
-Building incplot requires CMake and it should be possible using the (appropriate) predefined presets.</br>
-Incplot is using very cutting edge features of the standard. Beware that as of September 2025 LLVM's libc++ doesn't (yet) support all the C++23 library features used by incplot. However, both libstdc++ and MSVC STL support all incplot's needs.</br>
-In other words: A. If compiling with Clang, it is imperative to use libstdc++ (which is sort of irregular but possible). B. It is almost certainly no-go for the more exotic compilers and toolings.</br>
-These limitations will subside on their own as time passes and implementations get fully up to speed on modern C++.
+Building incplot requires CMake and should be possible using the (appropriate) predefined CMake presets.</br>
+
+* Uses cutting edge (as of September 2025) features from C++23 language as well as from C++23 STL extensively
+* Compiles with GCC 14.2+ and Clang 20.1.3+ on Linux, MacOS
+* Compiles with MSVC 19.44+, GCC 14.2+ (through MSYS2) and Clang 20.1.3+ (through MSYS2) on Windows
+* Beware that as of September 2025 LLVM's libc++ doesn't (yet) support all the C++23 library features used by incplot. Therefore, if compiling with Clang, it is imperative to use libstdc++ (which is sort of irregular but possible)
+* It is almost certainly impossible to compile with the more exotic compilers and toolings (as they are lagging further behind the mainstream ones in standard implementation)
+* These limitations will no doubt subside as time passes and implementations get fully up to speed on modern C++.
+
 
 ## License
 This code is free to use under the terms of the [MIT license](https://github.com/InCom-0/incplot/blob/main/LICENSE.txt).

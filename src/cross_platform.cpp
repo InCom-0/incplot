@@ -2,15 +2,17 @@
 #include <cstdio>
 
 #if defined(__MINGW64__)
-#include <windows.h>
 #include <unistd.h>
+#include <windows.h>
+
 #elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 #elif defined(_WIN64)
-#include <windows.h>
 #include <io.h>
+#include <windows.h>
+
 #endif
 
 namespace incom::crossplatform::console {
@@ -28,7 +30,7 @@ std::pair<int, int> get_rowColCount() {
         if (ws.ws_row == 0 || ws.ws_col == 0) { return std::make_pair(0, 0); }
         else { return std::make_pair(static_cast<int>(ws.ws_row), static_cast<int>(ws.ws_col)); }
     }
-    { return std::make_pair(0, 0); }
+    else { return std::make_pair(0, 0); }
 #endif
 }
 
@@ -43,6 +45,14 @@ bool is_stdin_inTerminal() {
     return isatty(fileno(stdin));
 #elif defined(_WIN64)
     return _isatty(_fileno(stdin));
+#endif
+};
+
+bool is_stdout_inTerminal() {
+#if defined(__linux__) || defined(__MINGW64__) || (defined(__APPLE__) && defined(__MACH__))
+    return isatty(fileno(stdout));
+#elif defined(_WIN64)
+    return _isatty(_fileno(stdout));
 #endif
 };
 
