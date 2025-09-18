@@ -8,8 +8,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 set(INCPLOT_VERSION_MAJOR 0)
-set(INCPLOT_VERSION_MINOR 2)
-set(INCPLOT_VERSION_PATCH 1)
+set(INCPLOT_VERSION_MINOR 3)
+set(INCPLOT_VERSION_PATCH 0)
 
 
 ########################################################
