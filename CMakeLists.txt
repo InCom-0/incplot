@@ -13,6 +13,20 @@ set(INCPLOT_VERSION_PATCH 0)
 
 
 ########################################################
+### LTO - try to enable for all dependent targets ###
+########################################################
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result OUTPUT output)
+
+if(result)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    # set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(WARNING "IPO is not supported: ${output}")
+endif()
+
+
+########################################################
 ### Target specification ###
 ########################################################
 add_executable(incplot)
