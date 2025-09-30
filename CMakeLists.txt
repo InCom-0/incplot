@@ -21,13 +21,15 @@ check_ipo_supported(RESULT result OUTPUT output)
 # Enable LTO if supported and only when NOT in debug mode
 if(result)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message (STATUS "LTO is disabled because of Debug build")
     else()
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    message (STATUS "LTO is enabled")
     # set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()
     
 else()
-    message(WARNING "IPO is not supported: ${output}")
+    message(WARNING "LTO is not supported: ${output}")
 endif()
 
 
