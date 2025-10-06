@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: ["windows-2025"]
+        runs-on: [windows-2025, windows-11-arm]
         sys: [windows]
         icon: ['⬜']
         buildenv: [VS2022]
