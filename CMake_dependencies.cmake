@@ -11,7 +11,8 @@ FetchContent_MakeAvailable(incplot-lib)
 FetchContent_Declare(
     sqlite3
     GIT_REPOSITORY https://github.com/InCom-0/sqlite3-cmake
-    GIT_TAG v3.50.2)
+    GIT_TAG master
+)
 FetchContent_MakeAvailable(sqlite3)
 
 # Write a fake package config so that subprojects find our SQLite that's defined by sqlite3-cmake
@@ -25,7 +26,7 @@ set(SQLite3_DIR "${sqlite3_BINARY_DIR}")
 FetchContent_Declare(
     sqlpp23
     GIT_REPOSITORY  https://github.com/InCom-0/sqlpp23
-    GIT_TAG         0.67
+    GIT_TAG         main
 )
 # Configure sqlpp23 for SQLite
 # set(BUILD_MYSQL_CONNECTOR ON)
