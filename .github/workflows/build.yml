@@ -20,9 +20,7 @@ jobs:
         sys: [windows]
         icon: ['⬜']
         buildenv: [VS2022]
-
         compiler: ["MSVC"]
-        platform: ["x86_64"]
         mode: ["cxx23"]
         build-type: ["Release", "Debug"]
         target : ["all"]
@@ -30,6 +28,10 @@ jobs:
         include:
           - compiler: "MSVC"
             compiler-ver: "19"
+          - runs-on: windows-2025
+            platform: "x86_64"
+          - runs-on: windows-11-arm
+            platform: "arm64"
 
     steps:
     - name: '🧰 Checkout'
