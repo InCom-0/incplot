@@ -37,7 +37,7 @@ endif()
 ### Target specification ###
 ########################################################
 add_executable(incplot)
-target_sources(incplot PRIVATE src/main.cpp src/cross_platform.cpp)
+target_sources(incplot PRIVATE src/main.cpp src/config.cpp)
 target_sources(incplot
     PRIVATE
         FILE_SET priv_headers

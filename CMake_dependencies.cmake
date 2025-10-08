@@ -12,6 +12,7 @@ FetchContent_Declare(
     sqlite3
     GIT_REPOSITORY https://github.com/InCom-0/sqlite3-cmake
     GIT_TAG master
+    EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(sqlite3)
 
@@ -27,6 +28,7 @@ FetchContent_Declare(
     sqlpp23
     GIT_REPOSITORY  https://github.com/InCom-0/sqlpp23
     GIT_TAG         main
+    EXCLUDE_FROM_ALL
 )
 # Configure sqlpp23 for SQLite
 # set(BUILD_MYSQL_CONNECTOR ON)
