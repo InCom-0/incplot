@@ -108,5 +108,54 @@ namespace incom::terminal_plot::config::sqltables {
                sqlpp::column_t<sqlpp::table_t<Schemes_>, SelColor>>;
   };
   using Schemes = ::sqlpp::table_t<Schemes_>;
+
+  struct PragmaTableInfo_ {
+  // Column definitions
+  struct Cid {
+    SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(cid, cid);
+    using data_type = ::sqlpp::integral;
+    using has_default = std::false_type;
+  };
+
+  struct Name {
+    SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(name, name);
+    using data_type = ::sqlpp::text;
+    using has_default = std::false_type;
+  };
+
+  struct Type {
+    SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(type, type);
+    using data_type = ::sqlpp::text;
+    using has_default = std::false_type;
+  };
+
+  struct NotNull {
+    SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(notnull, notnull);
+    using data_type = ::sqlpp::integral;
+    using has_default = std::false_type;
+  };
+
+  struct DfltValue {
+    SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(dflt_value, dfltValue);
+    using data_type = ::sqlpp::text;
+    using has_default = std::true_type; // can be NULL / optional
+  };
+
+  struct Pk {
+    SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(pk, pk);
+    using data_type = ::sqlpp::integral;
+    using has_default = std::false_type;
+  };
+
+  // Table definition
+  SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(pragma_table_info, pragmaTableInfo);
+
+  template <typename T>
+  using _table_columns = sqlpp::table_columns<
+      T, Cid, Name, Type, NotNull, DfltValue, Pk>;
+
+  using _required_insert_columns = sqlpp::detail::type_set<>;
+};
+using PragmaTableInfo = sqlpp::table_t<PragmaTableInfo_>;
   
 }
