@@ -1,10 +1,11 @@
+#include <optional>
 #include <print>
 
 #include <auto/versiondef.h>
+#include <config.hpp>
 #include <incplot.hpp>
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
-#include <config.hpp>
 
 
 using namespace std::literals;
@@ -45,41 +46,16 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
+    
 
-    auto configPath_exp = incstd::filesys::find_configFile(appName, configFileName);
-
-    if (not configPath_exp.has_value()) {
-        // Must use default 'in code' config since the sqlite config file is unavailable or somehow corrupted
-    }
-    else {
-        auto configOnDisk              = std::make_shared<sqlpp::sqlite3::connection_config>();
-        configOnDisk->path_to_database = configPath_exp->generic_string();
-        configOnDisk->flags            = SQLITE_OPEN_READWRITE;
-
-        sqlpp::sqlite3::connection dbOnDisk;
-        dbOnDisk.connect_using(configOnDisk); // This can throw an exception.
-
-        if (not incom::terminal_plot::config::validate_configDB(dbOnDisk)) {
-            // Must use default 'in code' config since the sqlite configDB is unavailable or somehow corrupted
-        }
-
-        else {
-            if (auto defScheme = incplot::config::get_lastUsedScheme(dbOnDisk)) {
-                if (incplot::config::validate_terminalPaletteSameness(3, defScheme.value().palette)) {
-                
-                }
-                else {}
-            }
-            else {
-            }
-        }
-    }
+    auto colSchemeToUse = incplot::config::get_colorScheme(ap, appName, configFileName);
 
 
     incom::standard::console::set_cocp();
-    std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
+    
 
-    for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
+    for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, std::string("a")) << '\n'; }
 
     return 0;
 }

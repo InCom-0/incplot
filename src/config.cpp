@@ -1,4 +1,9 @@
+#include <filesystem>
+
 #include <config.hpp>
+#include <incstd/core/filesys.hpp>
+#include <optional>
+
 
 namespace incom::terminal_plot::config {
 
@@ -12,9 +17,25 @@ constexpr uint32_t encode_color(inccol::inc_sRGB const &colInInt) {
 }
 
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
-                                                                            const inccol::palette256 &against) {
+                                                                            const inccol::palette16 &against) {
+    colorCount_toValidate = std::min(static_cast<size_t>(colorCount_toValidate),
+                                     std::tuple_size_v<typename std::remove_cvref_t<decltype(against)>>);
     for (size_t i = 0; i < colorCount_toValidate; ++i) {
-        auto queryRes = inccons::ColorQuery::queryPaletteIndex(i);
+        auto queryRes = inccons::ColorQuery::get_paletteIdx(i);
+        if (not queryRes.has_value()) { return std::unexpected(queryRes.error()); }
+        else if (queryRes.value() != against[i]) { return false; }
+    }
+
+    // If all pass then its validated
+    return true;
+}
+
+std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
+                                                                            const inccol::palette256 &against) {
+    colorCount_toValidate = std::min(static_cast<size_t>(colorCount_toValidate),
+                                     std::tuple_size_v<typename std::remove_cvref_t<decltype(against)>>);
+    for (size_t i = 0; i < colorCount_toValidate; ++i) {
+        auto queryRes = inccons::ColorQuery::get_paletteIdx(i);
         if (not queryRes.has_value()) { return std::unexpected(queryRes.error()); }
         else if (queryRes.value() != against[i]) { return false; }
     }
@@ -25,13 +46,28 @@ std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std:
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(
     std::vector<std::uint8_t> colorIDs_toValidate, const inccol::palette256 &against) {
     for (auto colToVal : colorIDs_toValidate) {
-        auto queryRes = inccons::ColorQuery::queryPaletteIndex(colToVal);
+        auto queryRes = inccons::ColorQuery::get_paletteIdx(colToVal);
         if (not queryRes.has_value()) { return std::unexpected(queryRes.error()); }
         else if (queryRes.value() != against[colToVal]) { return false; }
     }
 
     // If all pass then its validated
     return true;
+}
+
+std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path const &pathToDb) {
+    auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
+    connConfig->path_to_database = pathToDb.generic_string();
+    connConfig->flags            = SQLITE_OPEN_READWRITE;
+
+    sqlpp::sqlite3::connection dbOnDisk;
+    try {
+        dbOnDisk.connect_using(connConfig); // This can throw an exception.
+    }
+    catch (const sqlpp::sqlite3::exception &e) {
+        return std::unexpected(dbErr::connectionError);
+    }
+    return dbOnDisk;
 }
 
 bool validate_SQLite_tableExistence(sqlpp::sqlite3::connection &db, std::string const &tableName) {
@@ -77,7 +113,7 @@ bool validate_configDB(sqlpp::sqlite3::connection &db) {
 }
 
 
-std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme(sqlpp::sqlite3::connection &db) {
+std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme_exp(sqlpp::sqlite3::connection &db) {
     inccons::color_schemes::scheme256 res{};
     using namespace sqltables;
 
@@ -123,5 +159,80 @@ std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme(sqlpp
     // That is impossible
     return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
+
+
+inccons::color_schemes::scheme256 get_defaultColScheme256() {
+    return incstd::console::color_schemes::windows_terminal::campbell256;
+}
+inccons::color_schemes::scheme16 get_defaultColScheme16() {
+    return incstd::console::color_schemes::windows_terminal::campbell;
+}
+inccons::color_schemes::scheme256 get_monochromeColScheme256() {
+    // TEMP
+    return inccons::color_schemes::scheme256{};
+}
+inccons::color_schemes::scheme16 get_monochromeColScheme16() {
+    // TEMP
+    return inccons::color_schemes::scheme16{};
+}
+
+std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(const std::string &appName,
+                                                                                const std::string &configFileName) {
+    auto configPath_exp = incstd::filesys::find_configFile(appName, configFileName);
+    if (configPath_exp.has_value()) {
+        // Must use default 'in code' config since the sqlite config file is unavailable or somehow corrupted
+        if (auto sqlConn_exp = incom::terminal_plot::config::create_dbConnection_rw(configPath_exp.value());
+            sqlConn_exp.has_value()) {
+            auto &sqlConn = sqlConn_exp.value();
+            // Must use default 'in code' config since the sqlite configDB is unavailable or somehow corrupted
+            if (incom::terminal_plot::config::validate_configDB(sqlConn)) {
+                if (auto defScheme = incom::terminal_plot::config::get_lastUsedScheme_exp(sqlConn).transform(
+                        color_schemes::conv_s256s16)) {
+                    if (incom::terminal_plot::config::validate_terminalPaletteSameness(3, defScheme.value().palette)) {
+                        return defScheme.value();
+                    }
+                }
+            }
+        }
+    }
+    // If we fallthrough anywhere, then we can't get 'lastUsed' scheme and return nullopt
+    return std::nullopt;
+}
+
+inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string &appName,
+                                                 const std::string &configFileName) {
+    auto maybeDefault = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
+        // Requesting default colors
+        if (ap.get<bool>("-d")) { return get_defaultColScheme16(); }
+        else { return std::nullopt; }
+    };
+    auto maybeMonochrome = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
+        // Requesting monochrome mode
+        if (ap.get<bool>("-m")) { return get_monochromeColScheme16(); }
+        else { return std::nullopt; }
+    };
+    auto maybeGetSchemeFromTerminal = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
+        incstd::console::color_schemes::scheme16 res;
+        for (size_t id = 0; id < std::tuple_size_v<decltype(res.palette)>; ++id) {
+            auto queryRes = inccons::ColorQuery::get_paletteIdx(id);
+            if (queryRes.has_value()) { res.palette[id] = std::move(queryRes.value()); }
+            else { return std::nullopt; }
+        }
+        auto queryRes = inccons::ColorQuery::get_foreground();
+        if (queryRes.has_value()) { res.foreground = std::move(queryRes.value()); }
+        queryRes = inccons::ColorQuery::get_background();
+        if (queryRes.has_value()) { res.backgrond = std::move(queryRes.value()); }
+        // Incomplete because the cursor colour and selection colors are not set ...
+        // But for the time being it doesn't really matter.
+        return res;
+    };
+
+    return maybeDefault()
+        .or_else(maybeMonochrome)
+        .or_else(std::bind(maybeGet_lastUsedScheme, appName, configFileName))
+        .or_else(maybeGetSchemeFromTerminal)
+        .value_or(default_scheme16);
+}
+
 
 } // namespace incom::terminal_plot::config
