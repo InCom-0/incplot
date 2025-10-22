@@ -10,10 +10,13 @@ namespace incom::terminal_plot::config {
 namespace fs = std::filesystem;
 
 constexpr inline inccol::inc_sRGB decode_color(uint32_t const colInInt) {
+    // Consider what to do when the uint32_t is not in the expected range for colors
+    // Even if it isn't it is not catastrophic
     return inccol::inc_sRGB((colInInt >> 16) & 0xFF, (colInInt >> 8) & 0xFF, colInInt & 0xFF);
 }
-constexpr uint32_t encode_color(inccol::inc_sRGB const &colInInt) {
-    return 0;
+constexpr uint32_t encode_color(inccol::inc_sRGB const &srgb) {
+    return (static_cast<uint32_t>(srgb.r) << 16) | (static_cast<uint32_t>(srgb.g) << 8) |
+           (static_cast<uint32_t>(srgb.b));
 }
 
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
@@ -162,10 +165,10 @@ std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme_exp(s
 
 
 inccons::color_schemes::scheme256 get_defaultColScheme256() {
-    return incstd::console::color_schemes::windows_terminal::campbell256;
+    return color_schemes::defaultScheme256;
 }
 inccons::color_schemes::scheme16 get_defaultColScheme16() {
-    return incstd::console::color_schemes::windows_terminal::campbell;
+    return default_scheme16;
 }
 inccons::color_schemes::scheme256 get_monochromeColScheme256() {
     // TEMP
@@ -176,9 +179,9 @@ inccons::color_schemes::scheme16 get_monochromeColScheme16() {
     return inccons::color_schemes::scheme16{};
 }
 
-std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(const std::string &appName,
-                                                                                const std::string &configFileName) {
-    auto configPath_exp = incstd::filesys::find_configFile(appName, configFileName);
+std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(
+    const std::string_view &appName, const std::string_view &configFileName) {
+    auto configPath_exp = incstd::filesys::find_configFile(std::string(appName), std::string(configFileName));
     if (configPath_exp.has_value()) {
         // Must use default 'in code' config since the sqlite config file is unavailable or somehow corrupted
         if (auto sqlConn_exp = incom::terminal_plot::config::create_dbConnection_rw(configPath_exp.value());
@@ -199,8 +202,8 @@ std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(
     return std::nullopt;
 }
 
-inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string &appName,
-                                                 const std::string &configFileName) {
+inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string_view &appName,
+                                                 const std::string_view &configFileName) {
     auto maybeDefault = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
         // Requesting default colors
         if (ap.get<bool>("-d")) { return get_defaultColScheme16(); }
@@ -231,7 +234,7 @@ inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const 
         .or_else(maybeMonochrome)
         .or_else(std::bind(maybeGet_lastUsedScheme, appName, configFileName))
         .or_else(maybeGetSchemeFromTerminal)
-        .value_or(default_scheme16);
+        .value_or(color_schemes::defaultScheme16);
 }
 
 

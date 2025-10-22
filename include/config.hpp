@@ -31,7 +31,7 @@ enum class dbErr {
 };
 
 constexpr inccol::inc_sRGB decode_color(uint32_t const colInInt);
-constexpr uint32_t         encode_color(inccol::inc_sRGB const &colInInt);
+constexpr uint32_t         encode_color(inccol::inc_sRGB const &srgb);
 
 
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
@@ -59,10 +59,10 @@ inccons::color_schemes::scheme16  get_defaultColScheme16();
 inccons::color_schemes::scheme256 get_monochromeColScheme256();
 inccons::color_schemes::scheme16  get_monochromeColScheme16();
 
-std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(const std::string &appName,
-                                                                                const std::string &configFileName);
+std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(const std::string_view &appName,
+                                                                                const std::string_view &configFileName);
 
-inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string &appName,
-                                                 const std::string &configFileName);
+inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string_view &appName,
+                                                 const std::string_view &configFileName);
 
 } // namespace incom::terminal_plot::config

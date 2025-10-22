@@ -6,15 +6,15 @@
 #include <incplot.hpp>
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
-
+#include <string_view>
 
 using namespace std::literals;
-inline constexpr std::string appName("incplot"sv);
-inline constexpr std::string configFileName("configDB.sqlite"sv);
+inline constexpr std::string_view appName("incplot"sv);
+inline constexpr std::string_view configFileName("configDB.sqlite"sv);
 
 
 int main(int argc, char *argv[]) {
-
+    
     argparse::ArgumentParser ap(std::string(appName), INCPLOT_VERSION_MEDIUM, argparse::default_arguments::all);
     incplot::CL_Args::finishAp(ap);
     auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
@@ -47,15 +47,10 @@ int main(int argc, char *argv[]) {
     }
 
     std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
-    
 
     auto colSchemeToUse = incplot::config::get_colorScheme(ap, appName, configFileName);
-
-
     incom::standard::console::set_cocp();
-    
 
-    for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, std::string("a")) << '\n'; }
-
+    for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
     return 0;
 }
