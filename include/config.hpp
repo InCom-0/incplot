@@ -59,7 +59,7 @@ inccons::color_schemes::scheme16  get_defaultColScheme16();
 inccons::color_schemes::scheme256 get_monochromeColScheme256();
 inccons::color_schemes::scheme16  get_monochromeColScheme16();
 
-std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(const std::string_view &appName,
+std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme_db(const std::string_view &appName,
                                                                                 const std::string_view &configFileName);
 
 inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string_view &appName,

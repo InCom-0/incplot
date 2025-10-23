@@ -14,10 +14,13 @@ inline constexpr std::string_view configFileName("configDB.sqlite"sv);
 
 
 int main(int argc, char *argv[]) {
-    
+
     argparse::ArgumentParser ap(std::string(appName), INCPLOT_VERSION_MEDIUM, argparse::default_arguments::all);
     incplot::CL_Args::finishAp(ap);
     auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
+
+    auto aaa = incom::terminal_plot::config::maybeGet_lastUsedScheme_db(appName, configFileName);
+    auto              colSchemeToUse = incplot::config::get_colorScheme(ap, appName, configFileName);
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
@@ -47,10 +50,10 @@ int main(int argc, char *argv[]) {
     }
 
     std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
-
-    auto colSchemeToUse = incplot::config::get_colorScheme(ap, appName, configFileName);
+    auto              colSchemeToUse2 = incplot::config::get_colorScheme(ap, appName, configFileName);
     incom::standard::console::set_cocp();
 
+    for (auto &dpctr : dpctrs) { dpctr.colScheme = colSchemeToUse; }
     for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
     return 0;
 }

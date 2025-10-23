@@ -168,7 +168,7 @@ inccons::color_schemes::scheme256 get_defaultColScheme256() {
     return color_schemes::defaultScheme256;
 }
 inccons::color_schemes::scheme16 get_defaultColScheme16() {
-    return default_scheme16;
+    return color_schemes::defaultScheme16;
 }
 inccons::color_schemes::scheme256 get_monochromeColScheme256() {
     // TEMP
@@ -176,10 +176,10 @@ inccons::color_schemes::scheme256 get_monochromeColScheme256() {
 }
 inccons::color_schemes::scheme16 get_monochromeColScheme16() {
     // TEMP
-    return inccons::color_schemes::scheme16{};
+    return color_schemes::other_sources::monochrome;
 }
 
-std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(
+std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme_db(
     const std::string_view &appName, const std::string_view &configFileName) {
     auto configPath_exp = incstd::filesys::find_configFile(std::string(appName), std::string(configFileName));
     if (configPath_exp.has_value()) {
@@ -202,39 +202,87 @@ std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme(
     return std::nullopt;
 }
 
+std::optional<incstd::console::color_schemes::scheme16> maybeGet_schemeFromTerminal() {
+    incstd::console::color_schemes::scheme16 res;
+    for (size_t id = 0; id < std::tuple_size_v<decltype(res.palette)>; ++id) {
+        auto queryRes = inccons::ColorQuery::get_paletteIdx(id);
+        if (queryRes.has_value()) { res.palette[id] = std::move(queryRes.value()); }
+        else { return std::nullopt; } // Aborts if cannot obtain any of the colors
+    }
+
+    // Does not abort if can't get foreground, background, cursor ... uses colors from scheme16 above instead
+    auto queryRes = inccons::ColorQuery::get_foreground();
+    if (queryRes.has_value()) { res.foreground = std::move(queryRes.value()); }
+    else { res.foreground = res.palette.at(static_cast<int>(ANSI_Color16::Bright_White)); }
+
+    queryRes = inccons::ColorQuery::get_background();
+    if (queryRes.has_value()) { res.backgrond = std::move(queryRes.value()); }
+    else { res.backgrond = res.palette.at(static_cast<int>(ANSI_Color16::Black)); }
+
+    queryRes = inccons::ColorQuery::get_cursorCol();
+    if (queryRes.has_value()) { res.cursor = std::move(queryRes.value()); }
+    else { res.cursor = res.palette.at(static_cast<int>(ANSI_Color16::Bright_White)); }
+
+    // Can't query selection color (to my knowledge)
+    res.selection = res.cursor;
+    return res;
+};
+
 inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string_view &appName,
                                                  const std::string_view &configFileName) {
-    auto maybeDefault = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
-        // Requesting default colors
-        if (ap.get<bool>("-d")) { return get_defaultColScheme16(); }
-        else { return std::nullopt; }
-    };
-    auto maybeMonochrome = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
-        // Requesting monochrome mode
-        if (ap.get<bool>("-m")) { return get_monochromeColScheme16(); }
-        else { return std::nullopt; }
-    };
+    // auto maybeDefault = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
+    //     // Requesting default colors
+    //     if (ap.get<bool>("-d")) { return get_defaultColScheme16(); }
+    //     else { return std::nullopt; }
+    // };
+    // auto maybeMonochrome = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
+    //     // Requesting monochrome mode
+    //     if (ap.get<bool>("-m")) { return get_monochromeColScheme16(); }
+    //     else { return std::nullopt; }
+    // };
     auto maybeGetSchemeFromTerminal = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
         incstd::console::color_schemes::scheme16 res;
         for (size_t id = 0; id < std::tuple_size_v<decltype(res.palette)>; ++id) {
             auto queryRes = inccons::ColorQuery::get_paletteIdx(id);
             if (queryRes.has_value()) { res.palette[id] = std::move(queryRes.value()); }
-            else { return std::nullopt; }
+            else { return std::nullopt; } // Aborts if cannot obtain any of the colors
         }
+
+        // Does not abort if can't get foreground, background, cursor ... uses colors from scheme16 above instead
         auto queryRes = inccons::ColorQuery::get_foreground();
         if (queryRes.has_value()) { res.foreground = std::move(queryRes.value()); }
+        else { res.foreground = res.palette.at(static_cast<int>(ANSI_Color16::Bright_White)); }
+
         queryRes = inccons::ColorQuery::get_background();
         if (queryRes.has_value()) { res.backgrond = std::move(queryRes.value()); }
-        // Incomplete because the cursor colour and selection colors are not set ...
-        // But for the time being it doesn't really matter.
+        else { res.backgrond = res.palette.at(static_cast<int>(ANSI_Color16::Black)); }
+
+        queryRes = inccons::ColorQuery::get_cursorCol();
+        if (queryRes.has_value()) { res.cursor = std::move(queryRes.value()); }
+        else { res.cursor = res.palette.at(static_cast<int>(ANSI_Color16::Bright_White)); }
+
+        // Can't query selection color (to my knowledge)
+        res.selection = res.cursor;
         return res;
     };
 
-    return maybeDefault()
-        .or_else(maybeMonochrome)
-        .or_else(std::bind(maybeGet_lastUsedScheme, appName, configFileName))
-        .or_else(maybeGetSchemeFromTerminal)
-        .value_or(color_schemes::defaultScheme16);
+    auto schemeFromTerminal = maybeGetSchemeFromTerminal();
+
+
+    auto compareWith_fromTerminal =
+        [&](color_schemes::scheme16 &schm) -> std::optional<incstd::console::color_schemes::scheme16> {
+        return std::nullopt;
+    };
+
+    auto res = maybeGet_lastUsedScheme_db(appName, configFileName);
+
+    if (not res) {
+        res = res.or_else([&]() { return schemeFromTerminal; })
+                  .and_then(
+                      [](auto const &schm) -> std::optional<incstd::console::color_schemes::scheme16> { return schm; });
+    }
+
+    return res.value_or(color_schemes::defaultScheme16);
 }
 
 
