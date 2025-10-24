@@ -1,8 +1,10 @@
+#include <expected>
 #include <filesystem>
 
 #include <config.hpp>
 #include <incstd/core/filesys.hpp>
 #include <optional>
+#include <utility>
 
 
 namespace incom::terminal_plot::config {
@@ -179,7 +181,7 @@ inccons::color_schemes::scheme16 get_monochromeColScheme16() {
     return color_schemes::other_sources::monochrome;
 }
 
-std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme_db(
+std::expected<incstd::console::color_schemes::scheme16, dbErr> maybeGet_lastUsedScheme_db(
     const std::string_view &appName, const std::string_view &configFileName) {
     auto configPath_exp = incstd::filesys::find_configFile(std::string(appName), std::string(configFileName));
     if (configPath_exp.has_value()) {
@@ -191,15 +193,16 @@ std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme_
             if (incom::terminal_plot::config::validate_configDB(sqlConn)) {
                 if (auto defScheme = incom::terminal_plot::config::get_lastUsedScheme_exp(sqlConn).transform(
                         color_schemes::conv_s256s16)) {
-                    if (incom::terminal_plot::config::validate_terminalPaletteSameness(3, defScheme.value().palette)) {
-                        return defScheme.value();
-                    }
+                    return defScheme.value();
                 }
+                else { return std::unexpected(dbErr::notFound); }
             }
+            else { return std::unexpected(dbErr::dbAppearsCorrupted); }
         }
+        else { return std::unexpected(dbErr::connectionError); }
     }
-    // If we fallthrough anywhere, then we can't get 'lastUsed' scheme and return nullopt
-    return std::nullopt;
+    else { return std::unexpected(dbErr::notFound); }
+    std::unreachable();
 }
 
 std::optional<incstd::console::color_schemes::scheme16> maybeGet_schemeFromTerminal() {
@@ -266,23 +269,22 @@ inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const 
         return res;
     };
 
-    auto schemeFromTerminal = maybeGetSchemeFromTerminal();
 
-
-    auto compareWith_fromTerminal =
-        [&](color_schemes::scheme16 &schm) -> std::optional<incstd::console::color_schemes::scheme16> {
-        return std::nullopt;
-    };
-
-    auto res = maybeGet_lastUsedScheme_db(appName, configFileName);
-
-    if (not res) {
-        res = res.or_else([&]() { return schemeFromTerminal; })
-                  .and_then(
-                      [](auto const &schm) -> std::optional<incstd::console::color_schemes::scheme16> { return schm; });
+    if (auto res = maybeGet_lastUsedScheme_db(appName, configFileName)) {
+        auto exp = validate_terminalPaletteSameness(3, res.value().palette);
+        if (exp.has_value() && exp.value() == true) { return res.value(); }
+        else if (exp.has_value() && exp.value() == false) {
+            auto termScheme = maybeGetSchemeFromTerminal();
+            if (termScheme) {
+                // But also here we should update the scheme in the db to the termScheme
+                return termScheme.value();
+            }
+            else { return res.value(); }
+        }
+        else { return res.value(); }
     }
 
-    return res.value_or(color_schemes::defaultScheme16);
+    else { return res.value_or(color_schemes::defaultScheme16); }
 }
 
 

@@ -7,7 +7,7 @@
 #include <sqlpp23/sqlite3/sqlite3.h>
 #include <sqlpp23/sqlpp23.h>
 
-#include <incplot/args.hpp>
+#include <args.hpp>
 #include <incstd/incstd_color.hpp>
 #include <incstd/incstd_console.hpp>
 
@@ -27,6 +27,7 @@ enum class dbErr {
     impossibleValue,
     notFound,
     connectionError,
+    dbAppearsCorrupted,
     unknownError,
 };
 
@@ -59,8 +60,8 @@ inccons::color_schemes::scheme16  get_defaultColScheme16();
 inccons::color_schemes::scheme256 get_monochromeColScheme256();
 inccons::color_schemes::scheme16  get_monochromeColScheme16();
 
-std::optional<incstd::console::color_schemes::scheme16> maybeGet_lastUsedScheme_db(const std::string_view &appName,
-                                                                                const std::string_view &configFileName);
+std::expected<incstd::console::color_schemes::scheme16, dbErr> maybeGet_lastUsedScheme_db(
+    const std::string_view &appName, const std::string_view &configFileName);
 
 inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string_view &appName,
                                                  const std::string_view &configFileName);
