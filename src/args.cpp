@@ -1,8 +1,10 @@
-#include <args.hpp>
-#include <incplot/plot_structures.hpp>
-#include <incstd/core/typegen.hpp>
 #include <optional>
 #include <typeindex>
+
+#include <args.hpp>
+#include <config.hpp>
+#include <incplot/plot_structures.hpp>
+#include <incstd/core/typegen.hpp>
 
 
 namespace incom {
@@ -17,35 +19,59 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
         std::cerr << inout_ap;
         std::exit(1);
     }
+    DesiredPlot::DP_CtorStruct nonDifferentiated;
+
+    if (auto wdt = inout_ap.present<int>("-w")) { nonDifferentiated.tar_width = wdt.value(); }
+    if (auto hgt = inout_ap.present<int>("-t")) { nonDifferentiated.tar_height = hgt.value(); }
+    if (auto stddev = inout_ap.present<int>("-e")) {
+        if (stddev != 0) { nonDifferentiated.filter_outsideStdDev = stddev.value(); }
+        else { nonDifferentiated.filter_outsideStdDev = std::nullopt; }
+    }
+    else { nonDifferentiated.filter_outsideStdDev = Config::filter_withinStdDevMultiple_default; }
+
+
+    if (auto optVal = inout_ap.present<int>("-x")) { nonDifferentiated.lts_colID = optVal.value(); }
+    if (auto optVal = inout_ap.present<std::vector<int>>("-y")) {
+        nonDifferentiated.v_colIDs = std::vector<size_t>(optVal.value().begin(), optVal.value().end());
+    }
+    if (auto optVal = inout_ap.present<int>("-c")) { nonDifferentiated.c_colID = optVal.value(); }
+
+    if (inout_ap.get<bool>("-r")) { nonDifferentiated.forceRGB_bool = true; }
+    if (inout_ap.get<bool>("-d")) {
+        nonDifferentiated.colScheme     = color_schemes::defaultScheme16;
+        nonDifferentiated.forceRGB_bool = true;
+    }
+    else if (inout_ap.get<bool>("-m")) {
+        nonDifferentiated.colScheme     = color_schemes::other_sources::monochrome;
+        nonDifferentiated.forceRGB_bool = true;
+    }
+    else {
+        auto dbConn = config::maybeGet_configConnection(config::appName, config::configFileName);
+        if (dbConn.has_value()) {
+            if (inout_ap.is_used("-l")) { auto schm_name = inout_ap.get<std::string>("-l"); }
+            else {
+                // Pure default path
+            }
+        }
+        else {
+            auto schm_opt               = config::maybeGet_schemeFromTerminal();
+            nonDifferentiated.colScheme = schm_opt.value_or(config::get_defaultColScheme16());
+            if (schm_opt) {
+                nonDifferentiated.forceRGB_bool = true;
+                // Config DB conn not available, falling back to using ANSI color scheme currently set in the
+                // terminal
+            }
+            else {
+                // Config DB conn not available and couldn't obtain ANSI color scheme from the terminal ... using
+                // default integrated color scheme
+            }
+        }
+    }
+
     std::vector<DesiredPlot::DP_CtorStruct> res;
-
-    auto addOne = [&](std::optional<std::type_index> const &&sv_opt) {
-        res.push_back(DesiredPlot::DP_CtorStruct());
-        if (auto wdt = inout_ap.present<int>("-w")) { res.back().tar_width = wdt.value(); }
-        if (auto hgt = inout_ap.present<int>("-t")) { res.back().tar_height = hgt.value(); }
-        if (auto stddev = inout_ap.present<int>("-e")) {
-            if (stddev != 0) { res.back().filter_outsideStdDev = stddev.value(); }
-            else { res.back().filter_outsideStdDev = std::nullopt; }
-        }
-        else { res.back().filter_outsideStdDev = Config::filter_withinStdDevMultiple_default; }
-
+    auto                                    addOne = [&](std::optional<std::type_index> const &&sv_opt) {
+        res.push_back(nonDifferentiated);
         res.back().plot_type_name = sv_opt;
-        if (auto optVal = inout_ap.present<int>("-x")) { res.back().lts_colID = optVal.value(); }
-        if (auto optVal = inout_ap.present<std::vector<int>>("-y")) {
-            res.back().v_colIDs = std::vector<size_t>(optVal.value().begin(), optVal.value().end());
-        }
-        if (auto optVal = inout_ap.present<int>("-c")) { res.back().c_colID = optVal.value(); }
-
-        if (inout_ap.get<bool>("-r")) { res.back().forceRGB_bool = true; }
-        if (inout_ap.get<bool>("-d")) {
-            res.back().colScheme     = color_schemes::defaultScheme16;
-            res.back().forceRGB_bool = true;
-        }
-        else if (inout_ap.get<bool>("-m")) {
-            res.back().colScheme     = color_schemes::other_sources::monochrome;
-            res.back().forceRGB_bool = true;
-        }
-        else {}
     };
     using namespace incom::standard::typegen;
     if (inout_ap.get<bool>("-B")) { addOne(get_typeIndex<plot_structures::BarV>()); }
@@ -102,11 +128,11 @@ void CL_Args::finishAp(argparse::ArgumentParser &out_ap) {
 
     auto &mex_grp = out_ap.add_mutually_exclusive_group();
     out_ap.add_group("Other options:");
-    // out_ap.add_argument("-h", "--html")
-    //     .help("Convert the output into [h]tml (should 'pipe' the output into a file as emitting html "
-    //           "into terminal itself is typically not useful)")
-    //     .flag()
-    //     .nargs(0);
+
+    mex_grp.add_argument("-l", "--color-scheme")
+        .help("Specify a color scheme by name (the scheme must exist in the config database)")
+        .default_value<std::string>("")
+        .nargs(1);
     mex_grp.add_argument("-d", "--default-colors")
         .help("Draw with [d]efault colors (Windows Terminal Campbell theme)")
         .flag()

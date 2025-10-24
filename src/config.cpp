@@ -181,27 +181,26 @@ inccons::color_schemes::scheme16 get_monochromeColScheme16() {
     return color_schemes::other_sources::monochrome;
 }
 
-std::expected<incstd::console::color_schemes::scheme16, dbErr> maybeGet_lastUsedScheme_db(
-    const std::string_view &appName, const std::string_view &configFileName) {
+std::expected<sqlpp::sqlite3::connection, dbErr> maybeGet_configConnection(const std::string_view &appName,
+                                                                           const std::string_view &configFileName) {
     auto configPath_exp = incstd::filesys::find_configFile(std::string(appName), std::string(configFileName));
     if (configPath_exp.has_value()) {
         // Must use default 'in code' config since the sqlite config file is unavailable or somehow corrupted
-        if (auto sqlConn_exp = incom::terminal_plot::config::create_dbConnection_rw(configPath_exp.value());
-            sqlConn_exp.has_value()) {
-            auto &sqlConn = sqlConn_exp.value();
-            // Must use default 'in code' config since the sqlite configDB is unavailable or somehow corrupted
-            if (incom::terminal_plot::config::validate_configDB(sqlConn)) {
-                if (auto defScheme = incom::terminal_plot::config::get_lastUsedScheme_exp(sqlConn).transform(
-                        color_schemes::conv_s256s16)) {
-                    return defScheme.value();
-                }
-                else { return std::unexpected(dbErr::notFound); }
-            }
-            else { return std::unexpected(dbErr::dbAppearsCorrupted); }
-        }
-        else { return std::unexpected(dbErr::connectionError); }
+        return incom::terminal_plot::config::create_dbConnection_rw(configPath_exp.value());
     }
     else { return std::unexpected(dbErr::notFound); }
+}
+
+std::expected<incstd::console::color_schemes::scheme16, dbErr> maybeGet_lastUsedScheme_db(
+    sqlpp::sqlite3::connection &dbConn) {
+    if (incom::terminal_plot::config::validate_configDB(dbConn)) {
+        if (auto defScheme =
+                incom::terminal_plot::config::get_lastUsedScheme_exp(dbConn).transform(color_schemes::conv_s256s16)) {
+            return defScheme.value();
+        }
+        else { return std::unexpected(dbErr::notFound); }
+    }
+    else { return std::unexpected(dbErr::dbAppearsCorrupted); }
     std::unreachable();
 }
 
@@ -233,16 +232,14 @@ std::optional<incstd::console::color_schemes::scheme16> maybeGet_schemeFromTermi
 
 inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string_view &appName,
                                                  const std::string_view &configFileName) {
-    // auto maybeDefault = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
-    //     // Requesting default colors
-    //     if (ap.get<bool>("-d")) { return get_defaultColScheme16(); }
-    //     else { return std::nullopt; }
-    // };
-    // auto maybeMonochrome = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
-    //     // Requesting monochrome mode
-    //     if (ap.get<bool>("-m")) { return get_monochromeColScheme16(); }
-    //     else { return std::nullopt; }
-    // };
+
+    // Integrated themes handling
+    if (ap.get<bool>("-d")) { return get_defaultColScheme16(); }
+    else if (ap.get<bool>("-m")) { return get_monochromeColScheme16(); }
+
+    else if (auto schm_name = ap.get<std::string>("-l"); schm_name == "") {}
+
+
     auto maybeGetSchemeFromTerminal = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
         incstd::console::color_schemes::scheme16 res;
         for (size_t id = 0; id < std::tuple_size_v<decltype(res.palette)>; ++id) {
@@ -269,8 +266,9 @@ inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const 
         return res;
     };
 
+    auto dbConn = maybeGet_configConnection(appName, configFileName);
 
-    if (auto res = maybeGet_lastUsedScheme_db(appName, configFileName)) {
+    if (auto res = dbConn.and_then(maybeGet_lastUsedScheme_db)) {
         auto exp = validate_terminalPaletteSameness(3, res.value().palette);
         if (exp.has_value() && exp.value() == true) { return res.value(); }
         else if (exp.has_value() && exp.value() == false) {
@@ -284,7 +282,8 @@ inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const 
         else { return res.value(); }
     }
 
-    else { return res.value_or(color_schemes::defaultScheme16); }
+    else {
+        return res.value_or(color_schemes::defaultScheme16); }
 }
 
 
