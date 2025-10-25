@@ -38,6 +38,8 @@ constexpr uint32_t         encode_color(inccol::inc_sRGB const &srgb);
 
 
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
+                                                                            const inccol::palette16 &against);
+std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
                                                                             const inccol::palette256 &against);
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(
     std::vector<std::uint8_t> colorIDs_toValidate, const inccol::palette256 &against);
