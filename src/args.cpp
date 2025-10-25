@@ -21,6 +21,67 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
     }
     DesiredPlot::DP_CtorStruct nonDifferentiated;
 
+    auto schemeGetter = [&]() -> void {
+        auto setSchemeFromTerm = [&]() -> bool {
+            auto schm_opt = config::maybeGet_schemeFromTerminal();
+            if (schm_opt) {
+                // Use the scheme obtained from the terminal
+                nonDifferentiated.colScheme     = schm_opt.value();
+                nonDifferentiated.forceRGB_bool = false;
+            }
+            else {
+                // Also can't get scheme out of terminal using ANSI control sequences
+                // Must revert to default
+                nonDifferentiated.colScheme     = config::default_scheme16;
+                nonDifferentiated.forceRGB_bool = true;
+            }
+            return not(nonDifferentiated.forceRGB_bool.value());
+        };
+        auto dbConn = config::maybeGet_configConnection(config::appName, config::configFileName);
+        if (dbConn.has_value()) {
+            if (inout_ap.is_used("-l")) {
+                // Path of explicitly specified theme
+                auto schm_name = inout_ap.get<std::string>("-l");
+            }
+            else {
+                // Path of 'pure default'
+                auto lus_exp = config::maybeGet_lastUsedScheme_db(dbConn.value());
+                if (lus_exp) {
+                    auto validated = config::validate_terminalPaletteSameness(std::uint8_t(3), lus_exp.value().palette);
+                    if (not validated.has_value()) {
+                        // Can't validate beacuse can't get color information out of terminal
+                        // Must use the 'unvalidated' scheme from the config
+                        nonDifferentiated.colScheme     = lus_exp.value();
+                        nonDifferentiated.forceRGB_bool = true;
+                    }
+                    else {
+                        if (validated.value()) {
+                            // HAPPY PATH
+                            nonDifferentiated.colScheme     = lus_exp.value();
+                            nonDifferentiated.forceRGB_bool = false;
+                        }
+                        else {
+                            // Validation result == false
+                            // Need to take the scheme from the terminal, use it and then insert/update the default in
+                            // the configDB
+                            if (setSchemeFromTerm()) {
+                                // Code for updating the default scheme in the configDB goes here
+                            };
+                        }
+                    }
+                }
+                else {
+                    // Can't reach configDB or it is otherwise somehow corrupted
+                    if (setSchemeFromTerm()) {};
+                }
+            }
+        }
+        else {
+            // Path of 'noDB' available
+            setSchemeFromTerm();
+        }
+    };
+
     if (auto wdt = inout_ap.present<int>("-w")) { nonDifferentiated.tar_width = wdt.value(); }
     if (auto hgt = inout_ap.present<int>("-t")) { nonDifferentiated.tar_height = hgt.value(); }
     if (auto stddev = inout_ap.present<int>("-e")) {
@@ -45,80 +106,7 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
         nonDifferentiated.colScheme     = color_schemes::other_sources::monochrome;
         nonDifferentiated.forceRGB_bool = true;
     }
-    else {
-        auto dbConn = config::maybeGet_configConnection(config::appName, config::configFileName);
-        if (dbConn.has_value()) {
-            if (inout_ap.is_used("-l")) {
-                // Path of explicitly specified theme
-                auto schm_name = inout_ap.get<std::string>("-l");
-            }
-            else {
-                // Path of 'pure default'
-                auto lus_exp = config::maybeGet_lastUsedScheme_db(dbConn.value());
-                if (lus_exp) {
-                    auto validated = config::validate_terminalPaletteSameness(std::uint8_t(3), lus_exp.value().palette);
-                    if (not validated.has_value()) {
-                        // Can't validate beacuse can't get color information out of terminal
-                        // Must use the 'unvalidated' scheme from the config
-                        nonDifferentiated.colScheme     = lus_exp.value();
-                        nonDifferentiated.forceRGB_bool = true;
-                    }
-                    else {
-                        if (validated.value()) {
-                            nonDifferentiated.colScheme     = lus_exp.value();
-                            nonDifferentiated.forceRGB_bool = false;
-                        }
-                        else {
-                            // Validation result == false
-                            // Need to take the scheme from the terminal, use it and then insert/update the default in
-                            // the configDB
-                            auto schm_opt = config::maybeGet_schemeFromTerminal();
-                            if (schm_opt) {
-                                // Use the scheme obtained from the terminal
-                                nonDifferentiated.colScheme     = schm_opt.value();
-                                nonDifferentiated.forceRGB_bool = false;
-                            }
-                            else {
-                                // Also can't get scheme out of terminal using ANSI control sequences
-                                // Must revert to default
-                                nonDifferentiated.colScheme     = config::default_scheme16;
-                                nonDifferentiated.forceRGB_bool = true;
-                            }
-                        }
-                    }
-                }
-                else {
-                    // Can't reach configDB or it is otherwise somehow corrupted
-                    auto schm_opt = config::maybeGet_schemeFromTerminal();
-                    if (schm_opt) {
-                        // Use the scheme obtained from the terminal
-                        nonDifferentiated.colScheme     = schm_opt.value();
-                        nonDifferentiated.forceRGB_bool = false;
-                    }
-                    else {
-                        // Also can't get scheme out of terminal using ANSI control sequences
-                        // Must revert to default
-                        nonDifferentiated.colScheme     = config::default_scheme16;
-                        nonDifferentiated.forceRGB_bool = true;
-                    }
-                }
-            }
-        }
-        else {
-            // Path of 'noDB' available
-            auto schm_opt               = config::maybeGet_schemeFromTerminal();
-            nonDifferentiated.colScheme = schm_opt.value_or(config::get_defaultColScheme16());
-            if (schm_opt) {
-                nonDifferentiated.forceRGB_bool = true;
-                // Config DB conn not available, falling back to using ANSI color scheme currently set in the
-                // terminal
-            }
-            else {
-                // Config DB conn not available and couldn't obtain ANSI color scheme from the terminal ... using
-                // default integrated color scheme
-            }
-        }
-    }
+    else { schemeGetter(); }
     if (inout_ap.get<bool>("-r")) { nonDifferentiated.forceRGB_bool = true; }
 
     std::vector<DesiredPlot::DP_CtorStruct> res;
