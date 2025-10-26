@@ -118,7 +118,7 @@ bool validate_configDB(sqlpp::sqlite3::connection &db) {
 }
 
 
-std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme_exp(sqlpp::sqlite3::connection &db) {
+std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme(sqlpp::sqlite3::connection &db) {
     inccons::color_schemes::scheme256 res{};
     using namespace sqltables;
 
@@ -181,7 +181,7 @@ inccons::color_schemes::scheme16 get_monochromeColScheme16() {
     return color_schemes::other_sources::monochrome;
 }
 
-std::expected<sqlpp::sqlite3::connection, dbErr> maybeGet_configConnection(const std::string_view &appName,
+std::expected<sqlpp::sqlite3::connection, dbErr> get_configConnection(const std::string_view &appName,
                                                                            const std::string_view &configFileName) {
     auto configPath_exp = incstd::filesys::find_configFile(std::string(appName), std::string(configFileName));
     if (configPath_exp.has_value()) {
@@ -191,11 +191,11 @@ std::expected<sqlpp::sqlite3::connection, dbErr> maybeGet_configConnection(const
     else { return std::unexpected(dbErr::notFound); }
 }
 
-std::expected<incstd::console::color_schemes::scheme16, dbErr> maybeGet_lastUsedScheme_db(
+std::expected<incstd::console::color_schemes::scheme16, dbErr> get_lastUsedScheme_db(
     sqlpp::sqlite3::connection &dbConn) {
     if (incom::terminal_plot::config::validate_configDB(dbConn)) {
         if (auto defScheme =
-                incom::terminal_plot::config::get_lastUsedScheme_exp(dbConn).transform(color_schemes::conv_s256s16)) {
+                incom::terminal_plot::config::get_lastUsedScheme(dbConn).transform(color_schemes::conv_s256s16)) {
             return defScheme.value();
         }
         else { return std::unexpected(dbErr::notFound); }
@@ -204,7 +204,7 @@ std::expected<incstd::console::color_schemes::scheme16, dbErr> maybeGet_lastUsed
     std::unreachable();
 }
 
-std::optional<incstd::console::color_schemes::scheme16> maybeGet_schemeFromTerminal() {
+std::optional<incstd::console::color_schemes::scheme16> get_schemeFromTerminal() {
     incstd::console::color_schemes::scheme16 res;
     for (size_t id = 0; id < std::tuple_size_v<decltype(res.palette)>; ++id) {
         auto queryRes = inccons::ColorQuery::get_paletteIdx(id);
@@ -229,62 +229,6 @@ std::optional<incstd::console::color_schemes::scheme16> maybeGet_schemeFromTermi
     res.selection = res.cursor;
     return res;
 };
-
-inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string_view &appName,
-                                                 const std::string_view &configFileName) {
-
-    // Integrated themes handling
-    if (ap.get<bool>("-d")) { return get_defaultColScheme16(); }
-    else if (ap.get<bool>("-m")) { return get_monochromeColScheme16(); }
-
-    else if (auto schm_name = ap.get<std::string>("-l"); schm_name == "") {}
-
-
-    auto maybeGetSchemeFromTerminal = [&]() -> std::optional<incstd::console::color_schemes::scheme16> {
-        incstd::console::color_schemes::scheme16 res;
-        for (size_t id = 0; id < std::tuple_size_v<decltype(res.palette)>; ++id) {
-            auto queryRes = inccons::ColorQuery::get_paletteIdx(id);
-            if (queryRes.has_value()) { res.palette[id] = std::move(queryRes.value()); }
-            else { return std::nullopt; } // Aborts if cannot obtain any of the colors
-        }
-
-        // Does not abort if can't get foreground, background, cursor ... uses colors from scheme16 above instead
-        auto queryRes = inccons::ColorQuery::get_foreground();
-        if (queryRes.has_value()) { res.foreground = std::move(queryRes.value()); }
-        else { res.foreground = res.palette.at(static_cast<int>(ANSI_Color16::Bright_White)); }
-
-        queryRes = inccons::ColorQuery::get_background();
-        if (queryRes.has_value()) { res.backgrond = std::move(queryRes.value()); }
-        else { res.backgrond = res.palette.at(static_cast<int>(ANSI_Color16::Black)); }
-
-        queryRes = inccons::ColorQuery::get_cursorCol();
-        if (queryRes.has_value()) { res.cursor = std::move(queryRes.value()); }
-        else { res.cursor = res.palette.at(static_cast<int>(ANSI_Color16::Bright_White)); }
-
-        // Can't query selection color (to my knowledge)
-        res.selection = res.cursor;
-        return res;
-    };
-
-    auto dbConn = maybeGet_configConnection(appName, configFileName);
-
-    if (auto res = dbConn.and_then(maybeGet_lastUsedScheme_db)) {
-        auto exp = validate_terminalPaletteSameness(3, res.value().palette);
-        if (exp.has_value() && exp.value() == true) { return res.value(); }
-        else if (exp.has_value() && exp.value() == false) {
-            auto termScheme = maybeGetSchemeFromTerminal();
-            if (termScheme) {
-                // But also here we should update the scheme in the db to the termScheme
-                return termScheme.value();
-            }
-            else { return res.value(); }
-        }
-        else { return res.value(); }
-    }
-
-    else {
-        return res.value_or(color_schemes::defaultScheme16); }
-}
 
 
 } // namespace incom::terminal_plot::config

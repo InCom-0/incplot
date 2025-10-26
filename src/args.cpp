@@ -1,3 +1,5 @@
+#include "sqlitedefs.hpp"
+#include "sqlpp23/core/clause/select_column_traits.h"
 #include <optional>
 #include <typeindex>
 
@@ -22,22 +24,22 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
     DesiredPlot::DP_CtorStruct nonDifferentiated;
 
     auto schemeGetter = [&]() -> void {
-        auto setSchemeFromTerm = [&]() -> bool {
-            auto schm_opt = config::maybeGet_schemeFromTerminal();
+        auto setSchemeFromTermOrDefault = [&]() -> bool {
+            auto schm_opt = config::get_schemeFromTerminal();
             if (schm_opt) {
                 // Use the scheme obtained from the terminal
                 nonDifferentiated.colScheme     = schm_opt.value();
                 nonDifferentiated.forceRGB_bool = false;
             }
             else {
-                // Also can't get scheme out of terminal using ANSI control sequences
+                // Can't get scheme out of terminal using ANSI control sequences
                 // Must revert to default
                 nonDifferentiated.colScheme     = config::default_scheme16;
                 nonDifferentiated.forceRGB_bool = true;
             }
             return not(nonDifferentiated.forceRGB_bool.value());
         };
-        auto dbConn = config::maybeGet_configConnection(config::appName, config::configFileName);
+        auto dbConn = config::get_configConnection(config::appName, config::configFileName);
         if (dbConn.has_value()) {
             if (inout_ap.is_used("-l")) {
                 // Path of explicitly specified theme
@@ -45,9 +47,9 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
             }
             else {
                 // Path of 'pure default'
-                auto lus_exp = config::maybeGet_lastUsedScheme_db(dbConn.value());
+                auto lus_exp = config::get_lastUsedScheme_db(dbConn.value());
                 if (lus_exp) {
-                    auto validated = config::validate_terminalPaletteSameness(std::uint8_t(3), lus_exp.value().palette);
+                    auto validated = config::validate_terminalPaletteSameness(3, lus_exp.value().palette);
                     if (not validated.has_value()) {
                         // Can't validate beacuse can't get color information out of terminal
                         // Must use the 'unvalidated' scheme from the config
@@ -62,23 +64,29 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
                         }
                         else {
                             // Validation result == false
-                            // Need to take the scheme from the terminal, use it and then insert/update the default in
-                            // the configDB
-                            if (setSchemeFromTerm()) {
+                            if (setSchemeFromTermOrDefault()) {
+                                auto schemeTable = config::sqltables::Schemes{};
+                                for (auto schmName: dbConn(sqlpp::select(schemeTable.schemeId, schemeTable.name).from(schemeTable).where(schemeTable.name == lus_exp.value()))) {
+                                
+                                }
+
                                 // Code for updating the default scheme in the configDB goes here
-                            };
+                            }
+                            else {
+                                // Ultimate fallback ... 'nothing works' have to use default
+                            }
                         }
                     }
                 }
                 else {
                     // Can't reach configDB or it is otherwise somehow corrupted
-                    if (setSchemeFromTerm()) {};
+                    if (setSchemeFromTermOrDefault()) {};
                 }
             }
         }
         else {
             // Path of 'noDB' available
-            setSchemeFromTerm();
+            setSchemeFromTermOrDefault();
         }
     };
 

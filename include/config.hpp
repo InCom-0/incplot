@@ -45,7 +45,8 @@ std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(
     std::vector<std::uint8_t> colorIDs_toValidate, const inccol::palette256 &against);
 
 std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path const &pathToDb);
-bool        validate_SQLite_tableExistence(sqlpp::sqlite3::connection &db, std::string const &tableName);
+bool validate_SQLite_tableExistence(sqlpp::sqlite3::connection &db, std::string const &tableName);
+
 // Must provide all colName and all colTypes in the right order
 // Otherwise the func will return false
 // template <typename SQLPP23TableInfo_t>
@@ -55,7 +56,7 @@ inline bool validate_SQLite_tableColNamesTypes(sqlpp::sqlite3::connection &db, s
 bool        validate_configDB(sqlpp::sqlite3::connection &db);
 
 
-std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme_exp(sqlpp::sqlite3::connection &db);
+std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme(sqlpp::sqlite3::connection &db);
 std::expected<inccons::color_schemes::scheme16, dbErr>  get_lastUsedScheme16_exp(sqlpp::sqlite3::connection &db);
 std::expected<inccons::color_schemes::scheme256, dbErr> get_lastUsedScheme256_exp(sqlpp::sqlite3::connection &db);
 
@@ -64,14 +65,11 @@ inccons::color_schemes::scheme16  get_defaultColScheme16();
 inccons::color_schemes::scheme256 get_monochromeColScheme256();
 inccons::color_schemes::scheme16  get_monochromeColScheme16();
 
-std::expected<sqlpp::sqlite3::connection, dbErr> maybeGet_configConnection(const std::string_view &appName,
-                                                                           const std::string_view &configFileName);
-std::expected<incstd::console::color_schemes::scheme16, dbErr> maybeGet_lastUsedScheme_db(
+std::expected<sqlpp::sqlite3::connection, dbErr>               get_configConnection(const std::string_view &appName,
+                                                                                    const std::string_view &configFileName);
+std::expected<incstd::console::color_schemes::scheme16, dbErr> get_lastUsedScheme_db(
     sqlpp::sqlite3::connection &dbConn);
 
-inccons::color_schemes::scheme16 get_colorScheme(argparse::ArgumentParser const &ap, const std::string_view &appName,
-                                                 const std::string_view &configFileName);
-
-std::optional<incstd::console::color_schemes::scheme16> maybeGet_schemeFromTerminal();
+std::optional<incstd::console::color_schemes::scheme16> get_schemeFromTerminal();
 
 } // namespace incom::terminal_plot::config

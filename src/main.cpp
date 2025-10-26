@@ -19,10 +19,9 @@ int main(int argc, char *argv[]) {
     incplot::CL_Args::finishAp(ap);
     auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
 
-    auto dbConn = incplot::config::maybeGet_configConnection(incplot::config::appName, incplot::config::configFileName);
+    auto dbConn = incplot::config::get_configConnection(incplot::config::appName, incplot::config::configFileName);
 
-    auto aaa = dbConn.and_then(incplot::config::maybeGet_lastUsedScheme_db);
-    incplot::config::get_colorScheme(ap, incplot::config::appName, incplot::config::configFileName);
+    auto aaa = dbConn.and_then(incplot::config::get_lastUsedScheme_db);
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
@@ -52,11 +51,7 @@ int main(int argc, char *argv[]) {
     }
 
     std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
-    auto              colSchemeToUse2 =
-        incplot::config::get_colorScheme(ap, incplot::config::appName, incplot::config::configFileName);
-    incom::standard::console::set_cocp();
 
-    for (auto &dpctr : dpctrs) { dpctr.colScheme = colSchemeToUse2; }
     for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
     return 0;
 }
