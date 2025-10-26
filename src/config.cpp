@@ -182,7 +182,7 @@ inccons::color_schemes::scheme16 get_monochromeColScheme16() {
 }
 
 std::expected<sqlpp::sqlite3::connection, dbErr> get_configConnection(const std::string_view &appName,
-                                                                           const std::string_view &configFileName) {
+                                                                      const std::string_view &configFileName) {
     auto configPath_exp = incstd::filesys::find_configFile(std::string(appName), std::string(configFileName));
     if (configPath_exp.has_value()) {
         // Must use default 'in code' config since the sqlite config file is unavailable or somehow corrupted
@@ -194,11 +194,7 @@ std::expected<sqlpp::sqlite3::connection, dbErr> get_configConnection(const std:
 std::expected<incstd::console::color_schemes::scheme16, dbErr> get_lastUsedScheme_db(
     sqlpp::sqlite3::connection &dbConn) {
     if (incom::terminal_plot::config::validate_configDB(dbConn)) {
-        if (auto defScheme =
-                incom::terminal_plot::config::get_lastUsedScheme(dbConn).transform(color_schemes::conv_s256s16)) {
-            return defScheme.value();
-        }
-        else { return std::unexpected(dbErr::notFound); }
+        return incom::terminal_plot::config::get_lastUsedScheme(dbConn).transform(color_schemes::conv_s256s16);
     }
     else { return std::unexpected(dbErr::dbAppearsCorrupted); }
     std::unreachable();
