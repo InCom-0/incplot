@@ -39,7 +39,7 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
             }
             return not(nonDifferentiated.forceRGB_bool.value());
         };
-        auto dbConn = config::get_configConnection(config::appName, config::configFileName);
+        auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
         if (dbConn.has_value()) {
             if (inout_ap.is_used("-l")) {
                 // Path of explicitly specified theme
@@ -47,7 +47,7 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
             }
             else {
                 // Path of 'pure default'
-                auto lus_exp = config::get_lastUsedScheme_db(dbConn.value());
+                auto lus_exp = config::db::get_lastUsedScheme16(dbConn.value());
                 if (lus_exp) {
                     auto validated = config::validate_terminalPaletteSameness(3, lus_exp.value().palette);
                     if (not validated.has_value()) {
@@ -66,9 +66,13 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
                             // Validation result == false
                             if (setSchemeFromTermOrDefault()) {
                                 auto schemeTable = config::sqltables::Schemes{};
-                                for (auto schmName: dbConn(sqlpp::select(schemeTable.schemeId, schemeTable.name).from(schemeTable).where(schemeTable.name == lus_exp.value()))) {
-                                
-                                }
+
+                                for (auto const &schmName :
+                                     dbConn.value()(sqlpp::select(schemeTable.schemeId, schemeTable.name)
+                                                        .from(schemeTable)
+                                                        .where(schemeTable.name == lus_exp.value().name))) {
+                                                            
+                                                        }
 
                                 // Code for updating the default scheme in the configDB goes here
                             }

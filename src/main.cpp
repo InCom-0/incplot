@@ -19,9 +19,9 @@ int main(int argc, char *argv[]) {
     incplot::CL_Args::finishAp(ap);
     auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
 
-    auto dbConn = incplot::config::get_configConnection(incplot::config::appName, incplot::config::configFileName);
+    auto dbConn = incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
 
-    auto aaa = dbConn.and_then(incplot::config::get_lastUsedScheme_db);
+    auto aaa = dbConn.and_then(incplot::config::db::get_lastUsedScheme16);
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
