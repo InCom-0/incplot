@@ -1,4 +1,5 @@
 #include "sqlitedefs.hpp"
+#include "sqlpp23/sqlite3/clause/delete_from.h"
 #include "sqlpp23/sqlite3/clause/update.h"
 #include <expected>
 #include <filesystem>
@@ -413,6 +414,37 @@ std::expected<size_t, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &db
     return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
 
+std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, std::string const &name) {
+    using namespace sqltables;
+    Schemes sch{};
+
+    for (size_t id = 0; auto const &row : dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.name == name))) {
+        if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        else if (not row.schemeId.has_value()) { return std::unexpected(dbErr::impossibleValue); }
+
+        dbConn(sqlpp::sqlite3::delete_from(sch).where(sch.schemeId == row.schemeId.value()));
+        return row.schemeId.value();
+    }
+
+    // That is impossible
+    return std::unexpected(dbErr::impossibleNumberOfRecords);
+}
+std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const id) {
+    using namespace sqltables;
+    Schemes sch{};
+
+    for (size_t id = 0; auto const &row : dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.schemeId == id))) {
+        if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        else if (not row.schemeId.has_value()) { return std::unexpected(dbErr::impossibleValue); }
+
+        dbConn(sqlpp::sqlite3::delete_from(sch).where(sch.schemeId == row.schemeId.value()));
+        return id;
+    }
+
+
+    // That is impossible
+    return std::unexpected(dbErr::impossibleNumberOfRecords);
+}
 
 } // namespace db
 
