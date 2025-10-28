@@ -1,7 +1,5 @@
-#include "incstd/console/colorschemes.hpp"
-#include "sqlpp23/core/clause/insert.h"
-#include "sqlpp23/sqlite3/clause/delete_from.h"
-#include "sqlpp23/sqlite3/clause/insert.h"
+#include "sqlitedefs.hpp"
+#include "sqlpp23/sqlite3/clause/update.h"
 #include <expected>
 #include <filesystem>
 
@@ -99,7 +97,7 @@ std::optional<incstd::console::color_schemes::scheme16> get_schemeFromTerminal()
 namespace db {
 namespace detail {
 template <typename T>
-std::expected<T, dbErr> get_lastUsedScheme(sqlpp::sqlite3::connection &db) {
+std::expected<T, dbErr> get_defaultScheme(sqlpp::sqlite3::connection &db) {
     T res{};
     using namespace sqltables;
 
@@ -330,13 +328,13 @@ std::expected<scheme16, dbErr> get_scheme16(sqlpp::sqlite3::connection &dbConn, 
 }
 
 
-std::expected<scheme256, dbErr> get_lastUsedScheme256(sqlpp::sqlite3::connection &dbConn) {
-    if (validate_configDB(dbConn)) { return detail::get_lastUsedScheme<scheme256>(dbConn); }
+std::expected<scheme256, dbErr> get_defaultScheme256(sqlpp::sqlite3::connection &dbConn) {
+    if (validate_configDB(dbConn)) { return detail::get_defaultScheme<scheme256>(dbConn); }
     return std::unexpected(dbErr::dbAppearsCorrupted);
 }
 
-std::expected<scheme16, dbErr> get_lastUsedScheme16(sqlpp::sqlite3::connection &dbConn) {
-    if (validate_configDB(dbConn)) { return detail::get_lastUsedScheme<scheme16>(dbConn); }
+std::expected<scheme16, dbErr> get_defaultScheme16(sqlpp::sqlite3::connection &dbConn) {
+    if (validate_configDB(dbConn)) { return detail::get_defaultScheme<scheme16>(dbConn); }
     return std::unexpected(dbErr::dbAppearsCorrupted);
 }
 
@@ -346,6 +344,73 @@ std::expected<bool, dbErr> upsert_scheme256(sqlpp::sqlite3::connection &dbConn, 
 
 std::expected<bool, dbErr> upsert_scheme16(sqlpp::sqlite3::connection &dbConn, scheme16 const &scheme) {
     return detail::upsert_scheme<scheme16>(dbConn, scheme);
+}
+
+std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, std::string const &name) {
+    using namespace sqltables;
+    Schemes       sch{};
+    DefaultScheme dsch{};
+
+    for (size_t id = 0; auto const &row : dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.name == name))) {
+        if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        else if (not row.schemeId.has_value()) { return std::unexpected(dbErr::impossibleValue); }
+
+        dbConn(sqlpp::sqlite3::update(dsch).set(dsch.schemeId = row.schemeId.value()).where(true));
+        return row.schemeId.value();
+    }
+    // If the above for loop does not run at all that means there are 0 records in the DefaultScheme table
+    // That is impossible
+    return std::unexpected(dbErr::impossibleNumberOfRecords);
+}
+std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, size_t const id) {
+    using namespace sqltables;
+    Schemes       sch{};
+    DefaultScheme dsch{};
+
+    for (size_t id = 0; auto const &row : dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.schemeId == id))) {
+        if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        else if (not row.schemeId.has_value()) { return std::unexpected(dbErr::impossibleValue); }
+
+        dbConn(sqlpp::sqlite3::update(dsch).set(dsch.schemeId = id).where(true));
+        return id;
+    }
+
+    // If the above for loop does not run at all that means there are 0 records in the DefaultScheme table
+    // That is impossible
+    return std::unexpected(dbErr::notFound);
+}
+
+std::expected<bool, dbErr> clear_defaultScheme(sqlpp::sqlite3::connection &dbConn) {
+    using namespace sqltables;
+
+    DefaultScheme ds{};
+    bool          res = false;
+    for (size_t j = 0; auto const &defSchm : dbConn(sqlpp::select(ds.id, ds.schemeId).from(ds).where(true))) {
+        if (j++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        res = defSchm.schemeId.has_value();
+        dbConn(sqlpp::sqlite3::update(ds).set(ds.schemeId = std::nullopt).where(true));
+        return res;
+    }
+
+    // If the above for loop does not run at all that means there are 0 records in the DefaultScheme table
+    // That is impossible
+    return std::unexpected(dbErr::impossibleNumberOfRecords);
+}
+
+std::expected<size_t, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &dbConn) {
+    using namespace sqltables;
+
+    DefaultScheme ds{};
+    Schemes       sch{};
+    for (size_t j = 0; auto const &defSchm : dbConn(sqlpp::select(ds.id, ds.schemeId).from(ds).where(true))) {
+        if (j++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        else if (not defSchm.schemeId.has_value()) { return std::unexpected(dbErr::missingData); }
+        dbConn(sqlpp::sqlite3::delete_from(sch).where(sch.schemeId == defSchm.schemeId.value()));
+    }
+
+    // If the above for loop does not run at all that means there are 0 records in the DefaultScheme table
+    // That is impossible
+    return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
 
 

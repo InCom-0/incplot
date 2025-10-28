@@ -1,5 +1,3 @@
-#include "sqlitedefs.hpp"
-#include "sqlpp23/core/clause/select_column_traits.h"
 #include <optional>
 #include <typeindex>
 
@@ -47,7 +45,7 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
             }
             else {
                 // Path of 'pure default'
-                auto lus_exp = config::db::get_lastUsedScheme16(dbConn.value());
+                auto lus_exp = config::db::get_defaultScheme16(dbConn.value());
                 if (lus_exp) {
                     auto validated = config::validate_terminalPaletteSameness(3, lus_exp.value().palette);
                     if (not validated.has_value()) {

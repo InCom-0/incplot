@@ -31,6 +31,7 @@ enum class dbErr {
     notFound,
     connectionError,
     dbAppearsCorrupted,
+    missingData,
     unknownError,
 };
 
@@ -73,8 +74,8 @@ std::expected<scheme16, dbErr>  get_scheme16(sqlpp::sqlite3::connection &dbConn,
 std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, std::string const &name);
 std::expected<scheme16, dbErr>  get_scheme16(sqlpp::sqlite3::connection &dbConn, std::string const &name);
 
-std::expected<scheme256, dbErr> get_lastUsedScheme256(sqlpp::sqlite3::connection &dbConn);
-std::expected<scheme16, dbErr>  get_lastUsedScheme16(sqlpp::sqlite3::connection &dbConn);
+std::expected<scheme256, dbErr> get_defaultScheme256(sqlpp::sqlite3::connection &dbConn);
+std::expected<scheme16, dbErr>  get_defaultScheme16(sqlpp::sqlite3::connection &dbConn);
 
 // Bool is whether a scheme of the same name was overwritten (true is overwritten, false if plain insert)
 std::expected<bool, dbErr> upsert_scheme256(sqlpp::sqlite3::connection &dbConn, scheme256 const &scheme);
@@ -84,7 +85,7 @@ std::expected<bool, dbErr> upsert_scheme16(sqlpp::sqlite3::connection &dbConn, s
 std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, std::string const &name);
 std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, size_t const id);
 
-// Bool is true if the default was not set (ie the default scheme was set to NULL)
+// Bool is true if the default was set (ie the default scheme was not set to NULL)
 std::expected<bool, dbErr>   clear_defaultScheme(sqlpp::sqlite3::connection &dbConn);
 // size_t is the ID of the scheme that was deleted (also sets the default scheme to NULL)
 std::expected<size_t, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &dbConn);
