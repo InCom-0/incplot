@@ -140,7 +140,7 @@ std::expected<T, dbErr> get_lastUsedScheme(sqlpp::sqlite3::connection &db) {
     return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
 
-std::expected<long long, dbErr> get_schemeID(sqlpp::sqlite3::connection &db, std::string const &schemeName) {
+std::expected<size_t, dbErr> get_schemeID(sqlpp::sqlite3::connection &db, std::string const &schemeName) {
     using namespace sqltables;
     Schemes sch{};
     for (auto const &schm : db(sqlpp::select(sch.schemeId).from(sch).where(sch.name == schemeName))) {
@@ -150,7 +150,7 @@ std::expected<long long, dbErr> get_schemeID(sqlpp::sqlite3::connection &db, std
 }
 
 template <typename T>
-std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, long long schemeID) {
+std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, size_t schemeID) {
     T res{};
     using namespace sqltables;
 
@@ -192,7 +192,6 @@ std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, long long sch
     // That is impossible
     return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
-
 
 std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path const &pathToDb) {
     auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
@@ -274,10 +273,10 @@ bool validate_SQLite_tableColNamesTypes(sqlpp::sqlite3::connection &db, std::str
 }
 
 
-std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, long long const id) {
+std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, size_t const id) {
     return detail::get_scheme<scheme256>(dbConn, id);
 }
-std::expected<scheme16, dbErr> get_scheme16(sqlpp::sqlite3::connection &dbConn, long long const id) {
+std::expected<scheme16, dbErr> get_scheme16(sqlpp::sqlite3::connection &dbConn, size_t const id) {
     return detail::get_scheme<scheme16>(dbConn, id);
 }
 std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, std::string const &name) {

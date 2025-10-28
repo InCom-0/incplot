@@ -69,8 +69,8 @@ inline bool validate_SQLite_tableColNamesTypes(sqlpp::sqlite3::connection &db, s
                                                std::vector<std::string_view> const &colNames,
                                                std::vector<std::string_view> const &colTypes);
 
-std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, long long const id);
-std::expected<scheme16, dbErr>  get_scheme16(sqlpp::sqlite3::connection &dbConn, long long const id);
+std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, size_t const id);
+std::expected<scheme16, dbErr>  get_scheme16(sqlpp::sqlite3::connection &dbConn, size_t const id);
 
 std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, std::string const &name);
 std::expected<scheme16, dbErr>  get_scheme16(sqlpp::sqlite3::connection &dbConn, std::string const &name);
@@ -82,17 +82,17 @@ std::expected<scheme16, dbErr>  get_lastUsedScheme16(sqlpp::sqlite3::connection 
 std::expected<bool, dbErr> upsert_scheme256(scheme256 const &scheme);
 std::expected<bool, dbErr> upsert_scheme16(scheme16 const &scheme);
 
-// Returned long long is the id of the newly default scheme
-std::expected<long long, dbErr> update_default(std::string const &name);
-std::expected<long long, dbErr> update_default(long long const id);
+// Returned size_t is the id of the newly default scheme
+std::expected<size_t, dbErr> update_default(std::string const &name);
+std::expected<size_t, dbErr> update_default(size_t const id);
 
 // Bool is true if the default was not set (ie the default scheme was set to NULL)
 std::expected<bool, dbErr>      clear_defaultScheme(sqlpp::sqlite3::connection &dbConn);
-// long long is the ID of the scheme that was deleted (also sets the default scheme to NULL)
-std::expected<long long, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &dbConn);
+// size_t is the ID of the scheme that was deleted (also sets the default scheme to NULL)
+std::expected<size_t, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &dbConn);
 
-std::expected<long long, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, std::string const &name);
-std::expected<long long, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, long long const id);
+std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, std::string const &name);
+std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const id);
 
 
 } // namespace db
