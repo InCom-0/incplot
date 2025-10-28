@@ -1,3 +1,7 @@
+#include "incstd/console/colorschemes.hpp"
+#include "sqlpp23/core/clause/insert.h"
+#include "sqlpp23/sqlite3/clause/delete_from.h"
+#include "sqlpp23/sqlite3/clause/insert.h"
 #include <expected>
 #include <filesystem>
 
@@ -193,6 +197,41 @@ std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, size_t scheme
     return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
 
+template <typename T>
+std::expected<bool, dbErr> upsert_scheme(sqlpp::sqlite3::connection &db, T const &scheme) {
+    using namespace sqltables;
+    SchemePalette sp{};
+    Schemes       sch{};
+
+    // Upsert into the 'schemes' table
+    for (size_t i = 0; auto const &schID : db(sqlpp::sqlite3::insert_into(sch)
+                                                  .set(sch.name = (scheme.name.has_value() ? scheme.name.value() : ""),
+               sch.fgColor = encode_color(scheme.foreground), sch.bgColor = encode_color(scheme.backgrond),
+               sch.cursorColor = encode_color(scheme.cursor), sch.selColor = encode_color(scheme.selection))
+                                                  .returning(sch.schemeId)
+                                                  .on_conflict(sch.name)
+                                                  .do_update(sch.fgColor = encode_color(scheme.foreground),
+  sch.bgColor = encode_color(scheme.backgrond), sch.cursorColor = encode_color(scheme.cursor),
+  sch.selColor = encode_color(scheme.selection)))) {
+        if (i++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+
+        // Delete any color associated with the respective schemeID
+        auto delRows = db(sqlpp::sqlite3::delete_from(sp).where(sp.schemeId == schID.schemeId.value())).affected_rows;
+        auto multiInsert = sqlpp::sqlite3::insert_into(sp).columns(sp.schemeId, sp.indexInPalette, sp.color);
+
+        for (size_t idInPal = 0; auto const &palCol : scheme.palette) {
+            multiInsert.add_values(sp.schemeId = schID.schemeId.value(), sp.indexInPalette = idInPal++,
+                                   sp.color = encode_color(palCol));
+        }
+        // Execute multiinsert
+        db(multiInsert);
+        return delRows;
+    }
+
+    // This should be impossible as only reached if the 'schemes' table UPSERT for loop doesn't run at all
+    return std::unexpected(dbErr::unknownError);
+}
+
 std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path const &pathToDb) {
     auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
     connConfig->path_to_database = pathToDb.generic_string();
@@ -299,6 +338,14 @@ std::expected<scheme256, dbErr> get_lastUsedScheme256(sqlpp::sqlite3::connection
 std::expected<scheme16, dbErr> get_lastUsedScheme16(sqlpp::sqlite3::connection &dbConn) {
     if (validate_configDB(dbConn)) { return detail::get_lastUsedScheme<scheme16>(dbConn); }
     return std::unexpected(dbErr::dbAppearsCorrupted);
+}
+
+std::expected<bool, dbErr> upsert_scheme256(sqlpp::sqlite3::connection &dbConn, scheme256 const &scheme) {
+    return detail::upsert_scheme<scheme256>(dbConn, scheme);
+}
+
+std::expected<bool, dbErr> upsert_scheme16(sqlpp::sqlite3::connection &dbConn, scheme16 const &scheme) {
+    return detail::upsert_scheme<scheme16>(dbConn, scheme);
 }
 
 
