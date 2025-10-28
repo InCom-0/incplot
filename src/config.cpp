@@ -330,13 +330,11 @@ std::expected<scheme16, dbErr> get_scheme16(sqlpp::sqlite3::connection &dbConn, 
 
 
 std::expected<scheme256, dbErr> get_defaultScheme256(sqlpp::sqlite3::connection &dbConn) {
-    if (validate_configDB(dbConn)) { return detail::get_defaultScheme<scheme256>(dbConn); }
-    return std::unexpected(dbErr::dbAppearsCorrupted);
+    return detail::get_defaultScheme<scheme256>(dbConn);
 }
 
 std::expected<scheme16, dbErr> get_defaultScheme16(sqlpp::sqlite3::connection &dbConn) {
-    if (validate_configDB(dbConn)) { return detail::get_defaultScheme<scheme16>(dbConn); }
-    return std::unexpected(dbErr::dbAppearsCorrupted);
+    return detail::get_defaultScheme<scheme16>(dbConn);
 }
 
 std::expected<bool, dbErr> upsert_scheme256(sqlpp::sqlite3::connection &dbConn, scheme256 const &scheme) {

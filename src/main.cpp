@@ -21,6 +21,12 @@ int main(int argc, char *argv[]) {
 
     auto dbConn = incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
 
+    if (dbConn) {
+        auto ow = incplot::config::db::upsert_scheme16(dbConn.value(),
+                                                       incom::standard::console::color_schemes::defaultScheme16);
+    }
+
+
     auto aaa = dbConn.and_then(incplot::config::db::get_defaultScheme16);
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
