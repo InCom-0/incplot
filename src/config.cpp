@@ -158,12 +158,10 @@ std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, size_t scheme
     SchemePalette sp{};
     Schemes       sch{};
 
-    
-
-    for (size_t      j = 0;
-         auto const &schm : db(sqlpp::select(sch.schemeId, sch.name, sch.fgColor, sch.bgColor, sch.cursorColor, sch.selColor)
-                                   .from(sch)
-                                   .where(sch.schemeId == schemeID))) {
+    for (size_t j = 0; auto const &schm :
+                       db(sqlpp::select(sch.schemeId, sch.name, sch.fgColor, sch.bgColor, sch.cursorColor, sch.selColor)
+                              .from(sch)
+                              .where(sch.schemeId == static_cast<int>(schemeID)))) {
         if (j++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
         res.name       = schm.name;
         res.foreground = decode_color(static_cast<uint32_t>(schm.fgColor));
@@ -172,7 +170,9 @@ std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, size_t scheme
         res.selection  = decode_color(static_cast<uint32_t>(schm.selColor));
     }
 
-    auto palColors = db(sqlpp::select(sp.schemeId, sp.indexInPalette, sp.color).from(sp).where(sp.schemeId == schemeID));
+    auto palColors = db(sqlpp::select(sp.schemeId, sp.indexInPalette, sp.color)
+                            .from(sp)
+                            .where(sp.schemeId == static_cast<int>(schemeID)));
     for (size_t k = 0; auto const &palCol : palColors) {
         // More than 256 colors => impossible
         if (k >= std::tuple_size<decltype(res.palette)>{}) { break; }
