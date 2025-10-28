@@ -23,9 +23,9 @@ namespace fs      = std::filesystem;
 
 using namespace incstd::console::color_schemes;
 
-inline constexpr color_schemes::scheme16 default_scheme16 = incstd::console::color_schemes::windows_terminal::campbell;
-inline constexpr std::string_view        appName("incplot"sv);
-inline constexpr std::string_view        configFileName("configDB.sqlite"sv);
+inline const color_schemes::scheme16 default_scheme16 = incstd::console::color_schemes::windows_terminal::campbell;
+inline constexpr std::string_view    appName("incplot"sv);
+inline constexpr std::string_view    configFileName("configDB.sqlite"sv);
 
 enum class dbErr {
     impossibleNumberOfRecords = 1,
@@ -87,7 +87,7 @@ std::expected<long long, dbErr> update_default(std::string const &name);
 std::expected<long long, dbErr> update_default(long long const id);
 
 // Bool is true if the default was not set (ie the default scheme was set to NULL)
-std::expected<bool, dbErr>   clear_defaultScheme(sqlpp::sqlite3::connection &dbConn);
+std::expected<bool, dbErr>      clear_defaultScheme(sqlpp::sqlite3::connection &dbConn);
 // long long is the ID of the scheme that was deleted (also sets the default scheme to NULL)
 std::expected<long long, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &dbConn);
 
