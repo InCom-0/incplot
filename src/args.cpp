@@ -1,5 +1,4 @@
 #include <optional>
-#include <print>
 #include <typeindex>
 
 #include <args.hpp>
@@ -54,6 +53,9 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
                         // Must use the 'unvalidated' scheme from the config
                         nonDifferentiated.colScheme     = lus_exp.value();
                         nonDifferentiated.forceRGB_bool = true;
+                        nonDifferentiated.additionalInfo.push_back(
+                            std::string("Error encountered while querying terminal for colors.\nUsing default color "
+                                        "scheme from config."));
                     }
                     else {
                         if (validated.value()) {
@@ -68,6 +70,11 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
                                 auto upsertedSchm =
                                     config::db::upsert_scheme16(dbConn.value(), nonDifferentiated.colScheme);
                             }
+                            else {
+                                nonDifferentiated.additionalInfo.push_back(std::string(
+                                    "Error encountered while querying terminal for colors.\nUsing fall default color "
+                                    "scheme."));
+                            }
                         }
                     }
                 }
@@ -80,16 +87,35 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
                             auto res = config::db::update_default(dbConn.value(), upsertedSchm.value());
                         }
                     }
+                    else {
+                        nonDifferentiated.additionalInfo.push_back(std::string(
+                            "Error encountered while querying terminal for colors.\nUsing fall default color "
+                            "scheme."));
+                    }
                 }
                 else {
                     // Can't reach configDB or it is otherwise somehow corrupted
-                    setSchemeFromTermOrDefault();
+                    nonDifferentiated.additionalInfo.push_back(
+                        std::string("Internal error of incplot config databse, which is probably unfixable by the "
+                                    "user. Incplot will continue to work with limited functionality."));
+                    if (not setSchemeFromTermOrDefault()) {
+                        nonDifferentiated.additionalInfo.push_back(std::string(
+                            "Error encountered while querying terminal for colors.\nUsing fallback default color "
+                            "scheme."));
+                    }
                 }
             }
         }
         else {
-            // Path of 'noDB' available
-            setSchemeFromTermOrDefault();
+            // Path of 'noDB' available or corrupted configDB
+            nonDifferentiated.additionalInfo.push_back(
+                std::string("Incplot config database does not seem to exist on your system or its internal structure "
+                            "is somehow corrupted. Incplot will continue to work with limited functionality."));
+            if (not setSchemeFromTermOrDefault()) {
+                nonDifferentiated.additionalInfo.push_back(
+                    std::string("Error encountered while querying terminal for colors.\nUsing fallback default color "
+                                "scheme."));
+            }
         }
     };
 

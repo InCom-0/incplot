@@ -1,6 +1,5 @@
 #include <expected>
 #include <filesystem>
-#include <print>
 
 #include <config.hpp>
 #include <incstd/core/filesys.hpp>
@@ -105,7 +104,8 @@ std::expected<T, dbErr> get_defaultScheme(sqlpp::sqlite3::connection &db) {
     Schemes       sch{};
 
     for (size_t i = 0; auto const &dsID : db(sqlpp::select(ds.schemeId).from(ds))) {
-        if (i++ != 0 || not dsID.schemeId.has_value()) { return std::unexpected(dbErr::notFound); }
+        if (i++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        if (not dsID.schemeId.has_value()) { return std::unexpected(dbErr::notFound); }
 
         for (size_t      j = 0;
              auto const &schm : db(sqlpp::select(sch.name, sch.fgColor, sch.bgColor, sch.cursorColor, sch.selColor)
@@ -155,26 +155,28 @@ std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, size_t scheme
     T res{};
     using namespace sqltables;
 
-    DefaultScheme ds{};
     SchemePalette sp{};
     Schemes       sch{};
 
-    for (size_t j = 0; auto const &schm :
-                       db(sqlpp::select(sch.schemeId, sch.name, sch.fgColor, sch.bgColor, sch.cursorColor, sch.selColor)
-                              .from(sch)
-                              .where(sch.schemeId == static_cast<int>(schemeID)))) {
-        if (j++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
-        res.name       = schm.name;
-        res.foreground = decode_color(static_cast<uint32_t>(schm.fgColor));
-        res.backgrond  = decode_color(static_cast<uint32_t>(schm.bgColor));
-        res.cursor     = decode_color(static_cast<uint32_t>(schm.cursorColor));
-        res.selection  = decode_color(static_cast<uint32_t>(schm.selColor));
+    {
+        size_t j = 0;
+        for (auto const &schm :
+             db(sqlpp::select(sch.schemeId, sch.name, sch.fgColor, sch.bgColor, sch.cursorColor, sch.selColor)
+                    .from(sch)
+                    .where(sch.schemeId == static_cast<int64_t>(schemeID)))) {
+            if (j++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+            res.name       = schm.name;
+            res.foreground = decode_color(static_cast<uint32_t>(schm.fgColor));
+            res.backgrond  = decode_color(static_cast<uint32_t>(schm.bgColor));
+            res.cursor     = decode_color(static_cast<uint32_t>(schm.cursorColor));
+            res.selection  = decode_color(static_cast<uint32_t>(schm.selColor));
+        }
+        if (j != 1) { return std::unexpected(dbErr::notFound); }
     }
 
-    auto palColors = db(sqlpp::select(sp.schemeId, sp.indexInPalette, sp.color)
-                            .from(sp)
-                            .where(sp.schemeId == static_cast<int>(schemeID)));
-    for (size_t k = 0; auto const &palCol : palColors) {
+    for (size_t k = 0; auto const &palCol : db(sqlpp::select(sp.schemeId, sp.indexInPalette, sp.color)
+                                                   .from(sp)
+                                                   .where(sp.schemeId == static_cast<int64_t>(schemeID)))) {
         // More than 256 colors => impossible
         if (k >= std::tuple_size<decltype(res.palette)>{}) { break; }
         else if (palCol.indexInPalette < 0) { return std::unexpected(dbErr::impossibleValue); }
@@ -217,8 +219,9 @@ std::expected<size_t, dbErr> upsert_scheme(sqlpp::sqlite3::connection &db, T con
         auto multiInsert = sqlpp::sqlite3::insert_into(sp).columns(sp.schemeId, sp.indexInPalette, sp.color);
 
         for (size_t idInPal = 0; auto const &palCol : scheme.palette) {
-            multiInsert.add_values(sp.schemeId = schID.schemeId.value(), sp.indexInPalette = idInPal++,
-                                   sp.color = encode_color(palCol));
+            multiInsert.add_values(sp.schemeId       = schID.schemeId.value(),
+                                   sp.indexInPalette = static_cast<int64_t>(idInPal++),
+                                   sp.color          = encode_color(palCol));
         }
         // Execute multiinsert
         db(multiInsert);
@@ -364,12 +367,13 @@ std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, 
     Schemes       sch{};
     DefaultScheme dsch{};
 
-    for (size_t id = 0; auto const &row :
-                        dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.schemeId == schm_id))) {
+    for (size_t      id = 0;
+         auto const &row :
+         dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.schemeId == static_cast<int64_t>(schm_id)))) {
         if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
         else if (not row.schemeId.has_value()) { return std::unexpected(dbErr::impossibleValue); }
 
-        dbConn(sqlpp::sqlite3::update(dsch).set(dsch.schemeId = schm_id).where(true));
+        dbConn(sqlpp::sqlite3::update(dsch).set(dsch.schemeId = static_cast<int64_t>(schm_id)).where(true));
         return schm_id;
     }
 
@@ -426,16 +430,18 @@ std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, s
     // That is impossible
     return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
-std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const id) {
+std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const schm_id) {
     using namespace sqltables;
     Schemes sch{};
 
-    for (size_t id = 0; auto const &row : dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.schemeId == id))) {
-        if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+    for (size_t      i = 0;
+         auto const &row :
+         dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.schemeId == static_cast<int64_t>(schm_id)))) {
+        if (i++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
         else if (not row.schemeId.has_value()) { return std::unexpected(dbErr::impossibleValue); }
 
         dbConn(sqlpp::sqlite3::delete_from(sch).where(sch.schemeId == row.schemeId.value()));
-        return id;
+        return schm_id;
     }
 
 
