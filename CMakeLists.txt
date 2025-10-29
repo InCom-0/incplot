@@ -78,7 +78,6 @@ add_dependencies(incplot ENSUREAutoFileDeps)
 ########################################################
 ### Install specification (mostly relevant to CPack) ###
 ########################################################
-set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 install(TARGETS incplot RUNTIME DESTINATION .
                         LIBRARY DESTINATION .)
 
