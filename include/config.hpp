@@ -77,7 +77,7 @@ std::expected<scheme16, dbErr>  get_scheme16(sqlpp::sqlite3::connection &dbConn,
 std::expected<scheme256, dbErr> get_defaultScheme256(sqlpp::sqlite3::connection &dbConn);
 std::expected<scheme16, dbErr>  get_defaultScheme16(sqlpp::sqlite3::connection &dbConn);
 
-// Bool is whether a scheme of the same name was overwritten (true is overwritten, false if plain insert)
+// size_t is whether a scheme of the same name was overwritten (true is overwritten, false if plain insert)
 std::expected<size_t, dbErr> upsert_scheme256(sqlpp::sqlite3::connection &dbConn, scheme256 const &scheme);
 std::expected<size_t, dbErr> upsert_scheme16(sqlpp::sqlite3::connection &dbConn, scheme16 const &scheme);
 

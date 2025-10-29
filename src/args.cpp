@@ -1,4 +1,5 @@
 #include <optional>
+#include <print>
 #include <typeindex>
 
 #include <args.hpp>
@@ -67,6 +68,16 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
                                 auto upsertedSchm =
                                     config::db::upsert_scheme16(dbConn.value(), nonDifferentiated.colScheme);
                             }
+                        }
+                    }
+                }
+                else if (lus_exp.error() == config::dbErr::notFound) {
+                    if (setSchemeFromTermOrDefault()) {
+                        nonDifferentiated.colScheme.name = "__fromTerminalScheme";
+                        auto upsertedSchm = config::db::upsert_scheme16(dbConn.value(), nonDifferentiated.colScheme);
+
+                        if (upsertedSchm) {
+                            auto res = config::db::update_default(dbConn.value(), upsertedSchm.value());
                         }
                     }
                 }

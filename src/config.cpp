@@ -1,8 +1,6 @@
-#include "sqlitedefs.hpp"
-#include "sqlpp23/sqlite3/clause/delete_from.h"
-#include "sqlpp23/sqlite3/clause/update.h"
 #include <expected>
 #include <filesystem>
+#include <print>
 
 #include <config.hpp>
 #include <incstd/core/filesys.hpp>
@@ -107,7 +105,7 @@ std::expected<T, dbErr> get_defaultScheme(sqlpp::sqlite3::connection &db) {
     Schemes       sch{};
 
     for (size_t i = 0; auto const &dsID : db(sqlpp::select(ds.schemeId).from(ds))) {
-        if (i++ != 0 || not dsID.schemeId.has_value()) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        if (i++ != 0 || not dsID.schemeId.has_value()) { return std::unexpected(dbErr::notFound); }
 
         for (size_t      j = 0;
              auto const &schm : db(sqlpp::select(sch.name, sch.fgColor, sch.bgColor, sch.cursorColor, sch.selColor)
@@ -361,17 +359,18 @@ std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, 
     // That is impossible
     return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
-std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, size_t const id) {
+std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, size_t const schm_id) {
     using namespace sqltables;
     Schemes       sch{};
     DefaultScheme dsch{};
 
-    for (size_t id = 0; auto const &row : dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.schemeId == id))) {
+    for (size_t id = 0; auto const &row :
+                        dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.schemeId == schm_id))) {
         if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
         else if (not row.schemeId.has_value()) { return std::unexpected(dbErr::impossibleValue); }
 
-        dbConn(sqlpp::sqlite3::update(dsch).set(dsch.schemeId = id).where(true));
-        return id;
+        dbConn(sqlpp::sqlite3::update(dsch).set(dsch.schemeId = schm_id).where(true));
+        return schm_id;
     }
 
     // If the above for loop does not run at all that means there are 0 records in the DefaultScheme table

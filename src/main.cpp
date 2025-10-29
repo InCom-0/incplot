@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
                    "... exiting");
         std::exit(1);
     }
-
     std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
 
     argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
