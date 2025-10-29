@@ -13,22 +13,6 @@ using namespace std::literals;
 
 
 int main(int argc, char *argv[]) {
-
-    argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
-                                argparse::default_arguments::all);
-    incplot::CL_Args::finishAp(ap);
-    auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
-
-    auto dbConn = incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
-
-    if (dbConn) {
-        auto ow = incplot::config::db::upsert_scheme16(dbConn.value(),
-                                                       incom::standard::console::color_schemes::defaultScheme16);
-    }
-
-
-    auto aaa = dbConn.and_then(incplot::config::db::get_defaultScheme16);
-
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
         std::print("{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",
@@ -36,6 +20,13 @@ int main(int argc, char *argv[]) {
                    "... exiting");
         std::exit(1);
     }
+
+    std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
+
+    argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
+                                argparse::default_arguments::all);
+    incplot::CL_Args::finishAp(ap);
+    auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
 
     // STDOUT IS NOT IN TERMINAL
     if (not incom::standard::console::is_stdout_inTerminal()) {
@@ -56,7 +47,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
+    incom::standard::console::set_cocp();
 
     for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
     return 0;

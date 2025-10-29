@@ -38,7 +38,7 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
             return not(nonDifferentiated.forceRGB_bool.value());
         };
         auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
-        if (dbConn.has_value()) {
+        if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
             if (inout_ap.is_used("-l")) {
                 // Path of explicitly specified theme
                 auto schm_name = inout_ap.get<std::string>("-l");
@@ -63,26 +63,16 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
                         else {
                             // Validation result == false
                             if (setSchemeFromTermOrDefault()) {
-                                auto schemeTable = config::sqltables::Schemes{};
-
-                                for (auto const &schmName :
-                                     dbConn.value()(sqlpp::select(schemeTable.schemeId, schemeTable.name)
-                                                        .from(schemeTable)
-                                                        .where(schemeTable.name == lus_exp.value().name))) {
-                                                            
-                                                        }
-
-                                // Code for updating the default scheme in the configDB goes here
-                            }
-                            else {
-                                // Ultimate fallback ... 'nothing works' have to use default
+                                nonDifferentiated.colScheme.name = "__fromTerminalScheme";
+                                auto upsertedSchm =
+                                    config::db::upsert_scheme16(dbConn.value(), nonDifferentiated.colScheme);
                             }
                         }
                     }
                 }
                 else {
                     // Can't reach configDB or it is otherwise somehow corrupted
-                    if (setSchemeFromTermOrDefault()) {};
+                    setSchemeFromTermOrDefault();
                 }
             }
         }

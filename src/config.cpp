@@ -197,7 +197,7 @@ std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, size_t scheme
 }
 
 template <typename T>
-std::expected<bool, dbErr> upsert_scheme(sqlpp::sqlite3::connection &db, T const &scheme) {
+std::expected<size_t, dbErr> upsert_scheme(sqlpp::sqlite3::connection &db, T const &scheme) {
     using namespace sqltables;
     SchemePalette sp{};
     Schemes       sch{};
@@ -224,7 +224,7 @@ std::expected<bool, dbErr> upsert_scheme(sqlpp::sqlite3::connection &db, T const
         }
         // Execute multiinsert
         db(multiInsert);
-        return delRows;
+        return schID.schemeId.value();
     }
 
     // This should be impossible as only reached if the 'schemes' table UPSERT for loop doesn't run at all
@@ -337,11 +337,11 @@ std::expected<scheme16, dbErr> get_defaultScheme16(sqlpp::sqlite3::connection &d
     return detail::get_defaultScheme<scheme16>(dbConn);
 }
 
-std::expected<bool, dbErr> upsert_scheme256(sqlpp::sqlite3::connection &dbConn, scheme256 const &scheme) {
+std::expected<size_t, dbErr> upsert_scheme256(sqlpp::sqlite3::connection &dbConn, scheme256 const &scheme) {
     return detail::upsert_scheme<scheme256>(dbConn, scheme);
 }
 
-std::expected<bool, dbErr> upsert_scheme16(sqlpp::sqlite3::connection &dbConn, scheme16 const &scheme) {
+std::expected<size_t, dbErr> upsert_scheme16(sqlpp::sqlite3::connection &dbConn, scheme16 const &scheme) {
     return detail::upsert_scheme<scheme16>(dbConn, scheme);
 }
 
