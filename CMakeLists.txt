@@ -62,6 +62,16 @@ include(CMake_dependencies.cmake) ### Loads and declares the required external l
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse "-lstdc++exp")
 target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
 
+#############################################################
+### Automatic copying certain assets to build directory   ###
+#############################################################
+
+add_custom_command(TARGET incplot POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/data/configDB.sqlite"
+            "$<TARGET_FILE_DIR:incplot>/configDB.sqlite"
+    COMMENT "Copying SQLite database to output directory"
+)
 
 #############################################################
 ### Automatic code generation (for version numbers, etc.) ###
