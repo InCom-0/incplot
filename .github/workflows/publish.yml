@@ -33,13 +33,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: ["windows-2025"]
+        runs-on: [windows-2025, windows-11-arm]
         sys: [windows]
         icon: ['⬜']
         buildenv: [VS2022]
 
         compiler: ["MSVC"]
-        platform: ["x86_64"]
         mode: ["cxx23"]
         build-type: ["Release"]
         target : ["incplot"]
@@ -47,6 +46,10 @@ jobs:
         include:
           - compiler: "MSVC"
             compiler-ver: "19"
+          - runs-on: windows-2025
+            platform: "x86_64"
+          - runs-on: windows-11-arm
+            platform: "arm64"
 
     steps:
     - name: '🧰 Checkout'
