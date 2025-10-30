@@ -1,3 +1,4 @@
+#include <format>
 #include <optional>
 #include <typeindex>
 
@@ -9,16 +10,9 @@
 
 namespace incom {
 namespace terminal_plot {
-std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::ArgumentParser &inout_ap, int argc,
-                                                                  const char *const *argv) {
-    try {
-        inout_ap.parse_args(argc, argv);
-    }
-    catch (const std::exception &err) {
-        std::cerr << err.what() << std::endl;
-        std::cerr << inout_ap;
-        std::exit(1);
-    }
+namespace cl_args {
+std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParser const &ap) {
+
     DesiredPlot::DP_CtorStruct nonDifferentiated;
 
     auto schemeGetter = [&]() -> void {
@@ -39,9 +33,29 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
         };
         auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
         if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
-            if (inout_ap.is_used("-l")) {
+            if (ap.is_used("-l")) {
                 // Path of explicitly specified theme
-                auto schm_name = inout_ap.get<std::string>("-l");
+                auto schm_name = ap.get<std::string>("-l");
+                auto schmExp   = config::db::get_scheme16(dbConn.value(), schm_name);
+
+                if (not schmExp.has_value()) {
+                    if (schmExp.error() == config::dbErr::notFound) {
+                        nonDifferentiated.additionalInfo.push_back(
+                            std::format("The specified scheme: '{}' was not found in the config database.", schm_name));
+                    }
+                    else {
+                        nonDifferentiated.additionalInfo.push_back(
+                            std::string("Internal error of incplot config databse, which is probably unfixable by the "
+                                        "user. Incplot will continue to work with limited functionality."));
+                    }
+                    // Set the default scheme
+                    nonDifferentiated.colScheme     = config::default_scheme16;
+                    nonDifferentiated.forceRGB_bool = true;
+                }
+                else {
+                    nonDifferentiated.colScheme     = schmExp.value();
+                    nonDifferentiated.forceRGB_bool = true;
+                }
             }
             else {
                 // Path of 'pure default'
@@ -66,7 +80,7 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
                         else {
                             // Validation result == false
                             if (setSchemeFromTermOrDefault()) {
-                                nonDifferentiated.colScheme.name = "__fromTerminalScheme";
+                                nonDifferentiated.colScheme.name = config::fromTerminalSchemeName;
                                 auto upsertedSchm =
                                     config::db::upsert_scheme16(dbConn.value(), nonDifferentiated.colScheme);
                             }
@@ -119,32 +133,32 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
         }
     };
 
-    if (auto wdt = inout_ap.present<int>("-w")) { nonDifferentiated.tar_width = wdt.value(); }
-    if (auto hgt = inout_ap.present<int>("-t")) { nonDifferentiated.tar_height = hgt.value(); }
-    if (auto stddev = inout_ap.present<int>("-e")) {
+    if (auto wdt = ap.present<int>("-w")) { nonDifferentiated.tar_width = wdt.value(); }
+    if (auto hgt = ap.present<int>("-t")) { nonDifferentiated.tar_height = hgt.value(); }
+    if (auto stddev = ap.present<int>("-e")) {
         if (stddev != 0) { nonDifferentiated.filter_outsideStdDev = stddev.value(); }
         else { nonDifferentiated.filter_outsideStdDev = std::nullopt; }
     }
     else { nonDifferentiated.filter_outsideStdDev = Config::filter_withinStdDevMultiple_default; }
 
 
-    if (auto optVal = inout_ap.present<int>("-x")) { nonDifferentiated.lts_colID = optVal.value(); }
-    if (auto optVal = inout_ap.present<std::vector<int>>("-y")) {
+    if (auto optVal = ap.present<int>("-x")) { nonDifferentiated.lts_colID = optVal.value(); }
+    if (auto optVal = ap.present<std::vector<int>>("-y")) {
         nonDifferentiated.v_colIDs = std::vector<size_t>(optVal.value().begin(), optVal.value().end());
     }
-    if (auto optVal = inout_ap.present<int>("-c")) { nonDifferentiated.c_colID = optVal.value(); }
+    if (auto optVal = ap.present<int>("-c")) { nonDifferentiated.c_colID = optVal.value(); }
 
 
-    if (inout_ap.get<bool>("-d")) {
+    if (ap.get<bool>("-d")) {
         nonDifferentiated.colScheme     = color_schemes::defaultScheme16;
         nonDifferentiated.forceRGB_bool = true;
     }
-    else if (inout_ap.get<bool>("-m")) {
+    else if (ap.get<bool>("-m")) {
         nonDifferentiated.colScheme     = color_schemes::other_sources::monochrome;
         nonDifferentiated.forceRGB_bool = true;
     }
     else { schemeGetter(); }
-    if (inout_ap.get<bool>("-r")) { nonDifferentiated.forceRGB_bool = true; }
+    if (ap.get<bool>("-r")) { nonDifferentiated.forceRGB_bool = true; }
 
     std::vector<DesiredPlot::DP_CtorStruct> res;
     auto                                    addOne = [&](std::optional<std::type_index> const &&sv_opt) {
@@ -152,22 +166,22 @@ std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct(argparse::Argu
         res.back().plot_type_name = sv_opt;
     };
     using namespace incom::standard::typegen;
-    if (inout_ap.get<bool>("-B")) { addOne(get_typeIndex<plot_structures::BarV>()); }
-    if (inout_ap.get<bool>("-S")) { addOne(get_typeIndex<plot_structures::Scatter>()); }
-    if (inout_ap.get<bool>("-L")) { addOne(get_typeIndex<plot_structures::Multiline>()); }
-    if (inout_ap.get<bool>("-V")) { addOne(get_typeIndex<plot_structures::BarVM>()); }
-    if (inout_ap.get<bool>("-H")) { addOne(get_typeIndex<plot_structures::BarHM>()); }
-    if (inout_ap.get<bool>("-T")) { addOne(get_typeIndex<plot_structures::BarHS>()); }
+    if (ap.get<bool>("-B")) { addOne(get_typeIndex<plot_structures::BarV>()); }
+    if (ap.get<bool>("-S")) { addOne(get_typeIndex<plot_structures::Scatter>()); }
+    if (ap.get<bool>("-L")) { addOne(get_typeIndex<plot_structures::Multiline>()); }
+    if (ap.get<bool>("-V")) { addOne(get_typeIndex<plot_structures::BarVM>()); }
+    if (ap.get<bool>("-H")) { addOne(get_typeIndex<plot_structures::BarHM>()); }
+    if (ap.get<bool>("-T")) { addOne(get_typeIndex<plot_structures::BarHS>()); }
     if (res.empty()) { addOne(std::nullopt); }
 
     return res;
 }
 
-std::vector<DesiredPlot::DP_CtorStruct> CL_Args::get_dpCtorStruct() {
+std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct() {
     return std::vector<DesiredPlot::DP_CtorStruct>{DesiredPlot::DP_CtorStruct{.plot_type_name = std::nullopt}};
 }
 
-void CL_Args::finishAp(argparse::ArgumentParser &out_ap) {
+void finishAp(argparse::ArgumentParser &out_ap) {
     out_ap.add_description(
         "Draw coloured plots using unicode symbols inside terminal.\n\nAutomatically infers what to display and "
         "how based on the shape of the data piped in.\nPipe in data in JSON, JSON Lines, NDJSON, CSV or TSV formats. "
@@ -211,16 +225,26 @@ void CL_Args::finishAp(argparse::ArgumentParser &out_ap) {
         .help("Specify a color scheme by name (the scheme must exist in the config database)")
         .default_value<std::string>("")
         .nargs(1);
-    mex_grp.add_argument("-d", "--default-colors")
-        .help("Draw with [d]efault colors (dimidium theme)")
-        .flag()
-        .nargs(0);
+    mex_grp.add_argument("-d", "--default-colors").help("Draw with [d]efault colors (dimidium theme)").flag().nargs(0);
     mex_grp.add_argument("-m", "--monochrome").help("Draw in [m]onochromatic colors").flag().nargs(0);
+    out_ap.add_argument("-s", "--show-schemes").help("Show all available color [s]chemes and exit").flag().nargs(0);
     out_ap.add_argument("-r", "--force-rgb")
         .help("Always use the RGB SGR way to output colors (virtually never necessary, exists for hypothetical "
               "compatibility reasons only)")
         .flag()
         .nargs(0);
 }
+
+void populateAp(argparse::ArgumentParser &out_ap, int argc, const char *const *argv) {
+    try {
+        out_ap.parse_args(argc, argv);
+    }
+    catch (const std::exception &err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << out_ap;
+        std::exit(1);
+    }
+}
+} // namespace cl_args
 } // namespace terminal_plot
 } // namespace incom

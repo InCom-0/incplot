@@ -7,7 +7,6 @@
 #include <incplot.hpp>
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
-#include <string_view>
 
 using namespace std::literals;
 
@@ -16,8 +15,16 @@ int main(int argc, char *argv[]) {
 
     argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
                                 argparse::default_arguments::all);
-    incplot::CL_Args::finishAp(ap);
-    auto dpctrs = incplot::CL_Args::get_dpCtorStruct(ap, argc, argv);
+    incplot::cl_args::finishAp(ap);
+    incplot::cl_args::populateAp(ap, argc, argv);
+
+    if (ap.get<bool>("-s")) {
+        auto dbCon = incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
+        std::cout << incplot::config::get_showSchemes(dbCon);
+        return 0;
+    }
+
+    auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {

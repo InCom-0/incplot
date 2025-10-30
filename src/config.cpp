@@ -1,9 +1,11 @@
+#include <cstddef>
 #include <expected>
 #include <filesystem>
 
 #include <config.hpp>
 #include <incstd/core/filesys.hpp>
 #include <optional>
+#include <string_view>
 #include <utility>
 
 
@@ -90,7 +92,66 @@ std::optional<incstd::console::color_schemes::scheme16> get_schemeFromTerminal()
     // Can't query selection color (to my knowledge)
     res.selection = res.cursor;
     return res;
-};
+}
+
+std::string get_showScheme(scheme16 const &scheme) {
+    constexpr std::string_view colorBlock = "██"sv;
+    ANSI::SGR_builder          bldr;
+
+    bldr.add_string(scheme.name.value_or(""));
+    bldr.add_string("\n");
+
+    for (size_t i = 0uz; i < 8uz; ++i) { bldr.color_fg(scheme.palette[i]).add_string(colorBlock); }
+    bldr.reset_all();
+    bldr.add_string("\n");
+
+    for (size_t i = 8uz; i < 16uz; ++i) { bldr.color_fg(scheme.palette[i]).add_string(colorBlock); }
+    bldr.reset_all();
+    bldr.add_string("\n");
+
+    bldr.color_fg(scheme.foreground).add_string(colorBlock);
+    bldr.color_fg(scheme.backgrond).add_string(colorBlock);
+    bldr.color_fg(scheme.cursor).add_string(colorBlock);
+    bldr.color_fg(scheme.selection).add_string(colorBlock);
+
+    bldr.reset_all();
+    bldr.add_string("\n");
+
+    return std::move(bldr).get();
+}
+
+std::string get_showInternalSchemes() {
+    return get_showScheme(defaultScheme16).append("\n").append(get_showScheme(other_sources::monochrome));
+}
+std::string get_showCongfigDBSchemes(sqlpp::sqlite3::connection &db) {
+    std::string res;
+    sqltables::Schemes       sch{};
+
+    for (auto const &schm_row : db(sqlpp::select(sch.schemeId, sch.name).from(sch).where(true))) {
+        if (schm_row.name == fromTerminalSchemeName) { continue; }
+        else {
+            auto schm = db::get_scheme16(db, schm_row.schemeId.value());
+            if (not schm.has_value()) { continue; }
+            else {
+                res.append(get_showScheme(schm.value()));
+                res.push_back('\n');
+            }
+        }
+    }
+    return res;
+}
+
+std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, dbErr> &db) {
+    std::string res(1, '\n');
+    res.append("Integrated color schemes:\n");
+    res.append(get_showInternalSchemes());
+
+    if (db.has_value() && config::db::validate_configDB(db.value())) {
+        res.append("\n\n").append("Config database color schemes:\n").append(get_showCongfigDBSchemes(db.value()));
+    }
+    res.append("\n");
+    return res;
+}
 
 namespace db {
 namespace detail {

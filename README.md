@@ -45,7 +45,8 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 * Users can optionally specify some or all arguments in any (sensible) combination
 * Accepts piped in data in [JSON](https://en.wikipedia.org/wiki/JSON), [JSON Lines](https://jsonlines.org/), [NDJSON](https://github.com/ndjson), [CSV](https://en.wikipedia.org/wiki/Comma-separated_values), [TSV](https://en.wikipedia.org/wiki/Tab-separated_values)
 * Blazingly fast
-* Full true color support
+* Powerful coloring support through integrated color schemes
+* Powerful ability to 'grab' currently selected colors/scheme from the user's terminal (if supported by the terminal app) with sensible fallback
 * Automatic but configurable filtering of extreme values
 * Automatic sizing
 * Automatic value labels and scaling with [metric prefixes](https://en.wikipedia.org/wiki/Metric_prefix)

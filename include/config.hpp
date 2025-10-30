@@ -24,6 +24,7 @@ using namespace incstd::console::color_schemes;
 inline const color_schemes::scheme16 default_scheme16 = incstd::console::color_schemes::windows_terminal::campbell;
 inline constexpr std::string_view    appName("incplot"sv);
 inline constexpr std::string_view    configFileName("configDB.sqlite"sv);
+inline constexpr std::string_view    fromTerminalSchemeName("__fromTerminalScheme"sv);
 
 enum class dbErr {
     impossibleNumberOfRecords = 1,
@@ -50,6 +51,11 @@ scheme256 get_monochromeColScheme256();
 scheme16  get_monochromeColScheme16();
 
 std::optional<scheme16> get_schemeFromTerminal();
+
+std::string get_showInternalSchemes();
+std::string get_showCongfigDBSchemes(sqlpp::sqlite3::connection &db);
+
+std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, dbErr> &db);
 
 namespace db {
 

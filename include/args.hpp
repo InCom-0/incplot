@@ -6,13 +6,14 @@
 
 namespace incom {
 namespace terminal_plot {
-struct CL_Args {
+namespace cl_args {
 
-    static std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParser &inout_ap, int argc,
-                                                                    const char *const *argv);
-    static std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct();
+std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParser const &ap);
+std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct();
 
-    static void finishAp(argparse::ArgumentParser &out_ap);
-};
+void finishAp(argparse::ArgumentParser &out_ap);
+void populateAp(argparse::ArgumentParser &out_ap, int argc, const char *const *argv);
+
+}; // namespace cl_args
 } // namespace terminal_plot
 } // namespace incom
