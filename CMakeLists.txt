@@ -9,7 +9,7 @@ endif()
 
 set(INCPLOT_VERSION_MAJOR 0)
 set(INCPLOT_VERSION_MINOR 4)
-set(INCPLOT_VERSION_PATCH 2)
+set(INCPLOT_VERSION_PATCH 3)
 
 
 ########################################################
