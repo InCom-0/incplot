@@ -212,7 +212,7 @@ void CL_Args::finishAp(argparse::ArgumentParser &out_ap) {
         .default_value<std::string>("")
         .nargs(1);
     mex_grp.add_argument("-d", "--default-colors")
-        .help("Draw with [d]efault colors (Windows Terminal Campbell theme)")
+        .help("Draw with [d]efault colors (dimidium theme)")
         .flag()
         .nargs(0);
     mex_grp.add_argument("-m", "--monochrome").help("Draw in [m]onochromatic colors").flag().nargs(0);

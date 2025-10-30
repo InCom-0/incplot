@@ -14,7 +14,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(argparse)
 
-# Get sqlite3
 FetchContent_Declare(
     sqlite3
     GIT_REPOSITORY https://github.com/InCom-0/sqlite3-cmake
