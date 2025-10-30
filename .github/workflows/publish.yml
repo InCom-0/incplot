@@ -359,4 +359,4 @@ jobs:
           echo '```' >> "$RUNNER_TEMP/notes.md"
           cat shasum.txt >> "$RUNNER_TEMP/notes.md"
           echo '```' >> "$RUNNER_TEMP/notes.md"
-          gh release create $TAG_NAME $PRERELEASE --notes-file "$RUNNER_TEMP/notes.md" --title "$INCPLOT_VERSION" --target $GITHUB_SHA incplot_linux_x86_64/* incplot_linux_arm64/* incplot_windows_msvc_x86_64/* incplot_windows_gnu_x86_64/* incplot_macos_arm64/* incplot_macos_x86_64/* shasum.txt
+          gh release create $TAG_NAME $PRERELEASE --notes-file "$RUNNER_TEMP/notes.md" --title "$INCPLOT_VERSION" --target $GITHUB_SHA incplot_linux_x86_64/* incplot_linux_arm64/* incplot_windows_msvc_x86_64/* incplot_windows_msvc_arm64/* incplot_windows_gnu_x86_64/* incplot_macos_arm64/* incplot_macos_x86_64/* shasum.txt
