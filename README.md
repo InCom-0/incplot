@@ -46,7 +46,7 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 * Accepts piped in data in [JSON](https://en.wikipedia.org/wiki/JSON), [JSON Lines](https://jsonlines.org/), [NDJSON](https://github.com/ndjson), [CSV](https://en.wikipedia.org/wiki/Comma-separated_values), [TSV](https://en.wikipedia.org/wiki/Tab-separated_values)
 * Blazingly fast
 * Powerful coloring support through integrated color schemes
-* Powerful ability to 'grab' currently selected colors/scheme from the user's terminal (if supported by the terminal app) with sensible fallback
+* Powerful ability to 'grab' currently used colors/scheme from the user's terminal and use it (if supported by the terminal app) with sensible fallback
 * Automatic but configurable filtering of extreme values
 * Automatic sizing
 * Automatic value labels and scaling with [metric prefixes](https://en.wikipedia.org/wiki/Metric_prefix)
@@ -134,7 +134,7 @@ The common case of having extreme values in the data that would normally prevent
 
 ## Features under consideration ##
 
-* Automatic discovery of terminal colors (usually dubbed 'color theme') ... this would enable matching colors with your existing setup 'out of the box'. However, there are a lot of problems with it both in technically making it work (would require the tool to somehow query the terminal app or the system which is a cross platform nightmare) and in using colors that are not distinct red, green and blue
+* Export/Conversion into HTML. Proper support for this will require solid amount of non-trivial 'font engineering' ...
 
 ## Non-Features ##
 
