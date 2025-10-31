@@ -22,6 +22,14 @@ int main(int argc, char *argv[]) {
     // Set the right character page of the terminal
     incom::standard::console::set_cocp();
 
+    // If the user wants just to display the available schemes we do that and exit
+    if (ap.get<bool>("-s")) {
+        auto dbCon =
+            incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
+        std::cout << incplot::config::get_showSchemes(dbCon);
+        return 0;
+    }
+
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
         std::print("{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",
@@ -32,13 +40,6 @@ int main(int argc, char *argv[]) {
     // Get the input data and store it in std::string
     std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
 
-    // If the user wants just to display the available schemes we do that and exit
-    if (ap.get<bool>("-s")) {
-        auto dbCon =
-            incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
-        std::cout << incplot::config::get_showSchemes(dbCon);
-        return 0;
-    }
 
     // If not the above then we create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
     auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
