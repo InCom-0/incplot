@@ -13,18 +13,14 @@ using namespace std::literals;
 
 int main(int argc, char *argv[]) {
 
+    // Create and populate ArgumentParser
     argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
                                 argparse::default_arguments::all);
     incplot::cl_args::finishAp(ap);
     incplot::cl_args::populateAp(ap, argc, argv);
 
-    if (ap.get<bool>("-s")) {
-        auto dbCon = incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
-        std::cout << incplot::config::get_showSchemes(dbCon);
-        return 0;
-    }
-
-    auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
+    // Set the right character page of the terminal
+    incom::standard::console::set_cocp();
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
@@ -33,6 +29,20 @@ int main(int argc, char *argv[]) {
                    "... exiting");
         std::exit(1);
     }
+    // Get the input data and store it in std::string
+    std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
+
+    // If the user wants just to display the available schemes we do that and exit
+    if (ap.get<bool>("-s")) {
+        auto dbCon =
+            incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
+        std::cout << incplot::config::get_showSchemes(dbCon);
+        return 0;
+    }
+
+    // If not the above then we create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
+    auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
+
 
     // STDOUT IS NOT IN TERMINAL
     if (not incom::standard::console::is_stdout_inTerminal()) {
@@ -53,9 +63,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
-    incom::standard::console::set_cocp();
-
+    // Do the thing ... ie. make all the plots and print them
     for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
     return 0;
 }
