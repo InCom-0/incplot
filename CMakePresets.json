@@ -105,7 +105,8 @@
             "binaryDir": "${sourceDir}/build/",
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "CPM_SOURCE_CACHE": "../.cache/CPM"
             }
         },
         {

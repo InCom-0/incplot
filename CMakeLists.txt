@@ -41,7 +41,7 @@ endif()
 ### Target specification ###
 ########################################################
 add_executable(incplot)
-target_sources(incplot PRIVATE src/main.cpp src/config.cpp src/args.cpp)
+target_sources(incplot PRIVATE src/main.cpp src/config.cpp src/args.cpp src/fontmaker.cpp)
 target_sources(incplot
   PRIVATE
   FILE_SET priv_headers
@@ -60,7 +60,7 @@ target_compile_features(incplot PRIVATE cxx_std_23)
 
 include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CMake's FetchContent.
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse "-lstdc++exp")
-target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
+target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3 incsfntly::incsfntly)
 
 #############################################################
 ### Automatic copying certain assets to build directory   ###

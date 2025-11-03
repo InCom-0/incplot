@@ -8,10 +8,37 @@
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
 
+#include <sfntly/font.h>
+#include <sfntly/font_factory.h>
+
+
 using namespace std::literals;
 
 
 int main(int argc, char *argv[]) {
+
+    // using namespace sfntly;
+    // std::filesystem::path path{"./JetBrainsMonoNerdFont-Regular.ttf"};
+
+
+    // // --- Read entire file into memory
+    // std::ifstream file(path, std::ios::binary | std::ios::ate);
+    // if (! file) { throw std::runtime_error("Cannot open font file"); }
+
+    // const auto size = static_cast<size_t>(file.tellg());
+    // file.seekg(0);
+
+    // std::vector<uint8_t> buffer(size);
+    // file.read(reinterpret_cast<char *>(buffer.data()), size);
+
+    // // --- Let FontFactory parse it
+    // // std::unique_ptr<class Ty>FontArray *fonts = new FontArray;
+    // auto fonts = std::make_unique<FontArray>();
+
+    // auto factory = std::unique_ptr<FontFactory>(FontFactory::GetInstance());
+    // factory->LoadFonts(&buffer, fonts.get());
+    // if (! fonts || fonts->empty()) { throw std::runtime_error("No valid fonts found"); }
+
 
     // Create and populate ArgumentParser
     argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
