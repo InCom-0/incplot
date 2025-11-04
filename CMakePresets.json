@@ -9,14 +9,7 @@
                 "_gcc",
                 "_debug",
                 "MSYS_ucrt_PATH"
-            ],
-            "vendor": {
-                "visualStudio": {
-                    "cmake.debugConfig": {
-                        "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe"
-                    }
-                }
-            }
+            ]
         },
         {
             "name": "MSYS2_ucrt_gcc_Release",
@@ -26,14 +19,27 @@
                 "_gcc",
                 "_release",
                 "MSYS_ucrt_PATH"
-            ],
-            "vendor": {
-                "visualStudio": {
-                    "cmake.debugConfig": {
-                        "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe"
-                    }
-                }
-            }
+            ]
+        },
+        {
+            "name": "MSYS2_ucrt_clang_Debug",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_clang",
+                "_debug",
+                "MSYS_clang64_PATH"
+            ]
+        },
+        {
+            "name": "MSYS2_ucrt_clang_Release",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_clang",
+                "_release",
+                "MSYS_clang64_PATH"
+            ]
         },
         {
             "name": "MSVC_Debug",
@@ -150,6 +156,27 @@
             "hidden": true,
             "environment": {
                 "PATH": "C:/msys64/ucrt64/bin;$penv{PATH}"
+            },
+            "vendor": {
+                "visualStudio": {
+                    "cmake.debugConfig": {
+                        "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe"
+                    }
+                }
+            }
+        },
+        {
+            "name": "MSYS_clang64_PATH",
+            "hidden": true,
+            "environment": {
+                "PATH": "C:/msys64/clang64/bin;$penv{PATH}"
+            },
+            "vendor": {
+                "visualStudio": {
+                    "cmake.debugConfig": {
+                        "miDebuggerPath": "C:/msys64/clang64/bin/gdb.exe"
+                    }
+                }
             }
         }
     ]

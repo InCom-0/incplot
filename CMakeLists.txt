@@ -15,12 +15,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   add_compile_options(/utf-8)
 endif()
 
-# if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # message(STATUS "Detected macOS + GCC: disabling quick_exit support for libstdc++")
-    # add_compile_definitions(_GLIBCXX_HAVE_QUICK_EXIT=0)
-# endif()
-
-
 ########################################################
 ### LTO - try to enable for all dependent targets ###
 ########################################################
@@ -68,8 +62,12 @@ target_sources(incplot
 target_compile_features(incplot PRIVATE cxx_std_23)
 
 include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CMake's FetchContent.
-target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse "-lstdc++exp")
+
+target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse)
 target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3 incsfntly::incsfntly)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  target_link_libraries(incplot PRIVATE "-lstdc++exp")
+endif()
 
 #############################################################
 ### Automatic copying certain assets to build directory   ###
