@@ -206,8 +206,8 @@ jobs:
             platform: "x86_64"
 
           - compiler: "gcc"
-            compiler-ver: "14"
-            cmake-override: "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
+            compiler-ver: "15"
+            cmake-override: "-DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15"
             install:
           # - compiler: "clang"
           #   compiler-ver: "20"
