@@ -72,6 +72,12 @@ add_custom_command(TARGET incplot POST_BUILD
             "$<TARGET_FILE_DIR:incplot>/configDB.sqlite"
     COMMENT "Copying SQLite database to output directory"
 )
+add_custom_command(TARGET incplot POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/data/JetBrainsMonoNerdFont-Regular.ttf"
+            "$<TARGET_FILE_DIR:incplot>/JetBrainsMonoNerdFont-Regular.ttf"
+    COMMENT "Copying JetBrainsMonoNerdFont to output directory"
+)
 
 #############################################################
 ### Automatic code generation (for version numbers, etc.) ###
