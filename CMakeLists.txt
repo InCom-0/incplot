@@ -65,7 +65,9 @@ include(CMake_dependencies.cmake) ### Loads and declares the required external l
 
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse)
 target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3 incsfntly::incsfntly)
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+
+include(cmake/stdlibQuery.cmake)
+if(USING_LIBSTDCXX)
   target_link_libraries(incplot PRIVATE "-lstdc++exp")
 endif()
 

@@ -59,29 +59,41 @@ jobs:
 
 # Based on https://github.com/msys2/setup-msys2/blob/main/examples/cmake.yml
   Windows-MSYS:
-    name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.buildenv}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
+    name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.msystem}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
     runs-on: ${{matrix.runs-on}}
     strategy:
       fail-fast: false
       matrix:
         runs-on: ["windows-2025"]
         sys: [windows]
-        icon: ['🟦']
+        icon: ["🟦"]
 
-        buildenv: [MSYS2]
-        msystem: [ucrt64]
-        compiler: ["gcc", "clang"]
-        build-type: ["Release", "Debug"]
+        buildenv: [msys2]
+        msystem: [ucrt64, clang64]
+        build-type: [Release, Debug]
+        compiler: [gcc, clang]
         platform: ["x86_64"]
-        target : ["all"]
+        target: ["all"]
         cmake-override: [""]
         include:
-          - compiler: "gcc"
-            compiler-ver: "14"
+          - msystem: ucrt64
+            compiler: gcc
+            compiler-ver: 15
             add-to-pacboy: ""
-          - compiler: "clang"
-            compiler-ver: "20"
+
+          - msystem: ucrt64
+            compiler: clang
+            compiler-ver: 21
             add-to-pacboy: "clang:p"
+
+          - msystem: clang64
+            compiler: clang
+            compiler-ver: 21
+            add-to-pacboy: ""
+            
+        exclude:
+          - msystem: clang64
+            compiler: gcc
     
     defaults:
       run:
@@ -127,13 +139,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        icon: ['🟧']
+        icon: ["🟧"]
         sys: [linux]
         runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
-        compiler: ["gcc"]
-        # compiler-ver: ["14"]
-        build-type: ["Release", "Debug"]
-        target : ["all"]
+        compiler: [gcc]
+        # compiler-ver: [15, 21]
+        build-type: [Release, Debug]
+        target: ["all"]
         cmake-override: [""]
 
         include:
@@ -143,46 +155,29 @@ jobs:
             platform: "arm64"
 
           - compiler: "gcc"
+            compiler-setupname: "gcc"
             compiler-ver: "14"
-            install: |
-              sudo apt install gcc-14 g++-14
-              sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 --slave /usr/bin/g++ g++ /usr/bin/g++-14 --slave /usr/bin/gcov gcov /usr/bin/gcov-14
-              sudo update-alternatives --set gcc /usr/bin/gcc-14
 
-          # Temporarily disabled CLANG because libstc++ is not up to date
           # - compiler: "clang"
-          #   compiler-ver: "20"
-          #   install: |
-          #     setup-cpp --compiler llvm-20
+          #   compiler-setupname: "llvm"
+          #   compiler-ver: "21"
 
     steps:
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v5
-      with:
-        submodules: recursive
+      - name: "🧰 Checkout"
+        uses: actions/checkout@v4
 
-    - name: Setup Cpp
-      uses: aminya/setup-cpp@v1
-      with:
-        setup-cpp: true
+      - name: Setup Cpp
+        uses: aminya/setup-cpp@v1
+        with:
+          setup-cpp: true
+          compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
 
+      - name: Configure
+        run: |
+          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
-    - name: Create Build Environment
-      run: |
-        ${{matrix.install}}
-
-    - name: Configure git credentials
-      run: |
-        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Configure
-      run: |
-        cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
-
-    - name: '🚧 Build'
-      run: cmake --build build --target ${{matrix.target}}
+      - name: "🚧 Build"
+        run: cmake --build build --target ${{matrix.target}}
 
 
   macOS:
@@ -191,13 +186,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        icon: ['⬛']
+        icon: ["⬛"]
         sys: [macos]
         runs-on: [macos-15, macos-15-intel]
-        compiler: ["gcc"]
-        # compiler-ver: ["14"]
+        compiler: ["gcc", "clang"]
         build-type: ["Release", "Debug"]
-        target : ["incplot"]
+        target: ["all"]
 
         include:
           - runs-on: macos-15
@@ -206,14 +200,17 @@ jobs:
             platform: "x86_64"
 
           - compiler: "gcc"
+            compiler-setupname: "gcc"
             compiler-ver: "15"
             cmake-override: "-DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15"
-            install:
-          # - compiler: "clang"
-          #   compiler-ver: "20"
-          #   cmake-override: ""
-          #   install: |
-          #     setup-cpp --compiler llvm-20
+
+          - compiler: "clang"
+            compiler-setupname: "llvm"
+            compiler-ver: "21"
+            cmake-override: "-DCMAKE_C_COMPILER=clang \
+             -DCMAKE_CXX_COMPILER=clang++ \
+             -DCMAKE_CXX_FLAGS=\"-stdlib=libc++ -I$(brew --prefix llvm)/include/c++/v1\" \
+             -DCMAKE_EXE_LINKER_FLAGS=\"-stdlib=libc++ -L$(brew --prefix llvm)/lib/c++\""
 
 
     steps:
@@ -226,11 +223,8 @@ jobs:
       uses: aminya/setup-cpp@v1
       with:
         setup-cpp: true
-        compiler: ${{matrix.compiler}}-${{matrix.compiler-ver}}
+        compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
 
-    - name: Create Build Environment
-      run: |
-        ${{matrix.install}}
 
     - name: Configure git credentials
       run: |
