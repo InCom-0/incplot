@@ -60,7 +60,7 @@ public:
     }
 
 
-    static constexpr std::unordered_set<char32_t> extract_codepoints(const std::string_view &utf8) {
+    static std::unordered_set<char32_t> extract_codepoints(const std::string_view &utf8) {
         std::unordered_set<char32_t> result;
         size_t                       i = 0;
         while (i < utf8.size()) {

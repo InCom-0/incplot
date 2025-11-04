@@ -11,6 +11,14 @@ set(INCPLOT_VERSION_MAJOR 0)
 set(INCPLOT_VERSION_MINOR 4)
 set(INCPLOT_VERSION_PATCH 6)
 
+#####################################################################
+### Platform specific hacks (required by by some dependencies) ###
+#####################################################################
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(STATUS "Detected macOS + GCC: disabling quick_exit support for libstdc++")
+    add_compile_definitions(_GLIBCXX_HAVE_QUICK_EXIT=0)
+endif()
+
 
 ########################################################
 ### LTO - try to enable for all dependent targets ###
