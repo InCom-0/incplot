@@ -45,8 +45,11 @@ jobs:
         include:
           - compiler: "MSVC"
             compiler-outputname: "msvc"
+            compiler-ver: 19
+
           # - compiler: "clang-cl"
           #   compiler-outputname: "llvm"
+          
           - runs-on: windows-2025
             platform: "x86_64"
           - runs-on: windows-11-arm
@@ -69,7 +72,7 @@ jobs:
 
     - name: 'Configure'
       shell: bash
-      run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+      run: cmake --preset Win_${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
     - name: '🚧 Build'
       run: cmake --build build --target ${{matrix.target}}
