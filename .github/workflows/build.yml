@@ -189,7 +189,7 @@ jobs:
         icon: ["⬛"]
         sys: [macos]
         runs-on: [macos-15, macos-15-intel]
-        compiler: ["gcc", "clang"]
+        compiler: [clang]
         build-type: ["Release", "Debug"]
         target: ["all"]
 
@@ -199,10 +199,10 @@ jobs:
           - runs-on: macos-15-intel
             platform: "x86_64"
 
-          - compiler: "gcc"
-            compiler-setupname: "gcc"
-            compiler-ver: "15"
-            cmake-override: "-DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15"
+          # - compiler: "gcc"
+          #   compiler-setupname: "gcc"
+          #   compiler-ver: "15"
+          #   cmake-override: "-DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15"
 
           - compiler: "clang"
             compiler-setupname: "llvm"

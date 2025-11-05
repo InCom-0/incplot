@@ -64,7 +64,7 @@ target_compile_features(incplot PRIVATE cxx_std_23)
 include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CMake's FetchContent.
 
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse)
-target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3 incsfntly::incsfntly)
+target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3 sfntly)
 
 include(cmake/stdlibQuery.cmake)
 if(USING_LIBSTDCXX)
