@@ -26,12 +26,18 @@ jobs:
         target : ["all"]
         cmake-override: [""]
         include:
-          # - compiler: "MSVC"
-          #   compiler-ver: "19"
+          - compiler: "MSVC"
+            compiler-ver: "19"
           - runs-on: windows-2025
             platform: "x86_64"
           - runs-on: windows-11-arm
             platform: "arm64"
+
+        # Can't use clang-cl on windows-arm?
+        # Leaving this be for the time being
+        exclude:
+          - runs-on: windows-11-arm
+            compiler: clang-cl
 
     steps:
     - name: '🧰 Checkout'
