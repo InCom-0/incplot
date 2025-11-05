@@ -9,37 +9,15 @@ project(incplot
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 #####################################################################
-### Platform specific hacks ###
+### Platform specific hacks + LTO Check ###
 #####################################################################
 if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
   add_compile_options(/utf-8)
   add_compile_definitions(NOMINMAX)
 endif()
 
-########################################################
-### LTO - try to enable for all dependent targets ###
-########################################################
 include(CheckIPOSupported)
-check_ipo_supported(RESULT result OUTPUT output)
-
-# Enable LTO if supported and only when NOT in debug mode
-if(result)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
-    message(STATUS "LTO is disabled because of Debug build")
-  elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
-    message(STATUS "LTO is disabled on MacOS")
-  else()
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-    message(STATUS "LTO is enabled")
-    # set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-  endif()
-  
-else()
-  message(WARNING "LTO is not supported: ${output}")
-endif()
-
+check_ipo_supported(RESULT INCPLOT_LTO OUTPUT output)
 
 ########################################################
 ### Target specification ###
@@ -71,6 +49,78 @@ include(cmake/stdlibQuery.cmake)
 if(USING_LIBSTDCXX)
   target_link_libraries(incplot PRIVATE "-lstdc++exp")
 endif()
+
+##########################################################################
+### Settings the right options to statically compile when 'Release' ###
+##########################################################################
+
+### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX)
+include(cmake/stdlibQuery.cmake)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    message(STATUS "GCC Compiler")
+    message(STATUS "Using libstdc++")
+    target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
+
+  elseif(CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+      message(STATUS "MSVC Compiler")
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      message(STATUS "Clang-cl Compiler")
+    endif()
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    # set_property(TARGET incplot PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
+    message(STATUS "Clang Compiler")
+    if(APPLE)
+      if(USING_LIBCXX)
+        message(STATUS "Using libc++")
+        target_link_options(incplot PUBLIC -stdlib=libc++)
+      elseif(USING_LIBSTDCXX)
+        message(STATUS "Using libstdc++")
+        target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
+      endif()
+    else()
+      target_link_options(incplot PUBLIC -static)
+      if(USING_LIBCXX)
+        message(STATUS "Using libc++")
+        target_link_options(incplot PUBLIC -stdlib=libc++ -Wl,-Bstatic -lc++ -lc++abi -Wl,-Bdynamic)
+      elseif(USING_LIBSTDCXX)
+        message(STATUS "Using libstdc++")
+        target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
+      endif()
+    endif()
+
+  else()
+    message(WARNING "You are using an unexpected compiler (ie. neither GCC, Clang, AppleClang, MSVC). All bets are off.")
+  endif()
+endif()
+
+
+########################################################
+### LTO - try to enable for all dependent targets ###
+########################################################
+
+# Enable LTO if supported and only when NOT in debug mode
+if(INCPLOT_LTO)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+    message(STATUS "LTO is disabled because of Debug build")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+    message(STATUS "LTO is disabled on MacOS")
+  else()
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    message(STATUS "LTO is enabled")
+    # set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  endif()
+
+else()
+  message(WARNING "LTO is not supported: ${output}")
+endif()
+
 
 #############################################################
 ### Automatic copying certain assets to build directory   ###
