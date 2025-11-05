@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.30...4.0)
 project(incplot)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
-
 set(INCPLOT_VERSION_MAJOR 0)
 set(INCPLOT_VERSION_MINOR 4)
 set(INCPLOT_VERSION_PATCH 6)
@@ -13,6 +12,7 @@ set(INCPLOT_VERSION_PATCH 6)
 #####################################################################
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   add_compile_options(/utf-8)
+  add_compile_definitions(NOMINMAX)
 endif()
 
 ########################################################
