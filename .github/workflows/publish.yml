@@ -37,15 +37,16 @@ jobs:
         sys: [windows]
         icon: ['⬜']
         buildenv: [VS2022]
-
-        compiler: ["MSVC"]
+        compiler: [MSVC]
         mode: ["cxx23"]
         build-type: ["Release"]
         target : ["incplot"]
         cmake-override: [""]
         include:
           - compiler: "MSVC"
-            compiler-ver: "19"
+            compiler-outputname: "msvc"
+          # - compiler: "clang-cl"
+          #   compiler-outputname: "llvm"
           - runs-on: windows-2025
             platform: "x86_64"
           - runs-on: windows-11-arm
@@ -57,7 +58,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: TheMrMilchmann/setup-msvc-dev@v3
+    - uses: TheMrMilchmann/setup-msvc-dev@v4
       with:
         arch: ${{matrix.platform}}
 
@@ -80,9 +81,9 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: ${{matrix.target}}_${{matrix.sys}}_msvc_${{matrix.platform}}
+        name: ${{matrix.target}}_${{matrix.sys}}_${{matrix.compiler-outputname}}_${{matrix.platform}}
         path: |
-          build/${{matrix.target}}_${{matrix.sys}}_msvc_${{matrix.platform}}.zip
+          build/${{matrix.target}}_${{matrix.sys}}_${{matrix.compiler-outputname}}_${{matrix.platform}}.zip
         retention-days: 1
 
 

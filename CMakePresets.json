@@ -2,7 +2,7 @@
     "version": 8,
     "configurePresets": [
         {
-            "name": "MSYS2_ucrt_gcc_Debug",
+            "name": "MSYS2_ucrt64_gcc_Debug",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -12,7 +12,7 @@
             ]
         },
         {
-            "name": "MSYS2_ucrt_gcc_Release",
+            "name": "MSYS2_ucrt64_gcc_Release",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -22,7 +22,7 @@
             ]
         },
         {
-            "name": "MSYS2_ucrt_clang_Debug",
+            "name": "MSYS2_clang64_clang_Debug",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -32,7 +32,7 @@
             ]
         },
         {
-            "name": "MSYS2_ucrt_clang_Release",
+            "name": "MSYS2_clang64_clang_Release",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -42,7 +42,7 @@
             ]
         },
         {
-            "name": "MSVC_Debug",
+            "name": "Win_MSVC_Debug",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -51,7 +51,7 @@
             ]
         },
         {
-            "name": "MSVC_Release",
+            "name": "Win_MSVC_Release",
             "hidden": false,
             "inherits": [
                 "_common",
@@ -60,14 +60,50 @@
             ]
         },
         {
-            "name": "MSVC_Release_TRACY",
+            "name": "Win_MSVC_Release_TRACY",
             "hidden": false,
             "inherits": [
-                "MSVC_Release"
+                "Win_MSVC_Release"
             ],
             "cacheVariables": {
                 "CMAKE_CXX_FLAGS": "-DTRACY_ENABLE -DTRACY_NO_EXIT"
             }
+        },
+        {
+            "name": "Win_clang-cl_Debug",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_windows_clang_cl",
+                "_debug"
+            ]
+        },
+        {
+            "name": "Win_clang-cl_Release",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_windows_clang_cl",
+                "_release"
+            ]
+        },
+        {
+            "name": "Win_clang_Debug",
+            "hidden": true,
+            "inherits": [
+                "_common",
+                "_windows_clang",
+                "_debug"
+            ]
+        },
+        {
+            "name": "Win_clang_Release",
+            "hidden": true,
+            "inherits": [
+                "_common",
+                "_windows_clang",
+                "_release"
+            ]
         },
         {
             "name": "gcc_Debug",
@@ -150,6 +186,20 @@
             "name": "_MSVC",
             "hidden": true,
             "toolchainFile": "cmake/toolchain/Windows.MSVC.toolchain.cmake"
+        },
+        {
+            "name": "_windows_clang",
+            "hidden": true,
+            "toolchainFile": "cmake/toolchain/Windows.Clang.toolchain.cmake"
+        },
+        {
+            "name": "_windows_clang_cl",
+            "hidden": true,
+            "toolchainFile": "cmake/toolchain/Windows.Clang.toolchain.cmake",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER_FRONTEND_VARIANT": "MSVC",
+                "CMAKE_CXX_COMPILER_FRONTEND_VARIANT": "MSVC"
+            }
         },
         {
             "name": "MSYS_ucrt_PATH",

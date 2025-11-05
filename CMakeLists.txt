@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 3.30...4.0)
 
-project(incplot)
+project(incplot
+  HOMEPAGE_URL "https://github.com/InCom-0/incplot"
+  VERSION "0.4.6"
+  DESCRIPTION
+  "CLI tool for drawing great looking plots in the terminal focused on user ergonomics and simplicity."
+  LANGUAGES CXX)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-
-set(INCPLOT_VERSION_MAJOR 0)
-set(INCPLOT_VERSION_MINOR 4)
-set(INCPLOT_VERSION_PATCH 6)
 
 #####################################################################
 ### Platform specific hacks ###
 #####################################################################
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
   add_compile_options(/utf-8)
   add_compile_definitions(NOMINMAX)
 endif()
@@ -34,7 +35,7 @@ if(result)
     message(STATUS "LTO is enabled")
     # set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
   endif()
-
+  
 else()
   message(WARNING "LTO is not supported: ${output}")
 endif()
@@ -76,16 +77,16 @@ endif()
 #############################################################
 
 add_custom_command(TARGET incplot POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_SOURCE_DIR}/data/configDB.sqlite"
-            "$<TARGET_FILE_DIR:incplot>/configDB.sqlite"
-    COMMENT "Copying SQLite database to output directory"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  "${CMAKE_SOURCE_DIR}/data/configDB.sqlite"
+  "$<TARGET_FILE_DIR:incplot>/configDB.sqlite"
+  COMMENT "Copying SQLite database to output directory"
 )
 add_custom_command(TARGET incplot POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_SOURCE_DIR}/data/JetBrainsMonoNerdFont-Regular.ttf"
-            "$<TARGET_FILE_DIR:incplot>/JetBrainsMonoNerdFont-Regular.ttf"
-    COMMENT "Copying JetBrainsMonoNerdFont to output directory"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  "${CMAKE_SOURCE_DIR}/data/JetBrainsMonoNerdFont-Regular.ttf"
+  "$<TARGET_FILE_DIR:incplot>/JetBrainsMonoNerdFont-Regular.ttf"
+  COMMENT "Copying JetBrainsMonoNerdFont to output directory"
 )
 
 #############################################################
@@ -95,7 +96,7 @@ set(COM_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/auto/versiondef.h)
 
 add_custom_command(
   OUTPUT ${COM_OUTPUT}
-  COMMAND ${CMAKE_COMMAND} -D TOP_DIR=${CMAKE_CURRENT_SOURCE_DIR} -D VER_MAJOR=${INCPLOT_VERSION_MAJOR} -D VER_MINOR=${INCPLOT_VERSION_MINOR} -D VER_PATCH=${INCPLOT_VERSION_PATCH} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/versionUpdate.cmake
+  COMMAND ${CMAKE_COMMAND} -D TOP_DIR=${CMAKE_CURRENT_SOURCE_DIR} -D VER_MAJOR=${PROJECT_VERSION_MAJOR} -D VER_MINOR=${PROJECT_VERSION_MINOR} -D VER_PATCH=${PROJECT_VERSION_PATCH} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/versionUpdate.cmake
   DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
   VERBATIM)

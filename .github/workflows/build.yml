@@ -10,7 +10,7 @@ on:
 jobs:
   
 # Windows-MSVC
-  Windows-MSVC:
+  Windows:
     name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
     runs-on: ${{matrix.runs-on}}
     strategy:
@@ -20,14 +20,14 @@ jobs:
         sys: [windows]
         icon: ['⬜']
         buildenv: [VS2022]
-        compiler: ["MSVC"]
+        compiler: [MSVC, clang-cl]
         mode: ["cxx23"]
         build-type: ["Release", "Debug"]
         target : ["all"]
         cmake-override: [""]
         include:
-          - compiler: "MSVC"
-            compiler-ver: "19"
+          # - compiler: "MSVC"
+          #   compiler-ver: "19"
           - runs-on: windows-2025
             platform: "x86_64"
           - runs-on: windows-11-arm
@@ -39,7 +39,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: TheMrMilchmann/setup-msvc-dev@v3
+    - uses: TheMrMilchmann/setup-msvc-dev@v4
       with:
         arch: ${{matrix.platform}}
         
@@ -51,7 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
     - name: 'Configure'
-      run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+      run: cmake --preset Win_${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
     - name: '🚧 Build'
       run: cmake --build build --target ${{matrix.target}}
