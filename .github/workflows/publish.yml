@@ -89,7 +89,7 @@ jobs:
   # Based on https://github.com/msys2/setup-msys2/blob/main/examples/cmake.yml
   Windows-MSYS:
     needs: setup
-    name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.buildenv}}, ${{matrix.compiler}}-${{matrix.compiler-ver}})
+    name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.msystem}}, ${{matrix.compiler}}-${{matrix.compiler-ver}})
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -156,6 +156,7 @@ jobs:
 
   # Based on https://github.com/tcbrindle/flux/blob/main/.github/workflows/linux.yml
   Linux-Ubuntu:
+    needs: setup
     name: ${{ matrix.icon }} linux (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
     runs-on: ${{matrix.runs-on}}
     strategy:
@@ -166,7 +167,7 @@ jobs:
         runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
         compiler: [gcc]
         # compiler-ver: [15, 21]
-        build-type: [Release, Debug]
+        build-type: [Release]
         target: ["incplot"]
         cmake-override: [""]
 
@@ -228,6 +229,7 @@ jobs:
           printf 'END\n' >> $GITHUB_OUTPUT
 
   macOS:
+    needs: setup
     name: ${{ matrix.icon }} macos (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
     runs-on: ${{ matrix.runs-on }}
     strategy:
@@ -237,7 +239,7 @@ jobs:
         sys: [macos]
         runs-on: [macos-15, macos-15-intel]
         compiler: [clang]
-        build-type: ["Release", "Debug"]
+        build-type: [Release]
         target: ["incplot"]
 
         include:
