@@ -55,8 +55,6 @@ jobs:
     steps:
     - name: '🧰 Checkout'
       uses: actions/checkout@v5
-      with:
-        submodules: recursive
 
     - uses: TheMrMilchmann/setup-msvc-dev@v4
       with:
@@ -118,8 +116,6 @@ jobs:
     steps:
     - name: '🧰 Checkout'
       uses: actions/checkout@v5
-      with:
-        submodules: recursive
 
     - name: '${{ matrix.icon }} Setup MSYS2'
       uses: msys2/setup-msys2@v2.27.0
@@ -160,97 +156,89 @@ jobs:
 
   # Based on https://github.com/tcbrindle/flux/blob/main/.github/workflows/linux.yml
   Linux-Ubuntu:
-    needs: setup
-    name: ${{ matrix.icon }} linux (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}})
-    runs-on: ${{ matrix.runs-on }}
+    name: ${{ matrix.icon }} linux (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
+    runs-on: ${{matrix.runs-on}}
     strategy:
       fail-fast: false
       matrix:
-
-        icon: ['🟧']
+        icon: ["🟧"]
         sys: [linux]
-        runs-on: [ubuntu-latest, ubuntu-24.04-arm]
-        compiler: ["gcc"]
-        build-type: ["Release"]
-        target : ["incplot"]
+        runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
+        compiler: [gcc]
+        # compiler-ver: [15, 21]
+        build-type: [Release, Debug]
+        target: ["incplot"]
         cmake-override: [""]
+
         include:
-          - runs-on: ubuntu-latest
-            compiler: "gcc"
+          - runs-on: ubuntu-24.04
             platform: "x86_64"
-            compiler-ver: "14"
-            cxx: g++-14
-            install: |
-              sudo apt install gcc-14 g++-14
-              sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 --slave /usr/bin/g++ g++ /usr/bin/g++-14 --slave /usr/bin/gcov gcov /usr/bin/gcov-14
-              sudo update-alternatives --set gcc /usr/bin/gcc-14
           - runs-on: ubuntu-24.04-arm
-            compiler: "gcc"
             platform: "arm64"
+
+          - compiler: "gcc"
+            compiler-setupname: "gcc"
             compiler-ver: "14"
-            cxx: g++-14
-            install: |
-              sudo apt install gcc-14 g++-14
-              sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 --slave /usr/bin/g++ g++ /usr/bin/g++-14 --slave /usr/bin/gcov gcov /usr/bin/gcov-14
-              sudo update-alternatives --set gcc /usr/bin/gcc-14
+
+          # - compiler: "clang"
+          #   compiler-setupname: "llvm"
+          #   compiler-ver: "21"
 
     outputs:
       version: ${{ steps.build.outputs.version }}
-      
+
     steps:
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v5
-      with:
-        submodules: recursive
+      - name: "🧰 Checkout"
+        uses: actions/checkout@v5
 
-    - name: Create Build Environment
-      run: |
-        ${{matrix.install}}
+      - name: Setup Cpp
+        uses: aminya/setup-cpp@v1
+        with:
+          setup-cpp: true
+          compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
+      
+      - name: Configure git credentials
+        run: |
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Configure git credentials
-      run: |
-        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure
+        run: |
+          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
-    - name: Configure
-      run: |
-        cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+      - name: '🚧 Build'
+        run: cmake --build build --target ${{matrix.target}}
 
-    - name: '🚧 Build'
-      run: cmake --build build --target ${{matrix.target}}
+      - name: Package
+        run: cpack --config build/CPackConfig.cmake
 
-    - name: Package
-      run: cpack --config build/CPackConfig.cmake
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{matrix.target}}_${{matrix.sys}}_${{matrix.platform}}
+          path: |
+            build/${{matrix.target}}_${{matrix.sys}}_${{matrix.platform}}.tar.gz
+          retention-days: 1
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: ${{matrix.target}}_${{matrix.sys}}_${{matrix.platform}}
-        path: |
-          build/${{matrix.target}}_${{matrix.sys}}_${{matrix.platform}}.tar.gz
-        retention-days: 1
-
-    - name: Export version
-      id: build
-      run: |
-        printf 'version<<END\n' >> $GITHUB_OUTPUT
-        ./build/incplot --version | head -n 1 >> $GITHUB_OUTPUT
-        printf 'END\n' >> $GITHUB_OUTPUT
+      - name: Export version
+        id: build
+        run: |
+          printf 'version<<END\n' >> $GITHUB_OUTPUT
+          ./build/incplot --version | head -n 1 >> $GITHUB_OUTPUT
+          printf 'END\n' >> $GITHUB_OUTPUT
 
   macOS:
-    needs: setup
-    name: ${{ matrix.icon }} macos (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}})
+    name: ${{ matrix.icon }} macos (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
-        icon: ['⬛']
+        icon: ["⬛"]
         sys: [macos]
         runs-on: [macos-15, macos-15-intel]
-        compiler: ["gcc"]
-        compiler-ver: ["14"]
-        build-type: ["Release"]
-        target : ["incplot"]
+        compiler: [clang]
+        build-type: ["Release", "Debug"]
+        target: ["incplot"]
 
         include:
           - runs-on: macos-15
@@ -258,15 +246,22 @@ jobs:
           - runs-on: macos-15-intel
             platform: "x86_64"
 
-          - compiler: "gcc"
-            compiler-ver: "14"
-            cmake-override: "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
+          # - compiler: "gcc"
+          #   compiler-setupname: "gcc"
+          #   compiler-ver: "15"
+          #   cmake-override: "-DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15"
+
+          - compiler: "clang"
+            compiler-setupname: "llvm"
+            compiler-ver: "21"
+            cmake-override: "-DCMAKE_C_COMPILER=clang \
+             -DCMAKE_CXX_COMPILER=clang++ \
+             -DCMAKE_CXX_FLAGS=\"-stdlib=libc++ -I$(brew --prefix llvm)/include/c++/v1\" \
+             -DCMAKE_EXE_LINKER_FLAGS=\"-stdlib=libc++ -L$(brew --prefix llvm)/lib/c++\""
 
     steps:
     - name: '🧰 Checkout'
       uses: actions/checkout@v5
-      with:
-        submodules: recursive
 
     - name: Setup Cpp
       uses: aminya/setup-cpp@v1
