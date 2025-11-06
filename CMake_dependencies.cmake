@@ -3,11 +3,6 @@ include(cmake/CPM.cmake)
 CPMAddPackage("gh:InCom-0/incplot-lib#main")
 CPMAddPackage("gh:p-ranav/argparse#master")
 CPMAddPackage("gh:InCom-0/sqlite3-cmake#master")
-CPMAddPackage("gh:InCom-0/incsfntly#main")
-# CPMAddPackage(
-#     URI "gh:InCom-0/sfntly#main"
-#     SOURCE_SUBDIR cpp
-# )
 
 
 ##############################################################################

@@ -40,23 +40,20 @@ target_sources(incplot
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
-include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CMake's FetchContent.
+include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CPM or CMake's FetchContent.
 
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse)
-target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3 incsfntly::incsfntly)
+target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
 
+### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX)
 include(cmake/stdlibQuery.cmake)
 if(USING_LIBSTDCXX)
   target_link_libraries(incplot PRIVATE "-lstdc++exp")
 endif()
 
 ##########################################################################
-### Settings the right options to statically compile when 'Release' ###
+### Settings the right options to statically link when 'Release' ###
 ##########################################################################
-
-### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX)
-include(cmake/stdlibQuery.cmake)
-
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     message(STATUS "GCC Compiler")
@@ -64,9 +61,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
 
   elseif(CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
-    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
       message(STATUS "MSVC Compiler")
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       message(STATUS "Clang-cl Compiler")
     endif()
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -102,7 +99,6 @@ endif()
 ########################################################
 ### LTO - try to enable for all dependent targets ###
 ########################################################
-
 # Enable LTO if supported and only when NOT in debug mode
 if(INCPLOT_LTO)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -125,18 +121,12 @@ endif()
 #############################################################
 ### Automatic copying certain assets to build directory   ###
 #############################################################
-
-add_custom_command(TARGET incplot POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-  "${CMAKE_SOURCE_DIR}/data/configDB.sqlite"
-  "$<TARGET_FILE_DIR:incplot>/configDB.sqlite"
-  COMMENT "Copying SQLite database to output directory"
-)
 add_custom_command(TARGET incplot POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
   "${CMAKE_SOURCE_DIR}/data/JetBrainsMonoNerdFont-Regular.ttf"
-  "$<TARGET_FILE_DIR:incplot>/JetBrainsMonoNerdFont-Regular.ttf"
-  COMMENT "Copying JetBrainsMonoNerdFont to output directory"
+  "${CMAKE_SOURCE_DIR}/data/configDB.sqlite"
+  "$<TARGET_FILE_DIR:incplot>"
+  COMMENT "Copying SQLite ConfigDB and JetBrainsMonoNerdFont to output directory"
 )
 
 #############################################################
