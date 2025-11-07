@@ -8,9 +8,6 @@
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
 
-#include <sfntly/font.h>
-#include <sfntly/font_factory.h>
-
 
 using namespace std::literals;
 

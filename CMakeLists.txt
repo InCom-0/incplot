@@ -23,7 +23,7 @@ check_ipo_supported(RESULT INCPLOT_LTO OUTPUT output)
 ### Target specification ###
 ########################################################
 add_executable(incplot)
-target_sources(incplot PRIVATE src/main.cpp src/config.cpp src/args.cpp src/fontmaker.cpp)
+target_sources(incplot PRIVATE src/main.cpp src/config.cpp src/args.cpp)
 target_sources(incplot
   PRIVATE
   FILE_SET priv_headers
