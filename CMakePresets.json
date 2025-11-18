@@ -22,6 +22,16 @@
             ]
         },
         {
+            "name": "MSYS2_ucrt64_gcc_None",
+            "hidden": false,
+            "inherits": [
+                "_common",
+                "_gcc",
+                "_none",
+                "MSYS_ucrt_PATH"
+            ]
+        },
+        {
             "name": "MSYS2_clang64_clang_Debug",
             "hidden": false,
             "inherits": [
@@ -163,6 +173,13 @@
             "hidden": true,
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "_none",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "None"
             }
         },
         {
