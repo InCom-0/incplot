@@ -1,8 +1,8 @@
 include(cmake/CPM.cmake)
 
 CPMAddPackage("gh:InCom-0/incplot-lib#main")
-CPMAddPackage("gh:p-ranav/argparse#master")
-CPMAddPackage("gh:InCom-0/sqlite3-cmake#master")
+CPMAddPackage("gh:p-ranav/argparse@3.2")
+CPMAddPackage("gh:sjinks/sqlite3-cmake#update-sqlite-3.51.0")
 
 
 ##############################################################################
@@ -20,5 +20,5 @@ set(SQLite3_DIR "${sqlite3_BINARY_DIR}")
 ##############################################################################
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 set(BUILD_SQLITE3_CONNECTOR ON)
-CPMAddPackage("gh:InCom-0/sqlpp23#main")
+CPMAddPackage("gh:rbock/sqlpp23#0.67")
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
