@@ -150,16 +150,17 @@ The common case of having extreme values in the data that would normally prevent
 
 ## Technical information ##
 
-Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal. All external dependencies (mostly lightweight header only libraries related to parsing) are included in [incplot-lib](https://github.com/InCom-0/incplot-lib)
+Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal. Incplot uses the following external dependencies directly: [argparse](https://github.com/p-ranav/argparse) for command line argument parsing, [sqlite](https://github.com/sqlite/sqlite) for storage (mostly color schemes), [sqlpp23](https://github.com/rbock/sqlpp23) for using SQL in a sane way from C++.
+
+Incplot also uses other external dependencies indirectly through [incplot-lib](https://github.com/InCom-0/incplot-lib), these are all shallow and lightweight header only libraries.
 
 ## Building ##
 
 Building incplot requires CMake and should be possible using the (appropriate) predefined CMake presets.</br>
 
-* Uses cutting edge (as of September 2025) features from C++23 language as well as from C++23 STL extensively
+* Uses cutting edge (as of December 2025) features from C++23 language as well as from C++23 STL extensively
 * Compiles with GCC 14.2+ and Clang 20.1.3+ on Linux, MacOS
 * Compiles with MSVC 19.44+, GCC 14.2+ (through MSYS2) and Clang 20.1.3+ (through MSYS2) on Windows
-* Beware that as of September 2025 LLVM's libc++ doesn't (yet) support all the C++23 library features used by incplot. Therefore, if compiling with Clang, it is imperative to use libstdc++ (which is sort of irregular but possible)
 * It is almost certainly impossible to compile with the more exotic compilers and toolings (as they are lagging further behind the mainstream ones in standard implementation)
 * These limitations will no doubt subside as time passes and implementations get fully up to speed on modern C++.
 
