@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.30...4.0)
 
 project(incplot
   HOMEPAGE_URL "https://github.com/InCom-0/incplot"
-  VERSION "0.4.6"
+  VERSION "0.5.0"
   DESCRIPTION
   "CLI tool for drawing great looking plots in the terminal focused on user ergonomics and simplicity."
   LANGUAGES CXX)
@@ -72,7 +72,7 @@ target_compile_features(incplot PRIVATE cxx_std_23)
 
 
 ##########################################################################
-### Settings the right options to statically link when 'Release' ###
+### Settings the right options for linking for Windows and Apple  ###
 ##########################################################################
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   if(CMAKE_SYSTEM_NAME MATCHES "Windows")
@@ -98,7 +98,7 @@ endif()
 
 
 ##########################################################################
-### Dependencies and linking  ###
+### Dependencies and library linking  ###
 ##########################################################################
 include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CPM or CMake's FetchContent.
 
