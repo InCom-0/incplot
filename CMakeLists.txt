@@ -8,20 +8,50 @@ project(incplot
   LANGUAGES CXX)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
+
 #####################################################################
-### Platform specific hacks + LTO Check ###
+### Platform specifics + hacks + LTO ###
 #####################################################################
 if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
   add_compile_options(/utf-8)
   add_compile_definitions(NOMINMAX)
 endif()
 
-include(CheckIPOSupported)
-check_ipo_supported(RESULT INCPLOT_LTO OUTPUT output)
+### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX) or MSVC_STL(USING_MSVC_STL)
+include(cmake/stdlibQuery.cmake)
+if(USING_LIBSTDCXX)
+  message(STATUS "Using libstdc++")
+elseif(USING_LIBCXX)
+  message(STATUS "Using libc++")
+elseif(USING_MSVC_STL)
+  message(STATUS "Using MSVC STL")
+endif()
 
-########################################################
+include(CheckIPOSupported)
+check_ipo_supported(RESULT INCPLOT_LTO OUTPUT INCPLOT_LTO_OUTPUT)
+
+# Enable LTO if supported and only when NOT in debug mode
+if(INCPLOT_LTO)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+    message(STATUS "LTO is disabled because of Debug build")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+    message(STATUS "LTO is disabled on MacOS")
+  else()
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    message(STATUS "LTO is enabled")
+    # set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  endif()
+
+else()
+  message(WARNING "LTO is not supported: ${INCPLOT_LTO_OUTPUT}")
+endif()
+
+
+######################################################################
 ### Target specification ###
-########################################################
+######################################################################
 add_executable(incplot)
 target_sources(incplot PRIVATE src/main.cpp src/config.cpp src/args.cpp)
 target_sources(incplot
@@ -40,81 +70,43 @@ target_sources(incplot
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
-include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CPM or CMake's FetchContent.
-
-target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse)
-target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
-
-### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX)
-include(cmake/stdlibQuery.cmake)
-if(USING_LIBSTDCXX)
-  target_link_libraries(incplot PRIVATE "-lstdc++exp")
-endif()
 
 ##########################################################################
 ### Settings the right options to statically link when 'Release' ###
 ##########################################################################
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    message(STATUS "GCC Compiler")
-    message(STATUS "Using libstdc++")
-    target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
-
-  elseif(CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
-    if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-      message(STATUS "MSVC Compiler")
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-      message(STATUS "Clang-cl Compiler")
-    endif()
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    # set_property(TARGET incplot PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
-  elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
-    message(STATUS "Clang Compiler")
-    if(APPLE)
-      if(USING_LIBCXX)
-        message(STATUS "Using libc++")
-        target_link_options(incplot PUBLIC -stdlib=libc++)
-      elseif(USING_LIBSTDCXX)
-        message(STATUS "Using libstdc++")
-        target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
-      endif()
-    else()
-      target_link_options(incplot PUBLIC -static)
-      if(USING_LIBCXX)
-        message(STATUS "Using libc++")
-        target_link_options(incplot PUBLIC -stdlib=libc++ -Wl,-Bstatic -lc++ -lc++abi -Wl,-Bdynamic)
-      elseif(USING_LIBSTDCXX)
-        message(STATUS "Using libstdc++")
-        target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
-      endif()
+  if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(BUILD_SHARED_LIBS OFF)
+    if(USING_LIBSTDCXX)
+      target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
+    elseif(USING_LIBCXX)
+      target_link_options(incplot PUBLIC -stdlib=libc++ -Wl,-Bstatic -lc++ -lc++abi -Wl,-Bdynamic)
+    elseif(USING_MSVC_STL)
     endif()
 
-  else()
-    message(WARNING "You are using an unexpected compiler (ie. neither GCC, Clang, AppleClang, MSVC). All bets are off.")
+  elseif(APPLE)
+    if(USING_LIBSTDCXX)
+      target_link_options(incplot PUBLIC -static-libgcc -static-libstdc++)
+    elseif(USING_LIBCXX)
+      target_link_options(incplot PUBLIC -stdlib=libc++)
+    endif()
   endif()
+
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(BUILD_SHARED_LIBS ON)
 endif()
 
 
-########################################################
-### LTO - try to enable for all dependent targets ###
-########################################################
-# Enable LTO if supported and only when NOT in debug mode
-if(INCPLOT_LTO)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
-    message(STATUS "LTO is disabled because of Debug build")
-  elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
-    message(STATUS "LTO is disabled on MacOS")
-  else()
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-    message(STATUS "LTO is enabled")
-    # set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-  endif()
+##########################################################################
+### Dependencies and linking  ###
+##########################################################################
+include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CPM or CMake's FetchContent.
 
-else()
-  message(WARNING "LTO is not supported: ${output}")
+target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse)
+target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
+
+if(USING_LIBSTDCXX)
+  target_link_libraries(incplot PRIVATE "-lstdc++exp")
 endif()
 
 
@@ -122,11 +114,11 @@ endif()
 ### Automatic copying certain assets to build directory   ###
 #############################################################
 add_custom_command(TARGET incplot POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E echo "Copying SQLite ConfigDB and JetBrainsMonoNerdFont to output directory"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
   "${CMAKE_SOURCE_DIR}/data/JetBrainsMonoNerdFont-Regular.ttf"
   "${CMAKE_SOURCE_DIR}/data/configDB.sqlite"
   "$<TARGET_FILE_DIR:incplot>"
-  COMMENT "Copying SQLite ConfigDB and JetBrainsMonoNerdFont to output directory"
 )
 
 #############################################################
