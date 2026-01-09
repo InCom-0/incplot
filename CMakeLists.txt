@@ -138,14 +138,22 @@ add_dependencies(incplot ENSUREAutoFileDeps)
 
 
 ########################################################
-### Install specification (mostly relevant to CPack) ###
+### Install specification ###
 ########################################################
-install(TARGETS incplot RUNTIME DESTINATION .
-  LIBRARY DESTINATION .)
+include(GNUInstallDirs)
 
-install(FILES README.md LICENSE.txt DESTINATION .)
-install(FILES data/configDB.sqlite DESTINATION .)
+install(TARGETS incplot
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+# install(TARGETS incplot RUNTIME DESTINATION .
+#   LIBRARY DESTINATION .)
+
+install(FILES README.md LICENSE.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES data/configDB.sqlite DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+if(PROJECT_IS_TOP_LEVEL)
   add_subdirectory(cmake/packaging)
 endif()
