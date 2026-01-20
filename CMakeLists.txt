@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30...4.0)
+cmake_minimum_required(VERSION 3.30...4.2)
 
 project(incplot
   HOMEPAGE_URL "https://github.com/InCom-0/incplot"
@@ -7,6 +7,18 @@ project(incplot
   "CLI tool for drawing great looking plots in the terminal focused on user ergonomics and simplicity."
   LANGUAGES CXX)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory structure" ON)
+
+
+#####################################################################
+### Staging ###
+#####################################################################
+include(cmake/StageOutputs.cmake)
+if(incplot_STAGE_OUTPUTS)
+    stageOutputDirsFor(incplot)
+endif()
 
 
 #####################################################################
@@ -92,8 +104,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     endif()
   endif()
 
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(BUILD_SHARED_LIBS ON)
+# elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#   set(BUILD_SHARED_LIBS ON)
 endif()
 
 
@@ -140,8 +152,6 @@ add_dependencies(incplot ENSUREAutoFileDeps)
 ########################################################
 ### Install specification ###
 ########################################################
-include(GNUInstallDirs)
-
 install(TARGETS incplot
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
