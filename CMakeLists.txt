@@ -104,8 +104,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     endif()
   endif()
 
-# elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-#   set(BUILD_SHARED_LIBS ON)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(BUILD_SHARED_LIBS ON)
 endif()
 
 

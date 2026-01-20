@@ -1,14 +1,15 @@
 include(cmake/CPM.cmake)
 
-CPMAddPackage("gh:InCom-0/incplot-lib#main")
-CPMAddPackage("gh:p-ranav/argparse@3.2")
-
 if(BUILD_SHARED_LIBS)
     set(CPM_USE_LOCAL_PACKAGES ON)
 endif()
 
+CPMAddPackage("gh:InCom-0/incplot-lib#main")
+CPMAddPackage("gh:p-ranav/argparse@3.2")
+
 CPMAddPackage(
     URI "gh:InCom-0/sqlite3-cmake#master"
+    OPTIONS "BUILD_SHARED_LIBS OFF"
     NAME SQLite3
 )
 
