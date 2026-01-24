@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
     // Create and populate ArgumentParser
     argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
                                 argparse::default_arguments::all);
-    incplot::cl_args::finishAp(ap);
+    argparse::ArgumentParser subap_setup("setup", INCPLOT_VERSION_MEDIUM, argparse::default_arguments::help);
+    incplot::cl_args::finishAp(ap, subap_setup);
     incplot::cl_args::populateAp(ap, argc, argv);
 
     // Set the right character page of the terminal

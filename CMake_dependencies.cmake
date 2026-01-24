@@ -15,7 +15,9 @@ CPMAddPackage(
 )
 
 
-CPMAddPackage("gh:p-ranav/argparse@3.2")
+CPMAddPackage(
+    URI "gh:p-ranav/argparse@3.2"
+)
 
 CPMAddPackage(
     URI "gh:InCom-0/sqlite3-cmake#master"

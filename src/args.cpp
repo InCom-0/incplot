@@ -15,6 +15,23 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
 
     DesiredPlot::DP_CtorStruct nonDifferentiated;
 
+    // Value options
+    if (auto optVal = ap.present<int>("-x")) { nonDifferentiated.lts_colID = optVal.value(); }
+    if (auto optVal = ap.present<std::vector<int>>("-y")) {
+        nonDifferentiated.v_colIDs = std::vector<size_t>(optVal.value().begin(), optVal.value().end());
+    }
+    if (auto optVal = ap.present<int>("-c")) { nonDifferentiated.c_colID = optVal.value(); }
+    if (auto stddev = ap.present<int>("-e")) {
+        if (stddev != 0) { nonDifferentiated.filter_outsideStdDev = stddev.value(); }
+        else { nonDifferentiated.filter_outsideStdDev = std::nullopt; }
+    }
+    else { nonDifferentiated.filter_outsideStdDev = Config::filter_withinStdDevMultiple_default; }
+
+    // Size options
+    if (auto wdt = ap.present<int>("-w")) { nonDifferentiated.tar_width = wdt.value(); }
+    if (auto hgt = ap.present<int>("-t")) { nonDifferentiated.tar_height = hgt.value(); }
+
+    // Scheme and color options
     auto schemeGetter = [&]() -> void {
         auto setSchemeFromTermOrDefault = [&]() -> bool {
             auto schm_opt = config::get_schemeFromTerminal();
@@ -133,22 +150,6 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
         }
     };
 
-    if (auto wdt = ap.present<int>("-w")) { nonDifferentiated.tar_width = wdt.value(); }
-    if (auto hgt = ap.present<int>("-t")) { nonDifferentiated.tar_height = hgt.value(); }
-    if (auto stddev = ap.present<int>("-e")) {
-        if (stddev != 0) { nonDifferentiated.filter_outsideStdDev = stddev.value(); }
-        else { nonDifferentiated.filter_outsideStdDev = std::nullopt; }
-    }
-    else { nonDifferentiated.filter_outsideStdDev = Config::filter_withinStdDevMultiple_default; }
-
-
-    if (auto optVal = ap.present<int>("-x")) { nonDifferentiated.lts_colID = optVal.value(); }
-    if (auto optVal = ap.present<std::vector<int>>("-y")) {
-        nonDifferentiated.v_colIDs = std::vector<size_t>(optVal.value().begin(), optVal.value().end());
-    }
-    if (auto optVal = ap.present<int>("-c")) { nonDifferentiated.c_colID = optVal.value(); }
-
-
     if (ap.get<bool>("-d")) {
         nonDifferentiated.colScheme     = color_schemes::defaultScheme16;
         nonDifferentiated.forceRGB_bool = true;
@@ -160,11 +161,23 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     else { schemeGetter(); }
     if (ap.get<bool>("-r")) { nonDifferentiated.forceRGB_bool = true; }
 
+
+    // HTML mode options
+    if (ap.get<bool>("-o")) { nonDifferentiated.htmlMode_bool = true; }
+    if (auto optVal = ap.present<std::vector<std::string>>("-f")) {
+        // TODO: Functions to get the font: 1) from system, 2) from path, 3) from URL
+        // TODO: Also need some way to differentiate between these
+    }
+    if (auto optVal = ap.present<size_t>("-z")) { nonDifferentiated.htmlMode_fontSize = optVal.value(); }
+
+
+    // Plot type options
     std::vector<DesiredPlot::DP_CtorStruct> res;
     auto                                    addOne = [&](std::optional<std::type_index> const &&sv_opt) {
         res.push_back(nonDifferentiated);
         res.back().plot_type_name = sv_opt;
     };
+
     using namespace incom::standard::typegen;
     if (ap.get<bool>("-B")) { addOne(get_typeIndex<plot_structures::BarV>()); }
     if (ap.get<bool>("-S")) { addOne(get_typeIndex<plot_structures::Scatter>()); }
@@ -181,7 +194,7 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct() {
     return std::vector<DesiredPlot::DP_CtorStruct>{DesiredPlot::DP_CtorStruct{.plot_type_name = std::nullopt}};
 }
 
-void finishAp(argparse::ArgumentParser &out_ap) {
+void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_setup) {
     out_ap.add_description(
         "Draw coloured plots using unicode symbols inside terminal.\n\nAutomatically infers what to display and "
         "how based on the shape of the data piped in.\nPipe in data in JSON, JSON Lines, NDJSON, CSV or TSV formats. "
@@ -219,12 +232,15 @@ void finishAp(argparse::ArgumentParser &out_ap) {
 
     // HTML Related
     out_ap.add_group("HTML output related:");
-    out_ap.add_argument("-h", "--html").help("Convert output into self-contained html [flag]").flag().nargs(0);
+    out_ap.add_argument("-o", "--html").help("Convert output into self-contained html [flag]").flag().nargs(0);
     out_ap.add_argument("-f", "--font")
-        .help("Font to use inside html (1. family name of system installed font and 2.style or 1.Path to font file or "
-              "1.Url to font file)")
+        .help("Font to use inside html. Either: Family name of system installed font or Path to font file "
+              "or Url to font file. Specify style name as second arg when relevant.")
         .nargs(1, 2);
-    out_ap.add_argument("-z", "--font-size").help("Convert output into self-contained html [flag]").flag().nargs(0);
+    out_ap.add_argument("-z", "--font-size")
+        .help("Specify font size to use [in pixels] [default = 12]")
+        // .default_value<int>(12)
+        .scan<'d', size_t>();
 
 
     // Schemes and colors options
@@ -244,22 +260,17 @@ void finishAp(argparse::ArgumentParser &out_ap) {
         .nargs(0);
 
 
-    argparse::ArgumentParser setup_subcommand("setup");
-    setup_subcommand.add_description("Various setup and maintenance functionality:");
-    // setup_subcommand.add_argument("-u", "--input-fallback-font")
-    //     .help("Change the fallback font (identical argument logic as the --font argument)")
-    //     .nargs(1, 2);
-    // setup_subcommand.add_argument("-g", "--grab-termscheme")
-    //     .help("Grabs current terminal color scheme and saves it. Optionally provide name for later usage using "
-    //           "'-l'.")
-    //     .nargs(0, 1);
-    // setup_subcommand.add_description(
-    //     "Draw coloured plots using unicode symbols inside terminal.\n\nAutomatically infers what to display and "
-    //     "how based on the shape of the data piped in.\nPipe in data in JSON, JSON Lines, NDJSON, CSV or TSV formats.
-    //     " "All " "arguments " "are optional");
+    subap_setup.add_description("Various setup and maintenance functionality:");
+    subap_setup.add_argument("-b", "--input-fallback-font")
+        .help("Change the fallback font (identical argument logic as the --font argument in top level)")
+        .nargs(1, 2);
+    subap_setup.add_argument("-g", "--grab-termscheme")
+        .help("Grabs current terminal color scheme and saves it. Optionally provide name for later usage using "
+              "'-l'.")
+        .nargs(0, 1);
 
     // TODO: Wierdly this does not actually create a working subparser ... need to investigate later.
-    out_ap.add_subparser(setup_subcommand);
+    out_ap.add_subparser(subap_setup);
 }
 
 void populateAp(argparse::ArgumentParser &out_ap, int argc, const char *const *argv) {
