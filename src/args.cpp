@@ -197,7 +197,7 @@ void finishAp(argparse::ArgumentParser &out_ap) {
     out_ap.add_argument("-H", "--barHM").help("Draw [H]orizontal multibar plot [flag]").flag().nargs(0);
     out_ap.add_argument("-T", "--barHS").help("Draw horizontal s[T]acked bar plot [flag]").flag().nargs(0);
 
-
+    // Value options
     out_ap.add_group("Values options");
     out_ap.add_argument("-x", "--main").help("Specify primary axis by column ID").nargs(1).scan<'d', int>();
     out_ap.add_argument("-y", "--values")
@@ -212,17 +212,26 @@ void finishAp(argparse::ArgumentParser &out_ap) {
         .nargs(1)
         .scan<'d', int>();
 
-
+    // Size options
     out_ap.add_group("Size options");
     out_ap.add_argument("-w", "--width").help("Requested width (in characters)").nargs(1).scan<'d', int>();
     out_ap.add_argument("-t", "--height").help("Requested height (in characters)").nargs(1).scan<'d', int>();
 
+    // HTML Related
+    out_ap.add_group("HTML output related:");
+    out_ap.add_argument("-h", "--html").help("Convert output into self-contained html [flag]").flag().nargs(0);
+    out_ap.add_argument("-f", "--font")
+        .help("Font to use inside html (1. family name of system installed font and 2.style or 1.Path to font file or "
+              "1.Url to font file)")
+        .nargs(1, 2);
+    out_ap.add_argument("-z", "--font-size").help("Convert output into self-contained html [flag]").flag().nargs(0);
 
+
+    // Schemes and colors options
     auto &mex_grp = out_ap.add_mutually_exclusive_group();
-    out_ap.add_group("Other options:");
-
+    out_ap.add_group("Schemes and colors options:");
     mex_grp.add_argument("-l", "--color-scheme")
-        .help("Specify a color scheme by name (the scheme must exist in the config database)")
+        .help("Specify color scheme by name (the scheme must exist in the config database)")
         .default_value<std::string>("")
         .nargs(1);
     mex_grp.add_argument("-d", "--default-colors").help("Draw with [d]efault colors (dimidium theme)").flag().nargs(0);
@@ -233,6 +242,24 @@ void finishAp(argparse::ArgumentParser &out_ap) {
               "compatibility reasons only)")
         .flag()
         .nargs(0);
+
+
+    argparse::ArgumentParser setup_subcommand("setup");
+    setup_subcommand.add_description("Various setup and maintenance functionality:");
+    // setup_subcommand.add_argument("-u", "--input-fallback-font")
+    //     .help("Change the fallback font (identical argument logic as the --font argument)")
+    //     .nargs(1, 2);
+    // setup_subcommand.add_argument("-g", "--grab-termscheme")
+    //     .help("Grabs current terminal color scheme and saves it. Optionally provide name for later usage using "
+    //           "'-l'.")
+    //     .nargs(0, 1);
+    // setup_subcommand.add_description(
+    //     "Draw coloured plots using unicode symbols inside terminal.\n\nAutomatically infers what to display and "
+    //     "how based on the shape of the data piped in.\nPipe in data in JSON, JSON Lines, NDJSON, CSV or TSV formats.
+    //     " "All " "arguments " "are optional");
+
+    // TODO: Wierdly this does not actually create a working subparser ... need to investigate later.
+    out_ap.add_subparser(setup_subcommand);
 }
 
 void populateAp(argparse::ArgumentParser &out_ap, int argc, const char *const *argv) {

@@ -71,6 +71,15 @@ elseif(__STDLIB_COUNT GREATER 1)
     )
 endif()
 
+# ---- Post message about the result
+if(USING_LIBSTDCXX)
+  message(STATUS "Using libstdc++")
+elseif(USING_LIBCXX)
+  message(STATUS "Using libc++")
+elseif(USING_MSVC_STL)
+  message(STATUS "Using MSVC STL")
+endif()
+
 set_property(GLOBAL PROPERTY STDLIB_DETECTED TRUE)
 unset(__STDLIB_COUNT)
 unset(__STDLIB_ALREADY_RUN)

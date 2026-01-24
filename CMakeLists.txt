@@ -17,7 +17,7 @@ option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory
 #####################################################################
 include(cmake/StageOutputs.cmake)
 if(incplot_STAGE_OUTPUTS)
-    stageOutputDirsFor(incplot)
+  stageOutputDirsFor(incplot)
 endif()
 
 
@@ -31,13 +31,6 @@ endif()
 
 ### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX) or MSVC_STL(USING_MSVC_STL)
 include(cmake/stdlibQuery.cmake)
-if(USING_LIBSTDCXX)
-  message(STATUS "Using libstdc++")
-elseif(USING_LIBCXX)
-  message(STATUS "Using libc++")
-elseif(USING_MSVC_STL)
-  message(STATUS "Using MSVC STL")
-endif()
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT INCPLOT_LTO OUTPUT INCPLOT_LTO_OUTPUT)
@@ -114,8 +107,8 @@ endif()
 ##########################################################################
 include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CPM or CMake's FetchContent.
 
-target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib argparse::argparse)
-target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
+target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib incfontdisc::incfontdisc)
+target_link_libraries(incplot PRIVATE argparse::argparse sqlpp23::sqlpp23 sqlpp23::sqlite3)
 
 if(USING_LIBSTDCXX)
   target_link_libraries(incplot PRIVATE "-lstdc++exp")
