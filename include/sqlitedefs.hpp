@@ -11,6 +11,27 @@
 #include <sqlpp23/core/type_traits.h>
 
 namespace incom::terminal_plot::config::sqltables {
+  struct DefaultFont_ {
+    struct Id {
+      SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(id, id);
+      using data_type = ::sqlpp::integral;
+      using has_default = std::false_type;
+    };
+    struct Content {
+      SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(content, content);
+      using data_type = std::optional<::sqlpp::blob>;
+      using has_default = std::true_type;
+    };
+    SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(default_font, defaultFont);
+    template<typename T>
+    using _table_columns = sqlpp::table_columns<T,
+               Id,
+               Content>;
+    using _required_insert_columns = sqlpp::detail::type_set<
+               sqlpp::column_t<sqlpp::table_t<DefaultFont_>, Id>>;
+  };
+  using DefaultFont = ::sqlpp::table_t<DefaultFont_>;
+  
   struct DefaultScheme_ {
     struct Id {
       SQLPP_CREATE_NAME_TAG_FOR_SQL_AND_CPP(id, id);
