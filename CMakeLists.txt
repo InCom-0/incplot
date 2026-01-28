@@ -37,6 +37,7 @@ check_ipo_supported(RESULT INCPLOT_LTO OUTPUT INCPLOT_LTO_OUTPUT)
 
 # Enable LTO if supported and only when NOT in debug mode
 if(INCPLOT_LTO)
+  message(STATUS "LTO is supported")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
     message(STATUS "LTO is disabled because of Debug build")
@@ -50,7 +51,7 @@ if(INCPLOT_LTO)
   endif()
 
 else()
-  message(WARNING "LTO is not supported: ${INCPLOT_LTO_OUTPUT}")
+  message(WARNING "LTO is NOT supported: ${INCPLOT_LTO_OUTPUT}")
 endif()
 
 
