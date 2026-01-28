@@ -124,8 +124,8 @@ std::string get_showInternalSchemes() {
     return get_showScheme(defaultScheme16).append("\n").append(get_showScheme(other_sources::monochrome));
 }
 std::string get_showCongfigDBSchemes(sqlpp::sqlite3::connection &db) {
-    std::string res;
-    sqltables::Schemes       sch{};
+    std::string        res;
+    sqltables::Schemes sch{};
 
     for (auto const &schm_row : db(sqlpp::select(sch.schemeId, sch.name).from(sch).where(true))) {
         if (schm_row.name == fromTerminalSchemeName) { continue; }
@@ -508,6 +508,20 @@ std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, s
 
     // That is impossible
     return std::unexpected(dbErr::impossibleNumberOfRecords);
+}
+
+
+std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw) {
+    using namespace sqltables;
+    DefaultFont dfnt_tbl{};
+
+    auto rs = dbConn(sqlpp::sqlite3::update(dfnt_tbl)
+                         .set(dfnt_tbl.content = std::span<std::uint8_t>(
+                                  reinterpret_cast<std::uint8_t *>(ttf_font_raw.data()), ttf_font_raw.size()))
+                         .where(true));
+
+    if (rs.affected_rows == 1) { return 0uz; }
+    else { return std::unexpected(dbErr::impossibleNumberOfRecords); }
 }
 
 } // namespace db

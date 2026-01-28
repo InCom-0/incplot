@@ -26,6 +26,11 @@ inline constexpr std::string_view    appName("incplot"sv);
 inline constexpr std::string_view    configFileName("configDB.sqlite"sv);
 inline constexpr std::string_view    fromTerminalSchemeName("__fromTerminalScheme"sv);
 
+inline constexpr size_t html_defaultFontSize = 12uz; 
+inline constexpr size_t html_minFontSize = 1uz; 
+inline constexpr size_t html_maxFontSize = 256uz; 
+
+
 enum class dbErr {
     impossibleNumberOfRecords = 1,
     impossibleValue,
@@ -98,6 +103,11 @@ std::expected<size_t, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &db
 
 std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, std::string const &name);
 std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const id);
+
+
+std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw);
+
+
 
 
 } // namespace db

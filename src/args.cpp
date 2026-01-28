@@ -168,7 +168,26 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
         // TODO: Functions to get the font: 1) from system, 2) from path, 3) from URL
         // TODO: Also need some way to differentiate between these
     }
-    if (auto optVal = ap.present<size_t>("-z")) { nonDifferentiated.htmlMode_fontSize = optVal.value(); }
+    if (auto optVal = ap.present<size_t>("-z")) {
+        if (optVal.value() > incom::terminal_plot::config::html_maxFontSize) {
+            nonDifferentiated.additionalInfo.push_back(
+                std::format("Font size ('-z') was set over its maximum allowed value which is {0}px. Claming the font "
+                            "size value to {0}px.",
+                            incom::terminal_plot::config::html_maxFontSize));
+
+            nonDifferentiated.htmlMode_fontSize = incom::terminal_plot::config::html_maxFontSize;
+        }
+        else if (optVal.value() < incom::terminal_plot::config::html_minFontSize) {
+            nonDifferentiated.additionalInfo.push_back(
+                std::format("Font size ('-z') was set below its minimum allowed value which is {0}px. Claming the font "
+                            "size value to {0}px.",
+                            incom::terminal_plot::config::html_minFontSize));
+
+            nonDifferentiated.htmlMode_fontSize = incom::terminal_plot::config::html_minFontSize;
+        }
+        else { nonDifferentiated.htmlMode_fontSize = optVal.value(); }
+    }
+    else { nonDifferentiated.htmlMode_fontSize = incom::terminal_plot::config::html_defaultFontSize; }
 
 
     // Plot type options
@@ -196,7 +215,9 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct() {
 
 void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_setup) {
     out_ap.add_description(
-        "Draw coloured plots using unicode symbols inside terminal.\n\nAutomatically infers what to display and "
+        "Draw coloured plots using unicode symbols inside terminal.\nCan also output the plot as visually identical "
+        "self-contained html "
+        "document.\n\nAutomatically infers what to display and "
         "how based on the shape of the data piped in.\nPipe in data in JSON, JSON Lines, NDJSON, CSV or TSV formats. "
         "All "
         "arguments "
@@ -217,9 +238,12 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
         .help("Specify secondary axis values by column IDs")
         .nargs(1, 6)
         .scan<'d', int>();
-    out_ap.add_argument("-c", "--category").help("Specify the column used to group the data").nargs(1).scan<'d', int>();
+    out_ap.add_argument("-c", "--category")
+        .help("Specify the column used to group the data (for Scatter plots)")
+        .nargs(1)
+        .scan<'d', int>();
     out_ap.add_argument("-e", "--filter-extremes")
-        .help(std::format("Specify a multiple of standard deviation above and below which data is filtered('0' means "
+        .help(std::format("Specify a multiple of standard deviation above and below which data is filtered ('0' means "
                           "no filtering) [default = {}]",
                           Config::filter_withinStdDevMultiple_default))
         .nargs(1)
@@ -232,15 +256,20 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
 
     // HTML Related
     out_ap.add_group("HTML output related:");
-    out_ap.add_argument("-o", "--html").help("Convert output into self-contained html [flag]").flag().nargs(0);
+    out_ap.add_argument("-o", "--html")
+        .help("Convert output into self-contained html [flag] (it is advisable to pipe the result into a file or into "
+              "some other process when using this mode)")
+        .flag()
+        .nargs(0);
     out_ap.add_argument("-f", "--font")
         .help("Font to use inside html. Either: Family name of system installed font or Path to font file "
-              "or Url to font file. Specify style name as second arg when relevant.")
+              "or Url to font file. Specify style name as second arg if/where relevant.")
         .nargs(1, 2);
     out_ap.add_argument("-z", "--font-size")
-        .help("Specify font size to use [in pixels] [default = 12]")
+        .help("Specify font size to use (in pixels) [default = 12]")
         // .default_value<int>(12)
-        .scan<'d', size_t>();
+        .scan<'d', size_t>()
+        .nargs(1);
 
 
     // Schemes and colors options
@@ -251,8 +280,9 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
         .default_value<std::string>("")
         .nargs(1);
     mex_grp.add_argument("-d", "--default-colors").help("Draw with [d]efault colors (dimidium theme)").flag().nargs(0);
-    mex_grp.add_argument("-m", "--monochrome").help("Draw in [m]onochromatic colors").flag().nargs(0);
     out_ap.add_argument("-s", "--show-schemes").help("Show all available color [s]chemes and exit").flag().nargs(0);
+    mex_grp.add_argument("-m", "--monochrome").help("Draw in [m]onochromatic colors").flag().nargs(0);
+    
     out_ap.add_argument("-r", "--force-rgb")
         .help("Always use the RGB SGR way to output colors (virtually never necessary, exists for hypothetical "
               "compatibility reasons only)")

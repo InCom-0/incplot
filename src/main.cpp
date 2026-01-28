@@ -8,6 +8,8 @@
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
 
+#include <incfontdisc/incfontdisc.hpp>
+
 
 using namespace std::literals;
 
@@ -21,16 +23,30 @@ int main(int argc, char *argv[]) {
     incplot::cl_args::finishAp(ap, subap_setup);
     incplot::cl_args::populateAp(ap, argc, argv);
 
+    // auto fnt       = incfontdisc::match_fonts(incfontdisc::FontQuery{.family = "JetBrainsMono Nerd Font"});
+    // auto fnt_bytes = incfontdisc::load_font_data(fnt->font.id);
+
     // Set the right character page of the terminal
     incom::standard::console::set_cocp();
 
+    // Get connection to configDB
+    auto dbCon = incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
+
+    // auto r = incplot::config::db::set_default_font(dbCon.value(), fnt_bytes.value());
+
     // If the user wants just to display the available schemes we do that and exit
     if (ap.get<bool>("-s")) {
-        auto dbCon =
-            incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
         std::cout << incplot::config::get_showSchemes(dbCon);
         return 0;
     }
+
+    // If the users wants '-o' which means html output
+    if (ap.get<bool>("-o")) {
+        //  TODO: We need to check if we have a 'fallback font' available.
+        // TODO: If we don't have a fallback font available we need to request to download it, download it, store it in
+        // configDB, recheck, inform.
+    }
+
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
