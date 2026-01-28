@@ -27,24 +27,28 @@ CPMAddPackage("gh:rbock/sqlpp23#0.67")
 
 
 
-CPMAddPackage(URI "gh:curl/curl#curl-8_18_0"
-    NAME CURL
-    OPTIONS
-    "CURL_USE_LIBPSL OFF"
-    "USE_LIBIDN2 OFF"
-    "USE_NGHTTP2 OFF"
-    "CURL_USE_LIBSSH2 OFF"
+# CPMAddPackage(URI "gh:curl/curl#curl-8_18_0"
+#     NAME CURL
+#     OPTIONS
+#     "CURL_USE_LIBPSL OFF"
+#     "USE_LIBIDN2 OFF"
+#     "USE_NGHTTP2 OFF"
+#     "CURL_USE_LIBSSH2 OFF"
 
-    "CURL_BROTLI OFF"
-    "CURL_ZSTD OFF"
-    "CURL_ZLIB OFF"
-    "BUILD_CURL_EXE OFF"
-    "CURL_DISABLE_INSTALL ON"
-    "BUILD_SHARED_LIBS OFF"
-    "BUILD_STATIC_LIBS ON"
-    "ENABLE_UNICODE ON"
-    "CURL_USE_SCHANNEL ON"
-    "CURL_LTO ${INCPLOT_LTO}"
+#     "CURL_BROTLI OFF"
+#     "CURL_ZSTD OFF"
+#     "CURL_ZLIB OFF"
+#     "BUILD_CURL_EXE OFF"
+#     "CURL_DISABLE_INSTALL ON"
+#     "BUILD_SHARED_LIBS OFF"
+#     "BUILD_STATIC_LIBS ON"
+#     "ENABLE_UNICODE ON"
+#     "CURL_USE_SCHANNEL ON"
+#     "CURL_LTO ${INCPLOT_LTO}"
+# )
+CPMAddPackage(
+    URI "gh:libcpr/cpr#1.14.1"
+    NAME cpr
 )
 
 
