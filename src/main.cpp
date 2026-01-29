@@ -9,6 +9,7 @@
 #include <incstd/incstd_console.hpp>
 
 #include <incfontdisc/incfontdisc.hpp>
+#include <string_view>
 
 
 using namespace std::literals;
@@ -33,6 +34,9 @@ int main(int argc, char *argv[]) {
     auto dbCon = incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
 
     // auto r = incplot::config::db::set_default_font(dbCon.value(), fnt_bytes.value());
+
+    // cpr::Response r =
+    //     cpr::Get(cpr::Url{"https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"});
 
     // If the user wants just to display the available schemes we do that and exit
     if (ap.get<bool>("-s")) {

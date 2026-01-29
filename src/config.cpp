@@ -13,6 +13,26 @@ namespace incom::terminal_plot::config {
 
 namespace fs = std::filesystem;
 
+std::vector<std::byte> download_fileRaw(std::string_view url) {
+    auto cb = [](std::string_view data, intptr_t userdata) {
+        std::vector<std::byte> *pf = reinterpret_cast<std::vector<std::byte> *>(userdata);
+        auto v = std::views::transform(data, [](auto const &item) { return static_cast<std::byte>(item); });
+        pf->insert_range(pf->end(), v);
+        return true;
+    };
+
+    cpr::Session session;
+    session.SetUrl(cpr::Url{url});
+
+    std::vector<std::byte> res{};
+    if (auto resLength = session.GetDownloadFileLength(); resLength < 1) { goto RET; }
+    else { res.reserve(static_cast<size_t>(resLength)); }
+
+    cpr::Download(cpr::WriteCallback{cb, reinterpret_cast<intptr_t>(&res)}, cpr::Url{url});
+RET:
+    return res;
+};
+
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
                                                                             const inccol::palette16 &against) {
     colorCount_toValidate = std::min(static_cast<size_t>(colorCount_toValidate),

@@ -8,8 +8,10 @@
 #include <sqlpp23/sqlpp23.h>
 
 #include <args.hpp>
+#include <cpr/cpr.h>
 #include <incstd/incstd_color.hpp>
 #include <incstd/incstd_console.hpp>
+
 
 #include <sqlitedefs.hpp>
 
@@ -26,9 +28,9 @@ inline constexpr std::string_view    appName("incplot"sv);
 inline constexpr std::string_view    configFileName("configDB.sqlite"sv);
 inline constexpr std::string_view    fromTerminalSchemeName("__fromTerminalScheme"sv);
 
-inline constexpr size_t html_defaultFontSize = 12uz; 
-inline constexpr size_t html_minFontSize = 1uz; 
-inline constexpr size_t html_maxFontSize = 256uz; 
+inline constexpr size_t html_defaultFontSize = 12uz;
+inline constexpr size_t html_minFontSize     = 1uz;
+inline constexpr size_t html_maxFontSize     = 256uz;
 
 
 enum class dbErr {
@@ -41,6 +43,8 @@ enum class dbErr {
     unknownError,
 };
 
+
+std::vector<std::byte> download_fileRaw(std::string_view url);
 
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
                                                                             const inccol::palette16 &against);
@@ -106,8 +110,6 @@ std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, s
 
 
 std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw);
-
-
 
 
 } // namespace db
