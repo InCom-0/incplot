@@ -109,7 +109,8 @@ endif()
 include(CMake_dependencies.cmake) ### Loads and declares the required external libraries using CPM or CMake's FetchContent.
 
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib incfontdisc::incfontdisc)
-target_link_libraries(incplot PRIVATE argparse::argparse sqlpp23::sqlpp23 sqlpp23::sqlite3 LibArchive::LibArchive cpr::cpr)
+target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3 LibArchive::LibArchive cpr::cpr)
+target_link_libraries(incplot PRIVATE argparse::argparse LibArchive::LibArchive cpr::cpr indicators::indicators)
 target_link_libraries(incplot PRIVATE nlohmann_json::nlohmann_json)
 
 if(USING_LIBSTDCXX)

@@ -2,34 +2,67 @@
 #include <expected>
 #include <filesystem>
 
-#include <config.hpp>
-#include <incstd/core/filesys.hpp>
 #include <optional>
 #include <string_view>
 #include <utility>
 
+#include <indicators/color.hpp>
+#include <indicators/cursor_control.hpp>
+#include <indicators/progress_bar.hpp>
+
+#include <config.hpp>
+#include <incstd/core/filesys.hpp>
 
 namespace incom::terminal_plot::config {
 
 namespace fs = std::filesystem;
 
 std::vector<std::byte> download_fileRaw(std::string_view url) {
-    auto cb = [](std::string_view data, intptr_t userdata) {
+    auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
         std::vector<std::byte> *pf = reinterpret_cast<std::vector<std::byte> *>(userdata);
         auto v = std::views::transform(data, [](auto const &item) { return static_cast<std::byte>(item); });
         pf->insert_range(pf->end(), v);
         return true;
     };
 
+    using namespace indicators;
+
+
+    ProgressBar bar{option::BarWidth{50},
+                    option::Start{"["},
+                    option::Fill{"="},
+                    option::Lead{">"},
+                    option::Remainder{"-"},
+                    option::End{"]"},
+                    option::ForegroundColor{indicators::Color::cyan},
+                    option::ShowElapsedTime{true},
+                    option::ShowRemainingTime{true},
+                    option::ShowPercentage{true},
+                    option::PrefixText{"Downloading: "},
+                    option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}};
+
+    auto cb_progress = [&](cpr::cpr_off_t downloadTotal, cpr::cpr_off_t downloadNow, cpr::cpr_off_t, cpr::cpr_off_t,
+                           intptr_t) -> bool {
+        if (downloadTotal < 1 || downloadNow < 1 || bar.is_completed()) {}
+        else {
+            double pgr = static_cast<double>(downloadNow) / static_cast<double>(downloadTotal) * 100;
+            if (pgr == 100) { bar.set_option(option::PostfixText{"Font downloaded!"}); }
+            bar.set_progress(pgr);
+        }
+        return true;
+    };
+
     cpr::Session session;
     session.SetUrl(cpr::Url{url});
+    session.SetProgressCallback(cpr::ProgressCallback{cb_progress, 0});
 
     std::vector<std::byte> res{};
-    if (auto resLength = session.GetDownloadFileLength(); resLength < 1) { goto RET; }
-    else { res.reserve(static_cast<size_t>(resLength)); }
-
-    cpr::Download(cpr::WriteCallback{cb, reinterpret_cast<intptr_t>(&res)}, cpr::Url{url});
-RET:
+    if (auto resLength = session.GetDownloadFileLength(); resLength > 0) {
+        res.reserve(static_cast<size_t>(resLength));
+        show_console_cursor(false);
+        session.Download(cpr::WriteCallback{cb_writer, reinterpret_cast<intptr_t>(&res)});
+        show_console_cursor(true);
+    }
     return res;
 };
 

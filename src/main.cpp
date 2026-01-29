@@ -38,6 +38,8 @@ int main(int argc, char *argv[]) {
     // cpr::Response r =
     //     cpr::Get(cpr::Url{"https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"});
 
+    auto downloaded = incplot::config::download_fileRaw("https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz");
+
     // If the user wants just to display the available schemes we do that and exit
     if (ap.get<bool>("-s")) {
         std::cout << incplot::config::get_showSchemes(dbCon);
