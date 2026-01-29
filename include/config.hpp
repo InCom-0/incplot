@@ -44,7 +44,7 @@ enum class dbErr {
 };
 
 
-std::vector<std::byte> download_fileRaw(std::string_view url);
+std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator = true);
 
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
                                                                             const inccol::palette16 &against);
@@ -109,6 +109,7 @@ std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, s
 std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const id);
 
 
+std::expected<std::vector<std::byte>, dbErr> get_default_font(sqlpp::sqlite3::connection &dbConn);
 std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw);
 
 

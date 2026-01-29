@@ -1,5 +1,6 @@
 #include <format>
 #include <optional>
+#include <string>
 #include <typeindex>
 
 #include <args.hpp>
@@ -163,7 +164,42 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
 
 
     // HTML mode options
-    if (ap.get<bool>("-o")) { nonDifferentiated.htmlMode_bool = true; }
+    if (ap.get<bool>("-o")) {
+        nonDifferentiated.htmlMode_bool = true;
+        auto dbConn                     = config::db::get_configConnection(config::appName, config::configFileName);
+        if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
+            auto exp_fallBack_font = incom::terminal_plot::config::db::get_default_font(dbConn.value());
+
+            // Happy path
+            if (exp_fallBack_font.has_value()) {
+                nonDifferentiated.htmlMode_ttfs_lastResort.push_back(std::move(exp_fallBack_font.value()));
+            }
+
+            else {
+                // Less happy path, database is OK, but there is no default font in it
+                // TODO: If we don't have a fallback font available we need to request to download it, download it,
+                // store it in configDB, recheck, inform.
+                if (exp_fallBack_font.error() == incom::terminal_plot::config::dbErr::notFound) {}
+
+
+                // Very bad, some database error that cannot be solved
+                // Proceed but without fallback font ... all bets are off, inform the user
+                else {
+                    nonDifferentiated.additionalInfo.push_back(
+                        std::string("Internal error of incplot config database while querying for a fallback font for "
+                                    "html output. This is probably unfixable by the "
+                                    "user. Incplot will continue to work with limited functionality."));
+                }
+            }
+        }
+        else {
+            nonDifferentiated.additionalInfo.push_back(
+                std::string("Internal error of incplot config database while querying for a fallback font for html "
+                            "output. This is probably unfixable by the "
+                            "user. Incplot will continue to work with limited functionality."));
+        }
+    }
+
     if (auto optVal = ap.present<std::vector<std::string>>("-f")) {
         // TODO: Functions to get the font: 1) from system, 2) from path, 3) from URL
         // TODO: Also need some way to differentiate between these
@@ -282,7 +318,7 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
     mex_grp.add_argument("-d", "--default-colors").help("Draw with [d]efault colors (dimidium theme)").flag().nargs(0);
     out_ap.add_argument("-s", "--show-schemes").help("Show all available color [s]chemes and exit").flag().nargs(0);
     mex_grp.add_argument("-m", "--monochrome").help("Draw in [m]onochromatic colors").flag().nargs(0);
-    
+
     out_ap.add_argument("-r", "--force-rgb")
         .help("Always use the RGB SGR way to output colors (virtually never necessary, exists for hypothetical "
               "compatibility reasons only)")

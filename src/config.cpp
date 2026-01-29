@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include <optional>
+#include <ranges>
 #include <string_view>
 #include <utility>
 
@@ -17,7 +18,7 @@ namespace incom::terminal_plot::config {
 
 namespace fs = std::filesystem;
 
-std::vector<std::byte> download_fileRaw(std::string_view url) {
+std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
     auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
         std::vector<std::byte> *pf = reinterpret_cast<std::vector<std::byte> *>(userdata);
         auto v = std::views::transform(data, [](auto const &item) { return static_cast<std::byte>(item); });
@@ -46,7 +47,7 @@ std::vector<std::byte> download_fileRaw(std::string_view url) {
         if (downloadTotal < 1 || downloadNow < 1 || bar.is_completed()) {}
         else {
             double pgr = static_cast<double>(downloadNow) / static_cast<double>(downloadTotal) * 100;
-            if (pgr == 100) { bar.set_option(option::PostfixText{"Font downloaded!"}); }
+            if (pgr == 100) { bar.set_option(option::PostfixText{"Finished!"}); }
             bar.set_progress(pgr);
         }
         return true;
@@ -54,7 +55,7 @@ std::vector<std::byte> download_fileRaw(std::string_view url) {
 
     cpr::Session session;
     session.SetUrl(cpr::Url{url});
-    session.SetProgressCallback(cpr::ProgressCallback{cb_progress, 0});
+    if (indicator) { session.SetProgressCallback(cpr::ProgressCallback{cb_progress, 0}); }
 
     std::vector<std::byte> res{};
     if (auto resLength = session.GetDownloadFileLength(); resLength > 0) {
@@ -563,6 +564,22 @@ std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, s
     return std::unexpected(dbErr::impossibleNumberOfRecords);
 }
 
+
+std::expected<std::vector<std::byte>, dbErr> get_default_font(sqlpp::sqlite3::connection &dbConn) {
+    using namespace sqltables;
+    DefaultFont df{};
+
+    for (size_t i = 0; auto const &dfID : dbConn(sqlpp::select(df.content).from(df))) {
+        if (i++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+        if (not dfID.content.has_value()) { return std::unexpected(dbErr::notFound); }
+        return std::vector<std::byte>(std::from_range, std::views::transform(dfID.content.value(), [](auto const item) {
+                                          return static_cast<std::byte>(item);
+                                      }));
+    }
+    // If the above for loop does not run at all that means there are 0 records in the DefaultScheme table
+    // That is impossible
+    return std::unexpected(dbErr::impossibleNumberOfRecords);
+}
 
 std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw) {
     using namespace sqltables;
