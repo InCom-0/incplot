@@ -32,6 +32,8 @@ inline constexpr size_t html_defaultFontSize = 12uz;
 inline constexpr size_t html_minFontSize     = 1uz;
 inline constexpr size_t html_maxFontSize     = 256uz;
 
+inline constexpr std::string_view html_fallbackFont_URLsource =
+    "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"sv;
 
 enum class dbErr {
     impossibleNumberOfRecords = 1,

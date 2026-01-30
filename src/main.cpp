@@ -38,14 +38,15 @@ int main(int argc, char *argv[]) {
     // cpr::Response r =
     //     cpr::Get(cpr::Url{"https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"});
 
-    // auto downloaded = incplot::config::download_fileRaw(
-    //     "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz");
+    // auto downloaded = incplot::config::download_fileRaw(incplot::config::html_fallbackFont_URLsource);
 
     // If the user wants just to display the available schemes we do that and exit
     if (ap.get<bool>("-s")) {
         std::cout << incplot::config::get_showSchemes(dbCon);
         return 0;
     }
+
+    auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
 
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
@@ -60,7 +61,6 @@ int main(int argc, char *argv[]) {
 
 
     // If not the above then we create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
-    auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
 
 
     // STDOUT IS NOT IN TERMINAL

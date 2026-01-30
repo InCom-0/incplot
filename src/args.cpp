@@ -1,17 +1,66 @@
+#include <algorithm>
+#include <cctype>
 #include <format>
+#include <fstream>
+#include <iostream>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <typeindex>
 
 #include <args.hpp>
 #include <config.hpp>
 #include <incplot/plot_structures.hpp>
 #include <incstd/core/typegen.hpp>
+#include <incstd/incstd_console.hpp>
 
 
 namespace incom {
 namespace terminal_plot {
 namespace cl_args {
+namespace {
+std::optional<bool> prompt_yes_no(std::string_view question, bool defaultNo = true) {
+    std::istream *in = nullptr;
+    std::ifstream tty_in;
+
+    if (incom::standard::console::is_stdin_inTerminal()) { in = &std::cin; }
+    else {
+#ifdef _WIN32
+        tty_in.open("CONIN$");
+#else
+        tty_in.open("/dev/tty");
+#endif
+        if (tty_in.is_open()) { in = &tty_in; }
+    }
+
+    if (in == nullptr) { return std::nullopt; }
+
+    auto trim = [](std::string &s) {
+        auto not_space = [](unsigned char ch) { return ! std::isspace(ch); };
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), not_space));
+        s.erase(std::find_if(s.rbegin(), s.rend(), not_space).base(), s.end());
+    };
+
+    for (;;) {
+        std::cerr << question << (defaultNo ? " [y/N]: " : " [Y/n]: ") << std::flush;
+
+        std::string line;
+        if (! std::getline(*in, line)) { return std::nullopt; }
+
+        trim(line);
+        if (line.empty()) { return defaultNo ? std::optional<bool>(false) : std::optional<bool>(true); }
+
+        std::transform(line.begin(), line.end(), line.begin(),
+                       [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+        if (line == "y" || line == "yes") { return true; }
+        if (line == "n" || line == "no") { return false; }
+
+        std::cerr << "Please answer with 'y' or 'n'.\n";
+    }
+}
+} // namespace
+
 std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParser const &ap) {
 
     DesiredPlot::DP_CtorStruct nonDifferentiated;
@@ -179,7 +228,42 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
                 // Less happy path, database is OK, but there is no default font in it
                 // TODO: If we don't have a fallback font available we need to request to download it, download it,
                 // store it in configDB, recheck, inform.
-                if (exp_fallBack_font.error() == incom::terminal_plot::config::dbErr::notFound) {}
+                if (exp_fallBack_font.error() == incom::terminal_plot::config::dbErr::notFound) {
+                    auto consent =
+                        prompt_yes_no(std::format("No fallback font configured for HTML output (normal on first time "
+                                                  "use).\nDownload a fallback font now (Iosevka Nerd Font from {0} )?",
+                                                  incom::terminal_plot::config::html_fallbackFont_URLsource),
+                                      false);
+
+                    if (! consent.has_value()) {
+                        nonDifferentiated.additionalInfo.push_back(std::string(
+                            "Unable to prompt for fallback font download. Proceeding without a fallback font."));
+                    }
+                    else if (consent.value()) {
+                        nonDifferentiated.additionalInfo.push_back(std::string(
+                            "User approved fallback font download. (Download workflow not implemented yet.)"));
+                        auto downloaded = incom::terminal_plot::config::download_fileRaw(
+                            incom::terminal_plot::config::html_fallbackFont_URLsource);
+
+                            // TODO: Need to extract the font we want from the file
+                        std::vector<std::byte> extracted;
+
+                        // Put the fallback into configDB
+                        if (incom::terminal_plot::config::db::set_default_font(dbConn.value(), extracted).has_value()) {
+                            nonDifferentiated.htmlMode_ttfs_lastResort.push_back(extracted);
+                        }
+                        else {
+                            // configDB does not behave as expected ... should never ever happen
+                            nonDifferentiated.additionalInfo.push_back(
+                                std::string("Incplot config database is somehow corrupted on saving fallback font. "
+                                            "Incplot will continue to work with limited functionality."));
+                        }
+                    }
+                    else {
+                        nonDifferentiated.additionalInfo.push_back(
+                            std::string("User declined fallback font download. Proceeding without a fallback font."));
+                    }
+                }
 
 
                 // Very bad, some database error that cannot be solved
