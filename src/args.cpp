@@ -65,7 +65,9 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
 
     DesiredPlot::DP_CtorStruct nonDifferentiated;
 
-    // Value options
+    // #####################################################################
+    // ### Value and size options ###
+    // #####################################################################
     if (auto optVal = ap.present<int>("-x")) { nonDifferentiated.lts_colID = optVal.value(); }
     if (auto optVal = ap.present<std::vector<int>>("-y")) {
         nonDifferentiated.v_colIDs = std::vector<size_t>(optVal.value().begin(), optVal.value().end());
@@ -81,7 +83,9 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     if (auto wdt = ap.present<int>("-w")) { nonDifferentiated.tar_width = wdt.value(); }
     if (auto hgt = ap.present<int>("-t")) { nonDifferentiated.tar_height = hgt.value(); }
 
-    // Scheme and color options
+    // #####################################################################
+    // ### Scheme and color options ###
+    // #####################################################################
     auto schemeGetter = [&]() -> void {
         auto setSchemeFromTermOrDefault = [&]() -> bool {
             auto schm_opt = config::get_schemeFromTerminal();
@@ -212,7 +216,9 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     if (ap.get<bool>("-r")) { nonDifferentiated.forceRGB_bool = true; }
 
 
-    // HTML mode options
+    // #####################################################################
+    // ### HTML mode options ###
+    // #####################################################################
     if (ap.get<bool>("-o")) {
         nonDifferentiated.htmlMode_bool = true;
         auto dbConn                     = config::db::get_configConnection(config::appName, config::configFileName);
@@ -222,6 +228,7 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
             // Happy path
             if (exp_fallBack_font.has_value()) {
                 nonDifferentiated.htmlMode_ttfs_lastResort.push_back(std::move(exp_fallBack_font.value()));
+                std::cout << "LastResort set from database\n";
             }
 
             else {
@@ -240,18 +247,29 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
                             "Unable to prompt for fallback font download. Proceeding without a fallback font."));
                     }
                     else if (consent.value()) {
-                        nonDifferentiated.additionalInfo.push_back(std::string(
-                            "User approved fallback font download. (Download workflow not implemented yet.)"));
                         auto downloaded = incom::terminal_plot::config::download_fileRaw(
                             incom::terminal_plot::config::html_fallbackFont_URLsource);
 
-                            // TODO: Need to extract the font we want from the file
-                        std::vector<std::byte> extracted;
+                        auto extracted =
+                            incom::terminal_plot::config::extract_fromArchive(downloaded, [](archive_entry *item) {
+                                if (archive_entry_pathname(item) ==
+                                    incom::terminal_plot::config::html_fallbackFont_filePathInURLsource) {
+                                    return true;
+                                }
+                                else { return false; }
+                            });
 
-                        // Put the fallback into configDB
-                        if (incom::terminal_plot::config::db::set_default_font(dbConn.value(), extracted).has_value()) {
-                            nonDifferentiated.htmlMode_ttfs_lastResort.push_back(extracted);
+                        if (extracted.has_value() && extracted.value().size() == 1) {
+                            // Put the fallback into configDB
+                            if (incom::terminal_plot::config::db::set_default_font(dbConn.value(),
+                                                                                   extracted.value().front())
+                                    .has_value()) {
+                                // Only if that succeeds do we set that font as 'last resort'
+                                nonDifferentiated.htmlMode_ttfs_lastResort.push_back(extracted.value().front());
+                                std::cout << "LastResort set from download\n";
+                            }
                         }
+
                         else {
                             // configDB does not behave as expected ... should never ever happen
                             nonDifferentiated.additionalInfo.push_back(
@@ -310,7 +328,9 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     else { nonDifferentiated.htmlMode_fontSize = incom::terminal_plot::config::html_defaultFontSize; }
 
 
-    // Plot type options
+    // #####################################################################
+    // ### Plot type options ###
+    // #####################################################################
     std::vector<DesiredPlot::DP_CtorStruct> res;
     auto                                    addOne = [&](std::optional<std::type_index> const &&sv_opt) {
         res.push_back(nonDifferentiated);

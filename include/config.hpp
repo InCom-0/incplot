@@ -12,6 +12,8 @@
 #include <incstd/incstd_color.hpp>
 #include <incstd/incstd_console.hpp>
 
+#include <archive.h>
+#include <archive_entry.h>
 
 #include <sqlitedefs.hpp>
 
@@ -34,6 +36,7 @@ inline constexpr size_t html_maxFontSize     = 256uz;
 
 inline constexpr std::string_view html_fallbackFont_URLsource =
     "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"sv;
+inline constexpr std::string_view html_fallbackFont_filePathInURLsource = "IosevkaNerdFont-Regular.ttf"sv;
 
 enum class dbErr {
     impossibleNumberOfRecords = 1,
@@ -47,6 +50,58 @@ enum class dbErr {
 
 
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator = true);
+
+template <typename FUNC>
+std::expected<std::vector<std::vector<std::byte>>, int> extract_fromArchive(std::span<const std::byte> rawMemory,
+                                                                            FUNC const                &filter_func) {
+    std::expected<std::vector<std::vector<std::byte>>, int> res = std::vector<std::vector<std::byte>>{};
+
+    struct archive       *a;
+    struct archive_entry *entry;
+    int                   ok_r;
+
+    a = archive_read_new();
+    archive_read_support_filter_all(a);
+    archive_read_support_format_all(a);
+    // archive_read_open_memory(a, downloaded.data(), downloaded.size());
+    ok_r = archive_read_open_memory(a, rawMemory.data(), rawMemory.size_bytes());
+    if (ok_r != ARCHIVE_OK) {
+        res = std::unexpected(-1);
+        goto RET;
+    }
+
+    while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+        // printf("%s\n", archive_entry_pathname(entry));
+
+        if (filter_func(entry)) {
+            auto const size64 = archive_entry_size(entry);
+            if (size64 < 0) {
+                res = std::unexpected(-1);
+                goto RET;
+            }
+            res.value().push_back(std::vector<std::byte>(static_cast<std::size_t>(size64)));
+            std::size_t offset = 0;
+
+            while (offset < res.value().back().size()) {
+                auto const n =
+                    archive_read_data(a, res.value().back().data() + offset, res.value().back().size() - offset);
+                if (n == 0) { break; }
+                if (n < 0) {
+                    res = std::unexpected(-1);
+                    goto RET;
+                }
+                offset += static_cast<std::size_t>(n);
+            }
+            res.value().back().resize(offset);
+        }
+        archive_read_data_skip(a); // Note 2
+    }
+    ok_r = archive_read_free(a);   // Note 3
+    if (ok_r != ARCHIVE_OK) { std::exit(1); }
+
+RET:
+    return res;
+}
 
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
                                                                             const inccol::palette16 &against);

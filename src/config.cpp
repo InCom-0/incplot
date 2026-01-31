@@ -65,7 +65,8 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
         show_console_cursor(true);
     }
     return res;
-};
+}
+
 
 std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
                                                                             const inccol::palette16 &against) {
