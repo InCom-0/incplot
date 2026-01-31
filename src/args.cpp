@@ -228,13 +228,11 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
             // Happy path
             if (exp_fallBack_font.has_value()) {
                 nonDifferentiated.htmlMode_ttfs_lastResort.push_back(std::move(exp_fallBack_font.value()));
-                std::cout << "LastResort set from database\n";
+                // std::cout << "LastResort set from database\n";
             }
 
             else {
                 // Less happy path, database is OK, but there is no default font in it
-                // TODO: If we don't have a fallback font available we need to request to download it, download it,
-                // store it in configDB, recheck, inform.
                 if (exp_fallBack_font.error() == incom::terminal_plot::config::dbErr::notFound) {
                     auto consent =
                         prompt_yes_no(std::format("No fallback font configured for HTML output (normal on first time "
@@ -326,6 +324,17 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
         else { nonDifferentiated.htmlMode_fontSize = optVal.value(); }
     }
     else { nonDifferentiated.htmlMode_fontSize = incom::terminal_plot::config::html_defaultFontSize; }
+
+
+    // Check whether we have at least some font available
+    if (ap.get<bool>("-o")) {
+        if (nonDifferentiated.htmlMode_ttfs_lastResort.empty()) {
+            nonDifferentiated.additionalInfo.push_back(
+                std::string("No fallback font is available for use in HTML output mode.\nWithout a proper fallback "
+                            "including all the glyphs used by incplot, it is highly unlikely that the output html will "
+                            "display correctly without artifacts."));
+        }
+    }
 
 
     // #####################################################################
