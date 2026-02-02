@@ -2,6 +2,7 @@
 #include <cctype>
 #include <format>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -11,8 +12,10 @@
 #include <args.hpp>
 #include <config.hpp>
 #include <incplot/plot_structures.hpp>
+
 #include <incstd/core/typegen.hpp>
 #include <incstd/incstd_console.hpp>
+#include <incfontdisc/incfontdisc.hpp>
 
 
 namespace incom {
@@ -219,7 +222,7 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     // #####################################################################
     // ### HTML mode options ###
     // #####################################################################
-    if (ap.get<bool>("-o")) {
+    if (ap.get<bool>("-o") || ap.get<bool>("-j")) {
         nonDifferentiated.htmlMode_bool = true;
         auto dbConn                     = config::db::get_configConnection(config::appName, config::configFileName);
         if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
@@ -301,6 +304,20 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     }
 
     if (auto optVal = ap.present<std::vector<std::string>>("-f")) {
+        std::string                                       &reqFamilyName = optVal.value().front();
+        std::optional<std::reference_wrapper<std::string>> reqStyleName =
+            optVal.value().size() > 1
+                ? std::optional<std::reference_wrapper<std::string>>(std::ref(optVal.value().at(1)))
+                : std::nullopt;
+
+        auto mtch = incfontdisc::match_fonts(incfontdisc::FontQuery{
+            .family = reqFamilyName,
+            .style  = reqStyleName ? std::optional<std::string>(reqStyleName.value()) : std::nullopt});
+
+        if (not mtch.has_value()) {}
+        else if (mtch.value().family_score != 1.0f || mtch.value().face_score != 1.0f) {}
+        else {}
+
         // TODO: Functions to get the font: 1) from system, 2) from path, 3) from URL
         // TODO: Also need some way to differentiate between these
     }
@@ -405,11 +422,20 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
 
     // HTML Related
     out_ap.add_group("HTML output related:");
-    out_ap.add_argument("-o", "--html")
-        .help("Convert output into self-contained html [flag] (it is advisable to pipe the result into a file or into "
+    auto &mexGrp_html = out_ap.add_mutually_exclusive_group();
+    mexGrp_html.add_argument("-o", "--html")
+        .help("Convert output into self-contained pure text html, render using pure text [flag] (it is advisable to "
+              "pipe the result into a file or into "
               "some other process when using this mode)")
         .flag()
         .nargs(0);
+    mexGrp_html.add_argument("-j", "--html-canvas")
+        .help("Convert output into self-contained html, render using 2D canvas script [flag] (it is advisable to pipe "
+              "the result into a file or into "
+              "some other process when using this mode)")
+        .flag()
+        .nargs(0);
+
     out_ap.add_argument("-f", "--font")
         .help("Font to use inside html. Either: Family name of system installed font or Path to font file "
               "or Url to font file. Specify style name as second arg if/where relevant.")
@@ -422,16 +448,19 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
 
 
     // Schemes and colors options
-    auto &mex_grp = out_ap.add_mutually_exclusive_group();
+    auto &mexGrp_color = out_ap.add_mutually_exclusive_group();
     out_ap.add_group("Schemes and colors options:");
-    mex_grp.add_argument("-l", "--color-scheme")
+    mexGrp_color.add_argument("-l", "--color-scheme")
         .help("Specify color scheme by name (the scheme must exist in the config database)")
         .default_value<std::string>("")
         .nargs(1);
-    mex_grp.add_argument("-d", "--default-colors").help("Draw with [d]efault colors (dimidium theme)").flag().nargs(0);
-    out_ap.add_argument("-s", "--show-schemes").help("Show all available color [s]chemes and exit").flag().nargs(0);
-    mex_grp.add_argument("-m", "--monochrome").help("Draw in [m]onochromatic colors").flag().nargs(0);
+    mexGrp_color.add_argument("-d", "--default-colors")
+        .help("Draw with [d]efault colors (dimidium theme)")
+        .flag()
+        .nargs(0);
+    mexGrp_color.add_argument("-m", "--monochrome").help("Draw in [m]onochromatic colors").flag().nargs(0);
 
+    out_ap.add_argument("-s", "--show-schemes").help("Show all available color [s]chemes and exit").flag().nargs(0);
     out_ap.add_argument("-r", "--force-rgb")
         .help("Always use the RGB SGR way to output colors (virtually never necessary, exists for hypothetical "
               "compatibility reasons only)")
