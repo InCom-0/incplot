@@ -111,6 +111,7 @@ include(CMake_dependencies.cmake) ### Loads and declares the required external l
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib incfontdisc::incfontdisc)
 target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
 target_link_libraries(incplot PRIVATE argparse::argparse LibArchive::LibArchive cpr::cpr indicators::indicators)
+target_link_libraries(incplot PRIVATE ots::ots)
 
 if(USING_LIBSTDCXX)
     target_link_libraries(incplot PRIVATE "-lstdc++exp")
@@ -144,8 +145,8 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
     VERBATIM)
 
-add_custom_target(ENSUREAutoFileDeps ALL DEPENDS ${COM_OUTPUT})
-add_dependencies(incplot ENSUREAutoFileDeps)
+add_custom_target(incplot_autoFileDeps ALL DEPENDS ${COM_OUTPUT})
+add_dependencies(incplot incplot_autoFileDeps)
 
 
 ########################################################

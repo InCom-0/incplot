@@ -22,6 +22,11 @@ CPMAddPackage(
     NAME incfontdisc
 )
 CPMAddPackage(
+    URI "gh:InCom-0/ots_cmake#cmake_unofficial"
+    OPTIONS "ots_BUILD_SHARED_LIB OFF"
+    NAME ots
+)
+CPMAddPackage(
     URI "gh:p-ranav/argparse@3.2"
 )
 CPMAddPackage(
