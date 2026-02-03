@@ -39,6 +39,9 @@ CPMAddPackage("gh:rbock/sqlpp23#0.67")
 # cpr is a library that wraps curl in a sane way, but also builds its dependencies if need be or just links the system installed ones
 # On a 'normal' non-windows system it is probably better to have CURL already installed
 # Same goes for LIBPSL
+if(NOT DEFINED CURL_ZLIB)
+    set(CURL_ZLIB OFF CACHE BOOL "Enable zlib in curl")
+endif()
 CPMAddPackage(
     URI "gh:libcpr/cpr#1.14.1"
     OPTIONS "BUILD_SHARED_LIBS OFF"
