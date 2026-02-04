@@ -11,6 +11,9 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory structure" ON)
 
+option(incplot_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for dependencies." ON)
+option(incplot_USE_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing dependencies." OFF)
+
 
 #####################################################################
 ### Staging ###
@@ -45,7 +48,7 @@ if(INCPLOT_LTO)
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
         message(STATUS "LTO is disabled on MacOS")
     else()
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
         message(STATUS "LTO is enabled")
         # set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()
@@ -82,7 +85,7 @@ target_compile_features(incplot PRIVATE cxx_std_23)
 ##########################################################################
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-        set(BUILD_SHARED_LIBS OFF)
+        # set(BUILD_SHARED_LIBS OFF)
         if(USING_LIBSTDCXX)
             target_link_options(incplot PUBLIC -static)
         elseif(USING_LIBCXX)
@@ -111,7 +114,7 @@ include(CMake_dependencies.cmake) ### Loads and declares the required external l
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib incfontdisc::incfontdisc)
 target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
 target_link_libraries(incplot PRIVATE argparse::argparse LibArchive::LibArchive cpr::cpr indicators::indicators)
-target_link_libraries(incplot PRIVATE ots::ots)
+# target_link_libraries(incplot PRIVATE ots::ots)
 
 if(USING_LIBSTDCXX)
     target_link_libraries(incplot PRIVATE "-lstdc++exp")

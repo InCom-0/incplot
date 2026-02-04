@@ -1,8 +1,9 @@
+set(CPM_USE_LOCAL_PACKAGES ${incplot_USE_LOCAL_PACKAGES} CACHE BOOL "CPM will try to find packages locally first" FORCE)
+set(CPM_LOCAL_PACKAGES_ONLY ${incplot_USE_LOCAL_PACKAGES_ONLY} CACHE BOOL
+    "CPM will not be forbidden from downloading packages. Will have to use local packages." FORCE)
+    
 include(cmake/CPM.cmake)
 
-if(BUILD_SHARED_LIBS)
-    set(CPM_USE_LOCAL_PACKAGES ON)
-endif()
 
 CPMAddPackage(
     NAME nlohmann_json
@@ -21,11 +22,11 @@ CPMAddPackage(
     OPTIONS "incfontdisc_BUILD_SHARED_LIB OFF"
     NAME incfontdisc
 )
-CPMAddPackage(
-    URI "gh:InCom-0/ots_cmake#cmake_unofficial"
-    OPTIONS "ots_BUILD_SHARED_LIB OFF"
-    NAME ots
-)
+# CPMAddPackage(
+#     URI "gh:InCom-0/ots_cmake#cmake_unofficial"
+#     OPTIONS "ots_BUILD_SHARED_LIB OFF"
+#     NAME ots
+# )
 CPMAddPackage(
     URI "gh:p-ranav/argparse@3.2"
 )
@@ -53,15 +54,11 @@ CPMAddPackage(
     NAME cpr
 )
 
-
 CPMAddPackage(
     URI "gh:tukaani-project/xz@5.8.2"
     OPTIONS "BUILD_SHARED_LIBS OFF"
     NAME LibLZMA
 )
-if(LibLZMA_ADDED)
-    set(LIBLZMA_FOUND TRUE)
-endif()
 
 CPMAddPackage(
     URI "gh:libarchive/libarchive@3.8.5"
