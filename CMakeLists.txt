@@ -80,9 +80,10 @@ target_sources(incplot
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
-if(MINGW)
-    add_mingw_runtime_deps(incplot)
-endif(MINGW)
+# TODO: Need to finish the script that drives this
+# if(MINGW)
+#     add_mingw_runtime_deps(incplot)
+# endif(MINGW)
 
 
 ##########################################################################
@@ -120,16 +121,30 @@ include(CMake_dependencies.cmake) ### Loads and declares the required external l
 
 target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib incfontdisc::incfontdisc)
 target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
-target_link_libraries(incplot PRIVATE argparse::argparse LibArchive::LibArchive cpr::cpr indicators::indicators)
+target_link_libraries(incplot PRIVATE argparse::argparse cpr::cpr indicators::indicators)
+target_link_libraries(incplot PRIVATE LibArchive::LibArchive)
 # target_link_libraries(incplot PRIVATE ots::ots)
 
 if(USING_LIBSTDCXX)
     target_link_libraries(incplot PRIVATE "-lstdc++exp")
 endif()
 
-if(LibArchive_ADDED)
+if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(incplot PRIVATE LIBARCHIVE_STATIC)
 endif()
+
+# TODO: Figure out how to silence that warning on MinGW ... does not work like it is below
+# if(SQLite3_ADDED)
+#     set(sqlite3c_FILE "${CMAKE_BINARY_DIR}/_deps/sqlite3_ext-src/sqlite3.c")
+#     set_source_files_properties(
+#         ${sqlite3c_FILE}
+#         PROPERTIES
+#         COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-stringop-overread>"
+#     )
+#     unset(sqlite3c_FILE)
+
+# endif()
+
 
 
 #############################################################

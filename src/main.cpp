@@ -18,6 +18,7 @@ using namespace std::literals;
 
 int main(int argc, char *argv[]) {
 
+
     // Create and populate ArgumentParser
     argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
                                 argparse::default_arguments::all);
@@ -30,7 +31,8 @@ int main(int argc, char *argv[]) {
 
     // Get connection to configDB
     if (ap.get<bool>("-s")) {
-        auto dbCon = incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
+        auto dbCon =
+            incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
         std::cout << incplot::config::get_showSchemes(dbCon);
         return 0;
     }
