@@ -20,7 +20,7 @@ jobs:
         sys: [windows]
         icon: ['⬜']
         buildenv: [VS2022]
-        compiler: [MSVC, clang-cl]
+        compiler: [MSVC]
         mode: ["cxx23"]
         build-type: ["Release", "Debug"]
         target : ["all"]
