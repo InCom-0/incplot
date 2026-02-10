@@ -115,10 +115,11 @@ jobs:
         install: >-
           git
           make
+          cmake
+          meson
         pacboy: >-
           toolchain:p
           ${{matrix.add-to-pacboy}}
-          cmake:p
           ninja:p
 
     - name: Configure git credentials
