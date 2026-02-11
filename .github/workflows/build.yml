@@ -209,7 +209,7 @@ jobs:
           - compiler: "clang"
             compiler-setupname: "llvm"
             compiler-ver: "21"
-            cmake-override: ""
+            cmake-override: -DCMAKE_PREFIX_PATH=$(brew --prefix)
 
     steps:
       - name: "🧰 Checkout"
@@ -234,7 +234,7 @@ jobs:
 
       - name: Configure
         run: |
-          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}} -DCMAKE_PREFIX_PATH="$(brew --prefix)"
+          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
       - name: "🚧 Build"
         run: cmake --build build --target ${{matrix.target}}
