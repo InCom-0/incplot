@@ -173,7 +173,7 @@ jobs:
       - name: Install fontconfig
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libfontconfig-dev
+          sudo apt-get install -y libfontconfig-dev
 
       - name: Configure
         run: |
@@ -227,7 +227,7 @@ jobs:
       - name: Install harfbuzz
         run: |
           brew update
-          brew install harfbuzz
+          brew install woff2 nlohmann-json xxhash magic_enum argparse indicators cpr libarchive
 
       - name: Configure git credentials
         run: |
