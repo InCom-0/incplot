@@ -209,10 +209,7 @@ jobs:
           - compiler: "clang"
             compiler-setupname: "llvm"
             compiler-ver: "21"
-            cmake-override: "-DCMAKE_C_COMPILER=clang \
-              -DCMAKE_CXX_COMPILER=clang++ \
-              -DCMAKE_CXX_FLAGS=\"-stdlib=libc++ -I$(brew --prefix llvm)/include/c++/v1\" \
-              -DCMAKE_EXE_LINKER_FLAGS=\"-stdlib=libc++ -L$(brew --prefix llvm)/lib/c++\""
+            cmake-override: ""
 
     steps:
       - name: "🧰 Checkout"
