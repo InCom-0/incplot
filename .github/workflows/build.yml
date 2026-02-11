@@ -173,7 +173,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig-dev
+          sudo apt-get install -y libfontconfig-dev libharfbuzz-dev
 
       - name: Configure
         run: |
@@ -234,7 +234,7 @@ jobs:
 
       - name: Configure
         run: |
-          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} -DCMAKE_PREFIX_PATH="$(brew --prefix)"
 
       - name: "🚧 Build"
         run: cmake --build build --target ${{matrix.target}}
