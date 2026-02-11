@@ -170,7 +170,7 @@ jobs:
           setup-cpp: true
           compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
           
-      - name: Install fontconfig
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libfontconfig-dev
@@ -209,7 +209,7 @@ jobs:
           - compiler: "clang"
             compiler-setupname: "llvm"
             compiler-ver: "21"
-            cmake-override: -DCMAKE_PREFIX_PATH=$(brew --prefix)
+            cmake-override: -DCMAKE_PREFIX_PATH="$(brew --prefix)"
 
     steps:
       - name: "🧰 Checkout"
@@ -221,7 +221,7 @@ jobs:
           setup-cpp: true
           compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
             
-      - name: Install harfbuzz
+      - name: Install dependencies
         run: |
           brew update
           brew install woff2 nlohmann-json xxhash magic_enum argparse indicators cpr libarchive
