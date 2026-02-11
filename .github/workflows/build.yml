@@ -234,7 +234,7 @@ jobs:
 
       - name: Configure
         run: |
-          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}} -DCMAKE_PREFIX_PATH="$(brew --prefix)"
 
       - name: "🚧 Build"
         run: cmake --build build --target ${{matrix.target}}
