@@ -223,6 +223,11 @@ jobs:
         with:
           setup-cpp: true
           compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
+            
+      - name: Install harfbuzz
+        run: |
+          brew update
+          brew install harfbuzz
 
       - name: Configure git credentials
         run: |
