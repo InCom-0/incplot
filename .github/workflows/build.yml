@@ -234,7 +234,11 @@ jobs:
 
       - name: Configure
         run: |
-          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} -DCMAKE_PREFIX_PATH="$(brew --prefix)"
+          BREW_PREFIX="$(brew --prefix)"
+          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} \
+            -DCMAKE_PREFIX_PATH="$BREW_PREFIX" \
+            -DCMAKE_INCLUDE_PATH="$BREW_PREFIX/include" \
+            -DCMAKE_LIBRARY_PATH="$BREW_PREFIX/lib"
 
       - name: "🚧 Build"
         run: cmake --build build --target ${{matrix.target}}
