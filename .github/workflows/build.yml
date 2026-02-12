@@ -228,6 +228,7 @@ jobs:
           ls "$(brew --prefix harfbuzz)/include" || true
           ls "$(brew --prefix harfbuzz)/include/harfbuzz" || true
           ls "$(brew --prefix woff2)/include" || true
+          ls "$(brew --prefix woff2)/include/woff2" || true
           ls "$(brew --prefix woff2)/lib" || true
           ls "$(brew --prefix woff2)/lib/cmake" || true
           ls "$(brew --prefix woff2)/lib/cmake/woff2" || true
