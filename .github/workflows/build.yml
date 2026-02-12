@@ -209,7 +209,7 @@ jobs:
           - compiler: "clang"
             compiler-setupname: "llvm"
             compiler-ver: "21"
-            cmake-override: -DCMAKE_PREFIX_PATH="$(brew --prefix)"
+            cmake-override: ""
 
     steps:
       - name: "🧰 Checkout"
@@ -225,14 +225,6 @@ jobs:
         run: |
           brew update
           brew install harfbuzz woff2 nlohmann-json xxhash magic_enum argparse indicators cpr
-          ls "$(brew --prefix harfbuzz)/include" || true
-          ls "$(brew --prefix harfbuzz)/include/harfbuzz" || true
-          ls "$(brew --prefix woff2)/include" || true
-          ls "$(brew --prefix woff2)/include/woff2" || true
-          ls "$(brew --prefix woff2)/lib" || true
-          ls "$(brew --prefix woff2)/lib/cmake" || true
-          ls "$(brew --prefix woff2)/lib/cmake/woff2" || true
-          ls "$(brew --prefix woff2)/lib/cmake/woff2/WOFF2Config.cmake" || true
 
       - name: Configure git credentials
         run: |
@@ -242,13 +234,7 @@ jobs:
 
       - name: Configure
         run: |
-          BREW_PREFIX="$(brew --prefix)"
-          HB_PREFIX="$(brew --prefix harfbuzz)"
-          WOFF2_PREFIX="$(brew --prefix woff2)"
-          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} \
-            -DCMAKE_PREFIX_PATH="$BREW_PREFIX;$HB_PREFIX;$WOFF2_PREFIX" \
-            -DHarfBuzz_DIR="$HB_PREFIX/lib/cmake/harfbuzz" \
-            -DWOFF2_ROOT="$WOFF2_PREFIX"
+          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}}
 
       - name: "🚧 Build"
         run: cmake --build build --target ${{matrix.target}}
