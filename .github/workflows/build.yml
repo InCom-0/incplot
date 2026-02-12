@@ -225,10 +225,12 @@ jobs:
         run: |
           brew update
           brew install harfbuzz woff2 nlohmann-json xxhash magic_enum argparse indicators cpr
-          ls "$(brew --prefix harfbuzz)"  || true
-          ls "$(brew --prefix harfbuzz)/lib" || true
           ls "$(brew --prefix harfbuzz)/lib/cmake" || true
+          ls "$(brew --prefix harfbuzz)/lib/cmake/harfbuzz" || true
           ls "$(brew --prefix harfbuzz)/lib/cmake/harfbuzz/HarfBuzzConfig.cmake" || true
+          ls "$(brew --prefix woff2)/lib" || true
+          ls "$(brew --prefix woff2)/lib/cmake" || true
+          ls "$(brew --prefix woff2)/lib/cmake/woff2" || true
           ls "$(brew --prefix woff2)/lib/cmake/woff2/WOFF2Config.cmake" || true
 
       - name: Configure git credentials
