@@ -224,7 +224,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew install woff2 nlohmann-json xxhash magic_enum argparse indicators cpr libarchive
+          brew install harfbuzz woff2 nlohmann-json xxhash magic_enum argparse indicators cpr libarchive
 
       - name: Configure git credentials
         run: |
