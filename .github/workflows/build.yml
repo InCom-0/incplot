@@ -173,7 +173,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig-dev nlohmann-json3-dev
+          sudo apt-get install -y libfontconfig-dev nlohmann-json3-dev libwoff-dev libxxhash-dev libmagicenum-dev libargparse-dev libarchive-dev
 
       - name: Configure
         run: |
