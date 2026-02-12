@@ -46,6 +46,7 @@ CPMAddPackage(
 CPMAddPackage(
     URI "gh:InCom-0/sqlite3-cmake#master"
     OPTIONS "BUILD_SHARED_LIBS OFF"
+    FORCE TRUE
     NAME SQLite3
 )
 set(BUILD_SQLITE3_CONNECTOR ON)

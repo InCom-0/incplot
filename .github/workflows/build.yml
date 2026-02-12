@@ -221,10 +221,10 @@ jobs:
           setup-cpp: true
           compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
 
-      # - name: Install dependencies
-      #   run: |
-      #     brew update
-      #     brew install harfbuzz woff2 nlohmann-json xxhash magic_enum argparse indicators cpr
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install nlohmann-json xxhash magic_enum argparse indicators cpr xz libarchive
 
       - name: Configure git credentials
         run: |
