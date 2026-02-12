@@ -81,6 +81,7 @@ endif()
 CPMAddPackage(
     URI "gh:libcpr/cpr#1.14.1"
     OPTIONS "BUILD_SHARED_LIBS OFF" "CPR_CURL_USE_LIBPSL OFF" "CPR_USE_SYSTEM_CURL OFF"
+    FORCE TRUE
     NAME cpr
 )
 
