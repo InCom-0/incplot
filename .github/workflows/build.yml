@@ -225,9 +225,9 @@ jobs:
         run: |
           brew update
           brew install harfbuzz woff2 nlohmann-json xxhash magic_enum argparse indicators cpr
-          ls "$(brew --prefix harfbuzz)/lib/cmake" || true
-          ls "$(brew --prefix harfbuzz)/lib/cmake/harfbuzz" || true
-          ls "$(brew --prefix harfbuzz)/lib/cmake/harfbuzz/HarfBuzzConfig.cmake" || true
+          ls "$(brew --prefix harfbuzz)/include" || true
+          ls "$(brew --prefix harfbuzz)/include/harfbuzz" || true
+          ls "$(brew --prefix woff2)/include" || true
           ls "$(brew --prefix woff2)/lib" || true
           ls "$(brew --prefix woff2)/lib/cmake" || true
           ls "$(brew --prefix woff2)/lib/cmake/woff2" || true
