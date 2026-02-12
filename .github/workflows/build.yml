@@ -235,10 +235,11 @@ jobs:
       - name: Configure
         run: |
           BREW_PREFIX="$(brew --prefix)"
+          HB_PREFIX="$(brew --prefix harfbuzz)"
           cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} \
-            -DCMAKE_PREFIX_PATH="$BREW_PREFIX" \
-            -DCMAKE_INCLUDE_PATH="$BREW_PREFIX/include" \
-            -DCMAKE_LIBRARY_PATH="$BREW_PREFIX/lib"
+            -DCMAKE_PREFIX_PATH="$BREW_PREFIX;$HB_PREFIX" \
+            -DCMAKE_INCLUDE_PATH="$BREW_PREFIX/include;$HB_PREFIX/include" \
+            -DCMAKE_LIBRARY_PATH="$BREW_PREFIX/lib;$HB_PREFIX/lib"
 
       - name: "🚧 Build"
         run: cmake --build build --target ${{matrix.target}}
