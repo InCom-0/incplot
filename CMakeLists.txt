@@ -14,22 +14,12 @@ option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory
 option(incplot_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for dependencies." ON)
 option(incplot_USE_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing dependencies." OFF)
 
-if(APPLE)
-    execute_process(COMMAND brew --prefix
-        OUTPUT_VARIABLE BREW_PREFIX
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if(BREW_PREFIX)
-        list(PREPEND CMAKE_PREFIX_PATH "${BREW_PREFIX}")
-        list(PREPEND CMAKE_INCLUDE_PATH "${BREW_PREFIX}/include")
-        list(PREPEND CMAKE_LIBRARY_PATH "${BREW_PREFIX}/lib")
-        set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}" CACHE STRING "" FORCE)
-        set(CMAKE_INCLUDE_PATH "${CMAKE_INCLUDE_PATH}" CACHE STRING "" FORCE)
-        set(CMAKE_LIBRARY_PATH "${CMAKE_LIBRARY_PATH}" CACHE STRING "" FORCE)
-        message(STATUS "Setting PP: ${CMAKE_PREFIX_PATH}")
-        message(STATUS "Setting IP: ${CMAKE_INCLUDE_PATH}")
-        message(STATUS "Setting LP: ${CMAKE_LIBRARY_PATH}")
-    endif()
-endif()
+
+#  TEMP
+message(STATUS "Setting PP: ${CMAKE_PREFIX_PATH}")
+message(STATUS "Setting IP: ${CMAKE_INCLUDE_PATH}")
+message(STATUS "Setting LP: ${CMAKE_LIBRARY_PATH}")
+
 
 
 #####################################################################
