@@ -15,13 +15,6 @@ option(incplot_USE_LOCAL_PACKAGES "Use local (usually system installed) packages
 option(incplot_USE_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing dependencies." OFF)
 
 
-#  TEMP
-message(STATUS "Setting PP: ${CMAKE_PREFIX_PATH}")
-message(STATUS "Setting IP: ${CMAKE_INCLUDE_PATH}")
-message(STATUS "Setting LP: ${CMAKE_LIBRARY_PATH}")
-
-
-
 #####################################################################
 ### Staging ###
 #####################################################################

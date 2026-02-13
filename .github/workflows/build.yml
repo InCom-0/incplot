@@ -208,7 +208,7 @@ jobs:
 
           - compiler: "clang"
             compiler-setupname: "llvm"
-            compiler-ver: "21"
+            compiler-ver: "20"
             cmake-override: ""
 
     steps:
