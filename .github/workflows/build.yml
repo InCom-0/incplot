@@ -173,7 +173,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig-dev nlohmann-json3-dev libwoff-dev libxxhash-dev libargparse-dev libarchive-dev libidn2-dev libcurl4-openssl-dev
+          sudo apt-get install -y libharfbuzz-dev libfontconfig-dev nlohmann-json3-dev libwoff-dev libxxhash-dev libargparse-dev libarchive-dev libidn2-dev libcurl4-openssl-dev
 
       - name: Configure
         run: |
