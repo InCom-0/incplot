@@ -190,7 +190,7 @@ jobs:
       matrix:
         icon: ["⬛"]
         sys: [macos]
-        runs-on: [macos-15, macos-15-intel]
+        runs-on: [macos-15, macos-15-intel, macos-26]
         compiler: [clang]
         build-type: ["Release", "Debug"]
         target: ["all"]
@@ -210,7 +210,7 @@ jobs:
 
           - compiler: "clang"
             compiler-setupname: "llvm"
-            compiler-ver: "20"
+            compiler-ver: "21"
             cmake-override: ""
 
     steps:
