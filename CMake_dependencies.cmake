@@ -46,7 +46,6 @@ CPMAddPackage(
 CPMAddPackage(
     URI "gh:InCom-0/sqlite3-cmake#master"
     OPTIONS "BUILD_SHARED_LIBS OFF"
-    FORCE TRUE
     NAME SQLite3
 )
 set(BUILD_SQLITE3_CONNECTOR ON)
@@ -81,7 +80,6 @@ endif()
 CPMAddPackage(
     URI "gh:libcpr/cpr#1.14.1"
     OPTIONS "BUILD_SHARED_LIBS OFF" "CPR_CURL_USE_LIBPSL OFF" "CPR_USE_SYSTEM_CURL OFF"
-    FORCE TRUE
     NAME cpr
 )
 
@@ -105,5 +103,6 @@ CPMAddPackage(
     "libarchive_sb_ENABLE_TEST OFF"
     "libarchive_sb_ENABLE_COVERAGE OFF"
     "libarchive_sb_ENABLE_INSTALL OFF"
+    FORCE TRUE
     NAME libarchive_superbuild
 )
