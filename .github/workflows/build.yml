@@ -200,6 +200,8 @@ jobs:
             platform: "arm64"
           - runs-on: macos-15-intel
             platform: "x86_64"
+          - runs-on: macos-26
+            platform: "arm64"
 
           # - compiler: "gcc"
           #   compiler-setupname: "gcc"
