@@ -190,16 +190,16 @@ jobs:
       matrix:
         icon: ["⬛"]
         sys: [macos]
-        runs-on: [macos-26]
+        runs-on: [macos-15, macos-15-intel, macos-26]
         compiler: [clang]
         build-type: ["Release", "Debug"]
         target: ["all"]
 
         include:
-          # - runs-on: macos-15
-          #   platform: "arm64"
-          # - runs-on: macos-15-intel
-          #   platform: "x86_64"
+          - runs-on: macos-15
+            platform: "arm64"
+          - runs-on: macos-15-intel
+            platform: "x86_64"
           - runs-on: macos-26
             platform: "arm64"
 
