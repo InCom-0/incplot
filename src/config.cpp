@@ -22,7 +22,7 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
     auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
         std::vector<std::byte> *pf = reinterpret_cast<std::vector<std::byte> *>(userdata);
         auto v = std::views::transform(data, [](auto const &item) { return static_cast<std::byte>(item); });
-        pf->insert_range(pf->end(), v);
+        pf->insert(pf->end(), v.begin(), v.end());
         return true;
     };
 
@@ -573,9 +573,9 @@ std::expected<std::vector<std::byte>, dbErr> get_default_font(sqlpp::sqlite3::co
     for (size_t i = 0; auto const &dfID : dbConn(sqlpp::select(df.content).from(df))) {
         if (i++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
         if (not dfID.content.has_value()) { return std::unexpected(dbErr::notFound); }
-        return std::vector<std::byte>(std::from_range, std::views::transform(dfID.content.value(), [](auto const item) {
-                                          return static_cast<std::byte>(item);
-                                      }));
+        auto view_ret =
+            std::views::transform(dfID.content.value(), [](auto const item) { return static_cast<std::byte>(item); });
+        return std::vector<std::byte>(view_ret.begin(), view_ret.end());
     }
     // If the above for loop does not run at all that means there are 0 records in the DefaultScheme table
     // That is impossible

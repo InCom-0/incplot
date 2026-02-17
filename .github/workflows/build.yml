@@ -2,14 +2,12 @@ name: Build
 
 on:
   schedule:
-    - cron: '37 8 * * *'
-    
+    - cron: "37 8 * * *"
+
   workflow_dispatch:
 
-
 jobs:
-  
-# Windows-MSVC
+  # Windows-MSVC
   Windows:
     name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
     runs-on: ${{matrix.runs-on}}
@@ -18,12 +16,12 @@ jobs:
       matrix:
         runs-on: [windows-2025, windows-11-arm]
         sys: [windows]
-        icon: ['⬜']
+        icon: ["⬜"]
         buildenv: [VS2022]
-        compiler: [MSVC, clang-cl]
+        compiler: [MSVC]
         mode: ["cxx23"]
         build-type: ["Release", "Debug"]
-        target : ["all"]
+        target: ["all"]
         cmake-override: [""]
         include:
           - compiler: "MSVC"
@@ -40,28 +38,27 @@ jobs:
             compiler: clang-cl
 
     steps:
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v5
+      - name: "🧰 Checkout"
+        uses: actions/checkout@v5
 
-    - uses: TheMrMilchmann/setup-msvc-dev@v4
-      with:
-        arch: ${{matrix.platform}}
-        
-    - name: Configure git credentials
-      run: |
-        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/" |
-        git lfs install
-      env:
+      - uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: ${{matrix.platform}}
+
+      - name: Configure git credentials
+        run: |
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/" |
+          git lfs install
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-    - name: 'Configure'
-      run: cmake --preset Win_${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
-    - name: '🚧 Build'
-      run: cmake --build build --target ${{matrix.target}}
+      - name: "Configure"
+        run: cmake --preset Win_${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
+      - name: "🚧 Build"
+        run: cmake --build build --target ${{matrix.target}}
 
-# Based on https://github.com/msys2/setup-msys2/blob/main/examples/cmake.yml
+  # Based on https://github.com/msys2/setup-msys2/blob/main/examples/cmake.yml
   Windows-MSYS:
     name: ${{ matrix.icon }} windows (${{matrix.platform}}, ${{matrix.msystem}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
     runs-on: ${{matrix.runs-on}}
@@ -94,47 +91,46 @@ jobs:
             compiler: clang
             compiler-ver: 21
             add-to-pacboy: ""
-            
+
         exclude:
           - msystem: clang64
             compiler: gcc
-    
+
     defaults:
       run:
         shell: msys2 {0}
     steps:
+      - name: "🧰 Checkout"
+        uses: actions/checkout@v5
 
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v5
+      - name: "${{ matrix.icon }} Setup MSYS2"
+        uses: msys2/setup-msys2@v2.29.0
+        with:
+          msystem: ${{matrix.msystem}}
+          update: true
+          install: >-
+            git
+            make
+          pacboy: >-
+            toolchain:p
+            ${{matrix.add-to-pacboy}}
+            ninja:p
+            cmake:p
+            meson:p
 
-    - name: '${{ matrix.icon }} Setup MSYS2'
-      uses: msys2/setup-msys2@v2.29.0
-      with:
-        msystem: ${{matrix.msystem}}
-        update: true
-        install: >-
-          git
-          make
-        pacboy: >-
-          toolchain:p
-          ${{matrix.add-to-pacboy}}
-          cmake:p
-          ninja:p
-
-    - name: Configure git credentials
-      run: |
-        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-      env:
+      - name: Configure git credentials
+        run: |
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: 'Configure'
-      run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+      - name: "Configure"
+        run: cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
-    - name: '🚧 Build'
-      run: cmake --build build --target ${{matrix.target}}
+      - name: "🚧 Build"
+        run: cmake --build build --target ${{matrix.target}}
 
-
-# Based on https://github.com/tcbrindle/flux/blob/main/.github/workflows/linux.yml
+  # Based on https://github.com/tcbrindle/flux/blob/main/.github/workflows/linux.yml
   Linux-Ubuntu:
     name: ${{ matrix.icon }} linux (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
     runs-on: ${{matrix.runs-on}}
@@ -148,7 +144,7 @@ jobs:
         # compiler-ver: [15, 21]
         build-type: [Release, Debug]
         target: ["all"]
-        cmake-override: [""]
+        cmake-override: ["-DCPR_USE_SYSTEM_CURL=ON"]
 
         include:
           - runs-on: ubuntu-24.04
@@ -174,13 +170,17 @@ jobs:
           setup-cpp: true
           compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libharfbuzz-dev libfontconfig-dev nlohmann-json3-dev libwoff-dev libxxhash-dev libargparse-dev libarchive-dev libidn2-dev libcurl4-openssl-dev
+
       - name: Configure
         run: |
           cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
 
       - name: "🚧 Build"
         run: cmake --build build --target ${{matrix.target}}
-
 
   macOS:
     name: ${{ matrix.icon }} macos (${{matrix.platform}}, ${{matrix.compiler}}-${{matrix.compiler-ver}}, ${{matrix.build-type}})
@@ -190,16 +190,18 @@ jobs:
       matrix:
         icon: ["⬛"]
         sys: [macos]
-        runs-on: [macos-15, macos-15-intel]
+        runs-on: [macos-26]
         compiler: [clang]
         build-type: ["Release", "Debug"]
         target: ["all"]
 
         include:
-          - runs-on: macos-15
+          # - runs-on: macos-15
+          #   platform: "arm64"
+          # - runs-on: macos-15-intel
+          #   platform: "x86_64"
+          - runs-on: macos-26
             platform: "arm64"
-          - runs-on: macos-15-intel
-            platform: "x86_64"
 
           # - compiler: "gcc"
           #   compiler-setupname: "gcc"
@@ -209,32 +211,32 @@ jobs:
           - compiler: "clang"
             compiler-setupname: "llvm"
             compiler-ver: "21"
-            cmake-override: "-DCMAKE_C_COMPILER=clang \
-             -DCMAKE_CXX_COMPILER=clang++ \
-             -DCMAKE_CXX_FLAGS=\"-stdlib=libc++ -I$(brew --prefix llvm)/include/c++/v1\" \
-             -DCMAKE_EXE_LINKER_FLAGS=\"-stdlib=libc++ -L$(brew --prefix llvm)/lib/c++\""
-
+            cmake-override: ""
 
     steps:
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v5
+      - name: "🧰 Checkout"
+        uses: actions/checkout@v5
 
-    - name: Setup Cpp
-      uses: aminya/setup-cpp@v1
-      with:
-        setup-cpp: true
-        compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
+      - name: Setup Cpp
+        uses: aminya/setup-cpp@v1
+        with:
+          setup-cpp: true
+          compiler: ${{matrix.compiler-setupname}}-${{matrix.compiler-ver}}
 
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install harfbuzz woff2 nlohmann-json xxhash magic_enum argparse indicators cpr xz libarchive
 
-    - name: Configure git credentials
-      run: |
-        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-      env:
+      - name: Configure git credentials
+        run: |
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Configure
-      run: |
-        cmake --preset ${{matrix.compiler}}_${{matrix.build-type}} ${{matrix.cmake-override}}
+      - name: Configure
+        run: |
+          cmake --preset ${{matrix.compiler}}_${{matrix.build-type}}
 
-    - name: '🚧 Build'
-      run: cmake --build build --target ${{matrix.target}}
+      - name: "🚧 Build"
+        run: cmake --build build --target ${{matrix.target}}

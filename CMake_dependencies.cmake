@@ -79,7 +79,7 @@ endif()
 
 CPMAddPackage(
     URI "gh:libcpr/cpr#1.14.1"
-    OPTIONS "BUILD_SHARED_LIBS OFF" "CPR_CURL_USE_LIBPSL OFF"
+    OPTIONS "BUILD_SHARED_LIBS OFF" "CPR_CURL_USE_LIBPSL OFF" "CPR_USE_SYSTEM_CURL OFF"
     NAME cpr
 )
 
@@ -88,6 +88,7 @@ CPMAddPackage(
     OPTIONS
     # "BUILD_SHARED_LIBS OFF"
     "libarchive_sb_USE_LOCAL_PACKAGES ${incplot_USE_LOCAL_PACKAGES}"
+    "libarchive_sb_LZMA_FORCE_CPM TRUE"
     "ENABLE_MBEDTLS OFF"
     "ENABLE_LZMA ON"
     "ENABLE_ZLIB OFF"
@@ -102,5 +103,6 @@ CPMAddPackage(
     "libarchive_sb_ENABLE_TEST OFF"
     "libarchive_sb_ENABLE_COVERAGE OFF"
     "libarchive_sb_ENABLE_INSTALL OFF"
+    FORCE TRUE
     NAME libarchive_superbuild
 )
