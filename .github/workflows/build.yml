@@ -22,7 +22,7 @@ jobs:
         mode: ["cxx23"]
         build-type: ["Release", "Debug"]
         target: ["all"]
-        cmake-override: [""]
+        cmake-override: ["-Dincplot_USE_LOCAL_PACKAGES=OFF"]
         include:
           - compiler: "MSVC"
             compiler-ver: "19"
@@ -226,7 +226,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew install harfbuzz woff2 nlohmann-json xxhash magic_enum argparse indicators cpr xz libarchive
+          brew install harfbuzz woff2 nlohmann-json xxhash magic_enum argparse indicators cpr
 
       - name: Configure git credentials
         run: |

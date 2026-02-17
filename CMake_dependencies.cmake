@@ -7,9 +7,9 @@ if(NOT DEFINED CPM_LOCAL_PACKAGES_ONLY)
 endif()
 
 # TODO: Need to fix this logic somehow
-if(USING_MSVC_STL OR (MINGW AND (CMAKE_BUILD_TYPE STREQUAL "Release")))
-    set(CPM_USE_LOCAL_PACKAGES OFF CACHE BOOL "Forbid finding local packages" FORCE)
-endif()
+# if(USING_MSVC_STL OR (MINGW AND (CMAKE_BUILD_TYPE STREQUAL "Release")))
+#     set(CPM_USE_LOCAL_PACKAGES OFF CACHE BOOL "Forbid finding local packages" FORCE)
+# endif()
 
 include(cmake/CPM.cmake)
 
@@ -76,20 +76,44 @@ if((CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC") OR (MINGW AND (CMAKE_BUI
     endif()
 endif()
 
+if(WIN32)
+    set(_IN_CURL_ENABLE_UNICODE ON)
+else()
+    set(_IN_CURL_ENABLE_UNICODE OFF)
+endif()
 
+option(cpr_FETCHCONTENT_SOURCE_DIR_CURL "Override the location of curl sources,
+ so that cpr does not download them in configure step (when neither cpr nor curl is found on the system)."
+    "")
+
+### Set FETCHCONTENT_SOURCE_DIR_CURL to override the location of curl sources.
+### (So that cpr does not download them in configure step when cpr or curl aren't found on the system).
+### The above has not effect if either is found on the system
 CPMAddPackage(
     URI "gh:libcpr/cpr#1.14.1"
-    OPTIONS "BUILD_SHARED_LIBS OFF" "CPR_CURL_USE_LIBPSL OFF" "CPR_USE_SYSTEM_CURL OFF"
+    OPTIONS
+    "BUILD_SHARED_LIBS OFF"
+    "BUILD_EXAMPLES OFF"
+    "BUILD_CURL_EXE OFF"
+    "ENABLE_UNICODE ${_IN_CURL_ENABLE_UNICODE}"
+    "BUILD_LIBCURL_DOCS OFF"
+    "BUILD_MISC_DOCS OFF"
+    "ENABLE_CURL_MANUAL OFF"
+    "CPR_CURL_USE_LIBPSL OFF"
+    "CPR_USE_SYSTEM_CURL OFF"
+    "CPR_BUILD_TESTS OFF"
     NAME cpr
 )
 
+# Whenever we don't find libarchive, we proceed to build a fully static version 
 CPMAddPackage(
     URI "gh:InCom-0/libarchive_superbuild#main"
     OPTIONS
-    # "BUILD_SHARED_LIBS OFF"
+    "BUILD_SHARED_LIBS OFF"
     "libarchive_sb_USE_LOCAL_PACKAGES ${incplot_USE_LOCAL_PACKAGES}"
     "libarchive_sb_LZMA_FORCE_CPM TRUE"
     "ENABLE_MBEDTLS OFF"
+    "ENABLE_OPENSSL OFF"
     "ENABLE_LZMA ON"
     "ENABLE_ZLIB OFF"
     "ENABLE_BZip2 OFF"

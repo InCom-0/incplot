@@ -424,15 +424,11 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
     out_ap.add_group("HTML output related:");
     auto &mexGrp_html = out_ap.add_mutually_exclusive_group();
     mexGrp_html.add_argument("-o", "--html")
-        .help("Convert output into self-contained pure text html, render using pure text [flag] (it is advisable to "
-              "pipe the result into a file or into "
-              "some other process when using this mode)")
+        .help("Convert output into self-contained pure text html [flag]")
         .flag()
         .nargs(0);
     mexGrp_html.add_argument("-j", "--html-canvas")
-        .help("Convert output into self-contained html, render using 2D canvas script [flag] (it is advisable to pipe "
-              "the result into a file or into "
-              "some other process when using this mode)")
+        .help("Convert output into self-contained html, render using 2D canvas script [flag]")
         .flag()
         .nargs(0);
 

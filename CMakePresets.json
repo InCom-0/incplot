@@ -158,7 +158,8 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "CPM_SOURCE_CACHE": "../.cache/CPM"
+                "CPM_SOURCE_CACHE": "../.cache/CPM",
+                "CMAKE_POLICY_VERSION_MINIMUM": "3.5"
             }
         },
         {
