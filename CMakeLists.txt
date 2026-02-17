@@ -11,8 +11,8 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory structure" ON)
 
-option(incplot_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for dependencies." ON)
-option(incplot_USE_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing dependencies." OFF)
+option(CPM_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for dependencies." ON)
+option(CPM_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing dependencies." OFF)
 
 
 #####################################################################

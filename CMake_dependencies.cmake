@@ -1,11 +1,3 @@
-if(NOT DEFINED CPM_USE_LOCAL_PACKAGES)
-    set(CPM_USE_LOCAL_PACKAGES ${incplot_USE_LOCAL_PACKAGES} CACHE BOOL "CPM will try to find packages locally first" FORCE)
-endif()
-if(NOT DEFINED CPM_LOCAL_PACKAGES_ONLY)
-    set(CPM_LOCAL_PACKAGES_ONLY ${incplot_USE_LOCAL_PACKAGES_ONLY} CACHE BOOL
-        "CPM will not be forbidden from downloading packages. Will have to use local packages." FORCE)
-endif()
-
 # TODO: Need to fix this logic somehow
 # if(USING_MSVC_STL OR (MINGW AND (CMAKE_BUILD_TYPE STREQUAL "Release")))
 #     set(CPM_USE_LOCAL_PACKAGES OFF CACHE BOOL "Forbid finding local packages" FORCE)
@@ -82,9 +74,9 @@ else()
     set(_IN_CURL_ENABLE_UNICODE OFF)
 endif()
 
-option(cpr_FETCHCONTENT_SOURCE_DIR_CURL "Override the location of curl sources,
- so that cpr does not download them in configure step (when neither cpr nor curl is found on the system)."
-    "")
+# option(cpr_FETCHCONTENT_SOURCE_DIR_CURL "Override the location of curl sources,
+#  so that cpr does not download them in configure step (when neither cpr nor curl is found on the system)."
+#     "")
 
 ### Set FETCHCONTENT_SOURCE_DIR_CURL to override the location of curl sources.
 ### (So that cpr does not download them in configure step when cpr or curl aren't found on the system).
@@ -110,7 +102,6 @@ CPMAddPackage(
     URI "gh:InCom-0/libarchive_superbuild#main"
     OPTIONS
     "BUILD_SHARED_LIBS OFF"
-    "libarchive_sb_USE_LOCAL_PACKAGES ${incplot_USE_LOCAL_PACKAGES}"
     "libarchive_sb_LZMA_FORCE_CPM TRUE"
     "ENABLE_MBEDTLS OFF"
     "ENABLE_OPENSSL OFF"
