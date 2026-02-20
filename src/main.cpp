@@ -1,5 +1,6 @@
 #include <cstring>
 #include <print>
+#include <string_view>
 
 #include <auto/versiondef.h>
 
@@ -8,15 +9,20 @@
 #include <incplot.hpp>
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
-
 #include <incfontdisc/incfontdisc.hpp>
-#include <string_view>
+
+#include <uri.h>
+
 
 
 using namespace std::literals;
 
 
 int main(int argc, char *argv[]) {
+
+    // auto allFnts = incfontdisc::list_fonts();
+
+    auto parsedURI = incplot::parse_uri_string("www.seznam.cz/tmp.txt");
 
 
     // Create and populate ArgumentParser
@@ -28,6 +34,22 @@ int main(int argc, char *argv[]) {
 
     // Set the right character page of the terminal
     incom::standard::console::set_cocp();
+
+    if (ap.is_subcommand_used(subap_setup)) {
+        std::cout << "Used \n";
+
+        if (auto setupCommand_res = incplot::cl_args::process_setupCommand(subap_setup)) {
+            std::string toPrint;
+            for (auto const &oneLine : setupCommand_res.value()) {
+                toPrint.append(oneLine);
+                toPrint.push_back('\n');
+            }
+            std::cout << toPrint;
+            return 0;
+        }
+
+        else { return setupCommand_res.error(); }
+    }
 
     // Get connection to configDB
     if (ap.get<bool>("-s")) {

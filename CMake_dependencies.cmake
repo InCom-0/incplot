@@ -92,7 +92,7 @@ CPMAddPackage(
     "BUILD_MISC_DOCS OFF"
     "ENABLE_CURL_MANUAL OFF"
     "CPR_CURL_USE_LIBPSL OFF"
-    "CPR_USE_SYSTEM_CURL OFF"
+    "CPR_USE_SYSTEM_CURL ${incplot_CPR_USE_SYSTEM_CURL}"
     "CPR_BUILD_TESTS OFF"
     NAME cpr
 )
@@ -102,10 +102,10 @@ CPMAddPackage(
     URI "gh:InCom-0/libarchive_superbuild#main"
     OPTIONS
     "BUILD_SHARED_LIBS OFF"
+    "ENABLE_LZMA ON"
     "libarchive_sb_LZMA_FORCE_CPM TRUE"
     "ENABLE_MBEDTLS OFF"
     "ENABLE_OPENSSL OFF"
-    "ENABLE_LZMA ON"
     "ENABLE_ZLIB OFF"
     "ENABLE_BZip2 OFF"
     "ENABLE_LIBB2 OFF"

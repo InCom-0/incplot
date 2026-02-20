@@ -154,11 +154,11 @@
         {
             "name": "_common",
             "hidden": true,
-            "binaryDir": "${sourceDir}/build/",
             "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "CPM_SOURCE_CACHE": "../.cache/CPM",
+                "CPM_SOURCE_CACHE": "${sourceDir}/.cache/CPM",
                 "CMAKE_POLICY_VERSION_MINIMUM": "3.5"
             }
         },
@@ -252,6 +252,12 @@
                     }
                 }
             }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "inheritConfigureEnvironment": true
         }
     ]
 }

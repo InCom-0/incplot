@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <array>
+#include <cctype>
 #include <cstddef>
 #include <expected>
 #include <filesystem>
@@ -27,7 +30,6 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
     };
 
     using namespace indicators;
-
 
     ProgressBar bar{option::BarWidth{50},
                     option::Start{"["},

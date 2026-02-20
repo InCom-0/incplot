@@ -38,7 +38,7 @@ inline constexpr std::string_view html_fallbackFont_URLsource =
     "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"sv;
 inline constexpr std::string_view html_fallbackFont_filePathInURLsource = "IosevkaNerdFont-Regular.ttf"sv;
 
-enum class dbErr {
+enum class dbErr : size_t {
     impossibleNumberOfRecords = 1,
     impossibleValue,
     notFound,

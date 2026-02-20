@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 #include <format>
 #include <fstream>
 #include <functional>
@@ -13,14 +14,19 @@
 #include <config.hpp>
 #include <incplot/plot_structures.hpp>
 
+#include <incfontdisc/incfontdisc.hpp>
 #include <incstd/core/typegen.hpp>
 #include <incstd/incstd_console.hpp>
-#include <incfontdisc/incfontdisc.hpp>
+#include <incstd/core/filesys.hpp>
+
+#include <uri.h>
 
 
 namespace incom {
 namespace terminal_plot {
 namespace cl_args {
+namespace incplot = incom::terminal_plot;
+
 namespace {
 std::optional<bool> prompt_yes_no(std::string_view question, bool defaultNo = true) {
     std::istream *in = nullptr;
@@ -304,19 +310,34 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     }
 
     if (auto optVal = ap.present<std::vector<std::string>>("-f")) {
-        std::string                                       &reqFamilyName = optVal.value().front();
-        std::optional<std::reference_wrapper<std::string>> reqStyleName =
-            optVal.value().size() > 1
-                ? std::optional<std::reference_wrapper<std::string>>(std::ref(optVal.value().at(1)))
-                : std::nullopt;
+        std::string &reqFamilyName = optVal.value().front();
+
+        auto [byURI, protocolURI] = incplot::parse_uri_string(reqFamilyName);
+
+        if (byURI && (protocolURI == "file"sv || protocolURI == "http"sv || protocolURI == "https"sv)) {}
+
+
+        else if (protocolURI == ""sv) {
+            // 1) Try as if it were path on local system, 2) proceed to treat it as system font name
+            if (auto ca = incom::standard::filesys::check_access(std::filesystem::path(reqFamilyName))) {
+                if (ca->readable) {}
+                else {
+                    // Unreadable file which exists
+                }
+            }
+            else {}
+        }
+        else {}
+
 
         auto mtch = incfontdisc::match_fonts(incfontdisc::FontQuery{
             .family = reqFamilyName,
-            .style  = reqStyleName ? std::optional<std::string>(reqStyleName.value()) : std::nullopt});
+            .style  = optVal.value().size() > 1 ? std::optional<std::string>(optVal.value().at(1)) : std::nullopt});
 
         if (not mtch.has_value()) {}
         else if (mtch.value().family_score != 1.0f || mtch.value().face_score != 1.0f) {}
         else {}
+
 
         // TODO: Functions to get the font: 1) from system, 2) from path, 3) from URL
         // TODO: Also need some way to differentiate between these
@@ -379,15 +400,47 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct() {
     return std::vector<DesiredPlot::DP_CtorStruct>{DesiredPlot::DP_CtorStruct{.plot_type_name = std::nullopt}};
 }
 
+std::expected<std::vector<std::string>, int> process_setupCommand(argparse::ArgumentParser const &setup_ap) {
+
+    if (auto optVal = setup_ap.present<std::vector<std::string>>("-g")) {
+        auto const &vosRef = optVal.value();
+        if (vosRef.empty()) {}
+        else if (vosRef.size() == 1) {}
+        else {
+            // (vosRef.size() > 1)
+            // This should be handled by argparse on 'parse_args', therefore never executing
+            assert(false);
+        }
+    }
+    if (auto optVal = setup_ap.present<std::vector<std::string>>("-b")) {
+        auto const &vosRef = optVal.value();
+        if (vosRef.size() == 1 || vosRef.size() == 2) {
+            incfontdisc::FontQuery query{.family = std::string(vosRef.at(0))};
+            if (vosRef.size() == 2) { query.style = vosRef.at(1); }
+
+            auto fm = incfontdisc::match_fonts(query);
+        }
+        else {
+            // (vosRef.empty() or vosRef.size() > 2)
+            // This should be handled by argparse on 'parse_args', therefore never executing
+            assert(false);
+        }
+    }
+
+    return std::unexpected(-1);
+}
+
+
 void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_setup) {
-    out_ap.add_description(
-        "Draw coloured plots using unicode symbols inside terminal.\nCan also output the plot as visually identical "
-        "self-contained html "
-        "document.\n\nAutomatically infers what to display and "
-        "how based on the shape of the data piped in.\nPipe in data in JSON, JSON Lines, NDJSON, CSV or TSV formats. "
-        "All "
-        "arguments "
-        "are optional");
+    out_ap.add_description("Draw coloured plots using unicode symbols inside terminal.\nCan also output the plot "
+                           "as visually identical "
+                           "self-contained html "
+                           "document.\n\nAutomatically infers what to display and "
+                           "how based on the shape of the data piped in.\nPipe in data in JSON, JSON Lines, "
+                           "NDJSON, CSV or TSV formats. "
+                           "All "
+                           "arguments "
+                           "are optional");
 
     out_ap.add_group("Plot type options");
     out_ap.add_argument("-B", "--barV").help("Draw vertical [B]ar plot [flag]").flag().nargs(0);
@@ -473,7 +526,7 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
               "'-l'.")
         .nargs(0, 1);
 
-    // TODO: Wierdly this does not actually create a working subparser ... need to investigate later.
+    // Add the pre-existing subparser (the parser subap_setup intantiated object exists in main)
     out_ap.add_subparser(subap_setup);
 }
 
