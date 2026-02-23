@@ -15,9 +15,10 @@
 #include <incplot/plot_structures.hpp>
 
 #include <incfontdisc/incfontdisc.hpp>
+#include <incstd/core/filesys.hpp>
 #include <incstd/core/typegen.hpp>
 #include <incstd/incstd_console.hpp>
-#include <incstd/core/filesys.hpp>
+
 
 #include <uri.h>
 
@@ -70,7 +71,8 @@ std::optional<bool> prompt_yes_no(std::string_view question, bool defaultNo = tr
 }
 } // namespace
 
-std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParser const &ap) {
+std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Unexp_AP> get_dpCtorStruct(
+    argparse::ArgumentParser const &ap) {
 
     DesiredPlot::DP_CtorStruct nonDifferentiated;
 
@@ -309,25 +311,97 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
         }
     }
 
+    // Font option
     if (auto optVal = ap.present<std::vector<std::string>>("-f")) {
-        std::string &reqFamilyName = optVal.value().front();
+        if (optVal.value().size() == 0 || optVal.value().size() > 2) {
+            // TODO: Hard error
+        }
+        std::string &reqFamilyName     = optVal.value().front();
+        bool         styleSpecified_is = (optVal.value().size() == 2);
 
-        auto [byURI, protocolURI] = incplot::parse_uri_string(reqFamilyName);
+        auto uri = incplot::URI(reqFamilyName, true);
 
-        if (byURI && (protocolURI == "file"sv || protocolURI == "http"sv || protocolURI == "https"sv)) {}
+        if (not uri.getScheme().empty()) {
+            // Use CPR
 
+            cpr::Session session;
+            session.SetUrl(cpr::Url{uri.toString()});
 
-        else if (protocolURI == ""sv) {
-            // 1) Try as if it were path on local system, 2) proceed to treat it as system font name
+            auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
+                std::vector<std::byte> *pf = reinterpret_cast<std::vector<std::byte> *>(userdata);
+                auto v = std::views::transform(data, [](auto const &item) { return static_cast<std::byte>(item); });
+                pf->insert(pf->end(), v.begin(), v.end());
+                return true;
+            };
+
+            std::vector<std::byte> res{};
+            if (auto resLength = session.GetDownloadFileLength(); resLength > 0) {
+                res.reserve(static_cast<size_t>(resLength));
+                session.Download(cpr::WriteCallback{cb_writer, reinterpret_cast<intptr_t>(&res)});
+            }
+
+            // TODO: Use OTS Here to verify what we downloaded
+        }
+
+        else {
             if (auto ca = incom::standard::filesys::check_access(std::filesystem::path(reqFamilyName))) {
+                // 1) Try as if it were a filesystem path
                 if (ca->readable) {}
                 else {
                     // Unreadable file which exists
                 }
             }
-            else {}
+
+            else {
+                // 2) Try as if it were system font name
+                auto matched = incfontdisc::match_fonts(incfontdisc::FontQuery{
+                    .family = reqFamilyName,
+                    .style  = (styleSpecified_is ? std::optional<std::string>{optVal.value().at(1)} : std::nullopt)});
+
+                if (matched.has_value()) {
+                    if (matched->family_score < config::html_fontFamilyMatch_minScore) {
+                        nonDifferentiated.additionalInfo.push_back(
+                            std::format("{}{}\n{}\n{}{}\n{}", "Tried selection system font by the name of: "sv,
+                                        reqFamilyName, "However, no such font exists on the system."sv,
+                                        "The closest matching font on the system is: "sv, matched->font.family,
+                                        "The font above will NOT be used."));
+                    }
+
+                    else if (matched->face_score < config::html_fontFaceMatch_minScore && styleSpecified_is) {
+                        nonDifferentiated.additionalInfo.push_back(
+                            std::format("{}\n{}{}{}{}\n{}", "No such font/style exists on the system."sv,
+                                        "The closest matching font/style on the system is: "sv, matched->font.family,
+                                        " : "sv, matched->font.style, "The font above will NOT be used."));
+                    }
+                    else if (matched->face_score != 1.0f) {
+                        nonDifferentiated.additionalInfo.push_back(
+                            std::format("{}\n{}{}{}{}\n{}",
+                                        "Requested font/style has a close enough but non-exact match on the system."sv,
+                                        "The closest matching font/style on the system is: "sv, matched->font.family,
+                                        " : "sv, matched->font.style, "The font above will be used."));
+                    }
+                    else {
+                        // Nothing, we have an exact font match
+                    }
+
+                    if (auto fnt = incfontdisc::load_font_data(matched->font.id)) {
+                        // GET THE FONT
+                        nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(fnt.value()));
+                    }
+                    else {
+                        // Font data cannot be loaded, this should never happen and points to system failure
+                        nonDifferentiated.additionalInfo.push_back(std::format(
+                            "{}\n{}\n{}", "System font discovery failed"sv, "The specified font will not be used"sv,
+                            "Incplot will continue to work without this feature"sv));
+                    }
+                }
+                else {
+                    nonDifferentiated.additionalInfo.push_back(std::format(
+                        "{}\n{}\n{}", "System font discovery failed"sv, "The specified font will not be used"sv,
+                        "Incplot will continue to work without this feature"sv));
+                }
+            }
         }
-        else {}
 
 
         auto mtch = incfontdisc::match_fonts(incfontdisc::FontQuery{
@@ -368,9 +442,9 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     if (ap.get<bool>("-o")) {
         if (nonDifferentiated.htmlMode_ttfs_lastResort.empty()) {
             nonDifferentiated.additionalInfo.push_back(
-                std::string("No fallback font is available for use in HTML output mode.\nWithout a proper fallback "
-                            "including all the glyphs used by incplot, it is highly unlikely that the output html will "
-                            "display correctly without artifacts."));
+                std::format("{}\n{}", "No fallback font is available for use in HTML output mode.",
+                            "Without a proper fallback including all the glyphs used by incplot, it is highly unlikely "
+                            "that the output html will display correctly without artifacts."));
         }
     }
 
@@ -396,11 +470,12 @@ std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct(argparse::ArgumentParse
     return res;
 }
 
-std::vector<DesiredPlot::DP_CtorStruct> get_dpCtorStruct() {
+std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Unexp_AP> get_dpCtorStruct() {
     return std::vector<DesiredPlot::DP_CtorStruct>{DesiredPlot::DP_CtorStruct{.plot_type_name = std::nullopt}};
 }
 
-std::expected<std::vector<std::string>, int> process_setupCommand(argparse::ArgumentParser const &setup_ap) {
+std::expected<std::vector<std::string>, incom::terminal_plot::Unexp_AP> process_setupCommand(
+    argparse::ArgumentParser const &setup_ap) {
 
     if (auto optVal = setup_ap.present<std::vector<std::string>>("-g")) {
         auto const &vosRef = optVal.value();
@@ -427,7 +502,7 @@ std::expected<std::vector<std::string>, int> process_setupCommand(argparse::Argu
         }
     }
 
-    return std::unexpected(-1);
+    return std::unexpected(incplot::Unexp_AP::TNCII_colByNameNotExist);
 }
 
 

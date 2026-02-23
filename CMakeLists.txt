@@ -65,7 +65,7 @@ endif()
 ### Target specification ###
 ######################################################################
 add_executable(incplot)
-target_sources(incplot PRIVATE src/main.cpp src/config.cpp src/args.cpp)
+target_sources(incplot PRIVATE src/main.cpp src/config.cpp src/args.cpp src/uri.cpp)
 target_sources(incplot
     PRIVATE
     FILE_SET priv_headers

@@ -6,13 +6,13 @@
 
 #include <args.hpp>
 #include <config.hpp>
+#include <incfontdisc/incfontdisc.hpp>
 #include <incplot.hpp>
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
-#include <incfontdisc/incfontdisc.hpp>
+
 
 #include <uri.h>
-
 
 
 using namespace std::literals;
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
     // auto allFnts = incfontdisc::list_fonts();
 
-    auto parsedURI = incplot::parse_uri_string("www.seznam.cz/tmp.txt");
+    auto parsedURI = incplot::URI("./termix/tmp.txt", true);
 
 
     // Create and populate ArgumentParser
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        else { return setupCommand_res.error(); }
+        else { return -1; }
     }
 
     // Get connection to configDB
@@ -61,6 +61,11 @@ int main(int argc, char *argv[]) {
 
     // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
     auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
+    if (not dpctrs.has_value()) {
+        std::print("{}\n\n{}{}\n{}\n{}\n", "Error occurred during parsing command line arguments.",
+                   "The error code is: ", "EC", "COMMENT", "... exiting");
+        std::exit(1);
+    }
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
@@ -86,7 +91,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         auto const [rowsInTerm, colsInTerm] = incom::standard::console::get_rowColCount();
-        for (auto &dpctr : dpctrs) {
+        for (auto &dpctr : dpctrs.value()) {
             dpctr.availableWidth  = colsInTerm;
             dpctr.availableHeight = rowsInTerm;
         }
@@ -94,6 +99,6 @@ int main(int argc, char *argv[]) {
 
     // Do the thing ... ie. make all the plots and print them
     // TODO: need to somehow handle multiple plots emitted in HTML mode
-    for (auto const &dpctr : dpctrs) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
+    for (auto const &dpctr : dpctrs.value()) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
     return 0;
 }

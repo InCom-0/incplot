@@ -38,6 +38,9 @@ inline constexpr std::string_view html_fallbackFont_URLsource =
     "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"sv;
 inline constexpr std::string_view html_fallbackFont_filePathInURLsource = "IosevkaNerdFont-Regular.ttf"sv;
 
+inline constexpr float html_fontFamilyMatch_minScore = 0.8f;
+inline constexpr float html_fontFaceMatch_minScore  = 0.8f;
+
 enum class dbErr : size_t {
     impossibleNumberOfRecords = 1,
     impossibleValue,
