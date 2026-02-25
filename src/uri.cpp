@@ -70,6 +70,29 @@ bool isLikelyBrowserAuthority(std::string_view authority) {
     return false;
 }
 
+bool hasWindowsDrivePrefix(std::string_view value) {
+    return value.size() >= 2 && std::isalpha(static_cast<unsigned char>(value[0])) && value[1] == ':';
+}
+
+bool startsWith(std::string_view value, std::string_view prefix) {
+    return value.size() >= prefix.size() && value.substr(0, prefix.size()) == prefix;
+}
+
+bool isWindowsPathLike(std::string_view uri) {
+    if (uri.empty()) { return false; }
+
+    if (hasWindowsDrivePrefix(uri)) { return true; }
+
+    if (uri[0] == '\\') { return true; }
+    if (startsWith(uri, ".\\") || startsWith(uri, "..\\")) { return true; }
+
+    return uri.find('\\') != std::string_view::npos;
+}
+
+void normalizePathSeparatorsInPlace(std::string& value) {
+    std::replace(value.begin(), value.end(), '\\', '/');
+}
+
 } // namespace
 
 const std::string URI::RESERVED_PATH        = "?#";
@@ -334,6 +357,7 @@ void URI::setAuthority(std::string_view authority) {
 void URI::setPath(std::string_view path) {
     _path.clear();
     decode(path, _path);
+    normalizePathSeparatorsInPlace(_path);
 }
 
 
@@ -700,6 +724,11 @@ void URI::parse(std::string_view uri) {
 void URI::parse(std::string_view uri, bool heuristics) {
     if (uri.empty()) { return; }
 
+    if (isWindowsPathLike(uri)) {
+        parsePathEtc(uri);
+        return;
+    }
+
     if (heuristics) {
         if (uri.size() >= 2 && uri[0] == '/' && uri[1] == '/') {
             setScheme("https");
@@ -715,7 +744,7 @@ void URI::parse(std::string_view uri, bool heuristics) {
             return;
         }
 
-        if (uri[0] != '/' && uri[0] != '.' && uri[0] != '?' && uri[0] != '#') {
+        if (uri[0] != '/' && uri[0] != '\\' && uri[0] != '.' && uri[0] != '?' && uri[0] != '#') {
             const std::size_t tokenEnd = uri.find_first_of("/?#");
             const std::size_t schemeSep = uri.find(':');
             if (schemeSep == std::string_view::npos || (tokenEnd != std::string_view::npos && schemeSep > tokenEnd)) {
@@ -735,7 +764,7 @@ void URI::parse(std::string_view uri, bool heuristics) {
         }
     }
 
-    if (uri[0] != '/' && uri[0] != '.' && uri[0] != '?' && uri[0] != '#') {
+    if (uri[0] != '/' && uri[0] != '\\' && uri[0] != '.' && uri[0] != '?' && uri[0] != '#') {
         std::size_t pos = 0;
         while (pos < uri.size() && uri[pos] != ':' && uri[pos] != '?' && uri[pos] != '#' && uri[pos] != '/') { ++pos; }
 
@@ -823,6 +852,7 @@ void URI::parseHostAndPort(std::string_view hostAndPort) {
 void URI::parsePath(std::string_view path) {
     _path.clear();
     decode(path, _path);
+    normalizePathSeparatorsInPlace(_path);
 }
 
 

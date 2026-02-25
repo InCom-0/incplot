@@ -20,9 +20,8 @@ using namespace std::literals;
 
 int main(int argc, char *argv[]) {
 
-    // auto allFnts = incfontdisc::list_fonts();
-
-    auto parsedURI = incplot::URI("./termix/tmp.txt", true);
+    auto uri1 = incom::terminal_plot::URI("https://kurzlinks.de/german_economy"sv, true);
+    // auto dl   = incplot::cl_args::download_usingCPR(uri1);
 
 
     // Create and populate ArgumentParser
@@ -62,8 +61,8 @@ int main(int argc, char *argv[]) {
     // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
     auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
     if (not dpctrs.has_value()) {
-        std::print("{}\n\n{}{}\n{}\n{}\n", "Error occurred during parsing command line arguments.",
-                   "The error code is: ", "EC", "COMMENT", "... exiting");
+        std::print("{}\n\n{}{}\n{}\n\n{}\n", "Error occurred during evaluation of command line arguments.",
+                   "The error code is: ", dpctrs.error().category().name(), dpctrs.error().get_customMessage(), "... exiting");
         std::exit(1);
     }
 
