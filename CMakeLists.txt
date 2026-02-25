@@ -125,7 +125,7 @@ target_link_libraries(incplot PRIVATE incplot-lib::incplot-lib incfontdisc::incf
 target_link_libraries(incplot PRIVATE sqlpp23::sqlpp23 sqlpp23::sqlite3)
 target_link_libraries(incplot PRIVATE argparse::argparse cpr::cpr indicators::indicators)
 target_link_libraries(incplot PRIVATE LibArchive::LibArchive)
-# target_link_libraries(incplot PRIVATE ots::ots)
+target_link_libraries(incplot PRIVATE ots::ots)
 
 if(USING_LIBSTDCXX)
     target_link_libraries(incplot PRIVATE "-lstdc++exp")

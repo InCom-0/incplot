@@ -1,11 +1,14 @@
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <typeindex>
@@ -19,6 +22,8 @@
 #include <incstd/core/typegen.hpp>
 #include <incstd/incstd_console.hpp>
 
+#include <opentype-sanitiser.h>
+#include <ots-memory-stream.h>
 
 #include <uri.h>
 
@@ -29,7 +34,57 @@ namespace cl_args {
 namespace incplot = incom::terminal_plot;
 
 namespace {
-std::optional<bool> prompt_yes_no(std::string_view question, bool defaultNo = true) {
+std::expected<std::vector<std::byte>, incplot::Unexp_AP> sanitize_fontOTS(std::span<const std::byte> bytes) {
+    if (bytes.empty()) { return std::unexpected(incplot::Unexp_AP::FONT_OTS_emptyInput); }
+
+    class QuietOtsContext final : public ots::OTSContext {
+    public:
+        void Message(int, const char *, ...) override {}
+    };
+
+    const auto inSize = bytes.size();
+    size_t     limit  = inSize;
+    if (inSize <= (std::numeric_limits<size_t>::max() / 4)) { limit = inSize * 4; }
+
+    ots::ExpandingMemoryStream stream(inSize, limit);
+    QuietOtsContext            context;
+
+    auto *inData = reinterpret_cast<const uint8_t *>(bytes.data());
+    if (! context.Process(&stream, inData, inSize)) {
+        return std::unexpected(incplot::Unexp_AP::FONT_OTS_processFailed);
+    }
+
+    auto outSizeOff = stream.Tell();
+    if (outSizeOff < 0) { return std::unexpected(incplot::Unexp_AP::FONT_OTS_negativeOutputOffset); }
+
+    const auto outSize = static_cast<size_t>(outSizeOff);
+    if (outSize == 0) { return std::unexpected(incplot::Unexp_AP::FONT_OTS_emptyOutput); }
+
+    std::vector<std::byte> sanitized(outSize);
+    std::memcpy(sanitized.data(), stream.get(), outSize);
+    return sanitized;
+}
+
+std::vector<std::byte> download_usingCPR(incplot::URI const &uri) {
+    cpr::Session session;
+    session.SetUrl(cpr::Url{uri.toString()});
+
+    auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
+        std::vector<std::byte> *pf = reinterpret_cast<std::vector<std::byte> *>(userdata);
+        auto v = std::views::transform(data, [](auto const &item) { return static_cast<std::byte>(item); });
+        pf->insert(pf->end(), v.begin(), v.end());
+        return true;
+    };
+
+    std::vector<std::byte> res{};
+    if (auto resLength = session.GetDownloadFileLength(); resLength > 0) {
+        res.reserve(static_cast<size_t>(resLength));
+        session.Download(cpr::WriteCallback{cb_writer, reinterpret_cast<intptr_t>(&res)});
+    }
+    return res;
+}
+
+std::optional<bool> prompt_YesNo(std::string_view question, bool defaultNo = true) {
     std::istream *in = nullptr;
     std::ifstream tty_in;
 
@@ -246,10 +301,10 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Une
                 // Less happy path, database is OK, but there is no default font in it
                 if (exp_fallBack_font.error() == incom::terminal_plot::config::dbErr::notFound) {
                     auto consent =
-                        prompt_yes_no(std::format("No fallback font configured for HTML output (normal on first time "
-                                                  "use).\nDownload a fallback font now (Iosevka Nerd Font from {0} )?",
-                                                  incom::terminal_plot::config::html_fallbackFont_URLsource),
-                                      false);
+                        prompt_YesNo(std::format("No fallback font configured for HTML output (normal on first time "
+                                                 "use).\nDownload a fallback font now (Iosevka Nerd Font from {0} )?",
+                                                 incom::terminal_plot::config::html_fallbackFont_URLsource),
+                                     false);
 
                     if (! consent.has_value()) {
                         nonDifferentiated.additionalInfo.push_back(std::string(
@@ -292,7 +347,6 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Une
                     }
                 }
 
-
                 // Very bad, some database error that cannot be solved
                 // Proceed but without fallback font ... all bets are off, inform the user
                 else {
@@ -314,7 +368,8 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Une
     // Font option
     if (auto optVal = ap.present<std::vector<std::string>>("-f")) {
         if (optVal.value().size() == 0 || optVal.value().size() > 2) {
-            // TODO: Hard error
+            // This should never ever happen as it is checked by argparse already
+            return std::unexpected(incplot::Unexp_AP::DPCTOR_UnknownError);
         }
         std::string &reqFamilyName     = optVal.value().front();
         bool         styleSpecified_is = (optVal.value().size() == 2);
@@ -323,37 +378,33 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Une
 
         if (not uri.getScheme().empty()) {
             // Use CPR
-
-            cpr::Session session;
-            session.SetUrl(cpr::Url{uri.toString()});
-
-            auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
-                std::vector<std::byte> *pf = reinterpret_cast<std::vector<std::byte> *>(userdata);
-                auto v = std::views::transform(data, [](auto const &item) { return static_cast<std::byte>(item); });
-                pf->insert(pf->end(), v.begin(), v.end());
-                return true;
-            };
-
-            std::vector<std::byte> res{};
-            if (auto resLength = session.GetDownloadFileLength(); resLength > 0) {
-                res.reserve(static_cast<size_t>(resLength));
-                session.Download(cpr::WriteCallback{cb_writer, reinterpret_cast<intptr_t>(&res)});
+            if (auto sanitized = sanitize_fontOTS(download_usingCPR(uri))) {
+                nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(sanitized.value()));
             }
-
-            // TODO: Use OTS Here to verify what we downloaded
+            else { return std::unexpected(sanitized.error()); }
         }
-
         else {
-            if (auto ca = incom::standard::filesys::check_access(std::filesystem::path(reqFamilyName))) {
-                // 1) Try as if it were a filesystem path
-                if (ca->readable) {}
+            // Use filesystem path
+            auto pthToFont = std::filesystem::path(reqFamilyName);
+            if (auto ca = incom::standard::filesys::check_access(pthToFont)) {
+                // File found, proceed to check access
+                if (ca->readable) {
+                    if (auto res = incstd::filesys::get_file_bytes(pthToFont.generic_string())) {
+                        if (auto sanitized = sanitize_fontOTS(res.value())) {
+                            nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(sanitized.value()));
+                        }
+                        else { return std::unexpected(sanitized.error()); }
+                    }
+                    else { return std::unexpected(incplot::Unexp_AP::FONT_unknownErrorOnFileRead); }
+                }
                 else {
                     // Unreadable file which exists
+                    return std::unexpected(incplot::Unexp_AP::FONT_noReadAccessToFontFile);
                 }
             }
 
+            // File not found if tried as path ... Try as if it were system font name
             else {
-                // 2) Try as if it were system font name
                 auto matched = incfontdisc::match_fonts(incfontdisc::FontQuery{
                     .family = reqFamilyName,
                     .style  = (styleSpecified_is ? std::optional<std::string>{optVal.value().at(1)} : std::nullopt)});
@@ -384,6 +435,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Une
                         // Nothing, we have an exact font match
                     }
 
+
                     if (auto fnt = incfontdisc::load_font_data(matched->font.id)) {
                         // GET THE FONT
                         nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(fnt.value()));
@@ -402,24 +454,12 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Une
                 }
             }
         }
-
-
-        auto mtch = incfontdisc::match_fonts(incfontdisc::FontQuery{
-            .family = reqFamilyName,
-            .style  = optVal.value().size() > 1 ? std::optional<std::string>(optVal.value().at(1)) : std::nullopt});
-
-        if (not mtch.has_value()) {}
-        else if (mtch.value().family_score != 1.0f || mtch.value().face_score != 1.0f) {}
-        else {}
-
-
-        // TODO: Functions to get the font: 1) from system, 2) from path, 3) from URL
-        // TODO: Also need some way to differentiate between these
     }
+
     if (auto optVal = ap.present<size_t>("-z")) {
         if (optVal.value() > incom::terminal_plot::config::html_maxFontSize) {
             nonDifferentiated.additionalInfo.push_back(
-                std::format("Font size ('-z') was set over its maximum allowed value which is {0}px. Claming the font "
+                std::format("Font size ('-z') was set over its maximum allowed value which is {0}px. Clamping the font "
                             "size value to {0}px.",
                             incom::terminal_plot::config::html_maxFontSize));
 
@@ -427,7 +467,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incom::terminal_plot::Une
         }
         else if (optVal.value() < incom::terminal_plot::config::html_minFontSize) {
             nonDifferentiated.additionalInfo.push_back(
-                std::format("Font size ('-z') was set below its minimum allowed value which is {0}px. Claming the font "
+                std::format("Font size ('-z') was set below its minimum allowed value which is {0}px. Clamping the font "
                             "size value to {0}px.",
                             incom::terminal_plot::config::html_minFontSize));
 
@@ -502,7 +542,7 @@ std::expected<std::vector<std::string>, incom::terminal_plot::Unexp_AP> process_
         }
     }
 
-    return std::unexpected(incplot::Unexp_AP::TNCII_colByNameNotExist);
+    return std::unexpected(incplot::Unexp_AP::DPCTOR_UnknownError);
 }
 
 

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <incerr.hpp>
 #include <incplot/config.hpp>
 
@@ -13,10 +12,14 @@ using incerr_c = incerr::incerr_code;
 enum class Unexp_AP {
     // No value '0'
     FONT_incfontdiscSystemError = 1,
+    FONT_noReadAccessToFontFile,
+    FONT_unknownErrorOnFileRead,
+    FONT_OTS_emptyInput,
+    FONT_OTS_processFailed,
+    FONT_OTS_negativeOutputOffset,
+    FONT_OTS_emptyOutput,
+    DPCTOR_UnknownError,
 };
-
-// INCPLOT_LIB_API std::string_view incerr_msg_dispatch(Unexp_plotSpecs &&e);
-// std::string_view incerr_msg_dispatch(Unexp_plotDrawer &&e);
 
 
 } // namespace terminal_plot

@@ -12,6 +12,11 @@ CPMAddPackage(
     URL_HASH SHA256=42f6e95cad6ec532fd372391373363b62a14af6d771056dbfc86160e6dfff7aa
     EXCLUDE_FROM_ALL TRUE
 )
+CPMAddPackage(
+    URI "gh:InCom-0/ots_cmake#cmake_unofficial"
+    OPTIONS "ots_BUILD_SHARED_LIB OFF"
+    NAME ots
+)
 
 CPMAddPackage(
     URI "gh:InCom-0/incplot-lib#main"
@@ -23,11 +28,6 @@ CPMAddPackage(
     OPTIONS "incfontdisc_BUILD_SHARED_LIB OFF"
     NAME incfontdisc
 )
-# CPMAddPackage(
-#     URI "gh:InCom-0/ots_cmake#cmake_unofficial"
-#     OPTIONS "ots_BUILD_SHARED_LIB OFF"
-#     NAME ots
-# )
 CPMAddPackage(
     URI "gh:p-ranav/argparse@3.2"
 )
