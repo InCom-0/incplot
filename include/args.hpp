@@ -10,7 +10,7 @@
 #include <ots-memory-stream.h>
 
 
-#include <uri.h>
+#include <uri.hpp>
 
 #include <err.hpp>
 
