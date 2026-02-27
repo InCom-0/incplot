@@ -1,11 +1,9 @@
 #include <algorithm>
 #include <cctype>
-#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <format>
 #include <fstream>
-#include <functional>
 #include <incplot/err.hpp>
 #include <iostream>
 #include <optional>
@@ -242,7 +240,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
     if (ap.get<bool>("-o") || ap.get<bool>("-j")) {
         nonDifferentiated.htmlMode_bool       = (not ap.get<bool>("-j"));
         nonDifferentiated.htmlModeCanvas_bool = ap.get<bool>("-j");
-        
+
         auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
         if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
             auto exp_fallBack_font = incom::terminal_plot::config::db::get_default_font(dbConn.value());
@@ -286,7 +284,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                                     .has_value()) {
                                 // Only if that succeeds do we set that font as 'last resort'
                                 nonDifferentiated.htmlMode_ttfs_lastResort.push_back(extracted.value().front());
-                                std::cout << "LastResort set from download\n";
+                                // std::cout << "LastResort set from download\n";
                             }
                         }
 
@@ -336,7 +334,8 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
 
             if (not uri.getScheme().empty()) {
                 // Use CPR
-                if (auto sanitized = sanitize_fontOTS(download_usingCPR(uri))) {
+
+                if (auto sanitized = download_usingCPR(uri).and_then(sanitize_fontOTS)) {
                     nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(sanitized.value()));
                     // std::print("Using CPR\n");
                 }
@@ -380,7 +379,6 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
 
                     if (matched.has_value()) {
                         if (matched->family_score < config::html_fontFamilyMatch_minScore) {
-                            std::print("Matches score too low.\n");
                             nonDifferentiated.additionalInfo.push_back(
                                 std::format("{}{}\n{}\n{}{}\n{}", "Tried selection system font by the name of: "sv,
                                             reqFamilyName, "However, no such font exists on the system."sv,
@@ -402,7 +400,6 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                                 matched->font.style, "The font above will be used."));
                         }
                         else {
-                            std::print("Using system font\n");
                             // Nothing, we have an exact font match
                         }
 

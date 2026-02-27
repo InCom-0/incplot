@@ -14,6 +14,7 @@ enum class Unexp_AP {
     FONT_incfontdiscSystemError = 1,
     FONT_noReadAccessToFontFile,
     FONT_systemFontDiscoveredButImpossibleToLoad,
+    FONT_CPR_error,
     
     FONT_unknownErrorOnFileRead,
     FONT_OTS_emptyInput,

@@ -20,7 +20,6 @@ using namespace std::literals;
 int main(int argc, char *argv[]) {
 
     auto uri1 = incom::terminal_plot::URI("https://kurzlinks.de/german_economy"sv, true);
-    // auto dl   = incplot::cl_args::download_usingCPR(uri1);
 
 
     // Create and populate ArgumentParser
@@ -56,6 +55,8 @@ int main(int argc, char *argv[]) {
         std::cout << incplot::config::get_showSchemes(dbCon);
         return 0;
     }
+
+    // TODO: Need to do some dance if stdout is not in terminal so that we can output some stuff into the console in some cases
 
     // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
     auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);

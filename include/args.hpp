@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cpr/response.h>
 #include <expected>
 
 #include <argparse/argparse.hpp>
@@ -51,7 +52,7 @@ inline std::expected<std::vector<std::byte>, incplot::Unexp_AP> sanitize_fontOTS
     return sanitized;
 }
 
-inline std::vector<std::byte> download_usingCPR(incplot::URI const &uri) {
+inline std::expected<std::vector<std::byte>, Unexp_AP> download_usingCPR(incplot::URI const &uri) {
     cpr::Session session;
     session.SetUrl(cpr::Url{uri.toString()});
 
@@ -62,13 +63,16 @@ inline std::vector<std::byte> download_usingCPR(incplot::URI const &uri) {
         return true;
     };
 
-    std::vector<std::byte> res{};
+    // TODO: Need to somehow report an error
+    std::expected<std::vector<std::byte>, Unexp_AP> res = std::vector<std::byte>{};
     if (auto resLength = session.GetDownloadFileLength(); resLength > 0) {
-        res.reserve(static_cast<size_t>(resLength));
+        res.value().reserve(static_cast<size_t>(resLength));
     }
-    else { res.reserve(4096 * 1024); }
-    session.Download(cpr::WriteCallback{cb_writer, reinterpret_cast<intptr_t>(&res)});
-
+    else { res.value().reserve(4096 * 1024); }
+    
+    cpr::Response respo = session.Download(cpr::WriteCallback{cb_writer, reinterpret_cast<intptr_t>(&res)});
+    if (respo.error.code != cpr::ErrorCode::OK) { res = std::unexpected(Unexp_AP::FONT_CPR_error); }
+    
     return res;
 }
 
