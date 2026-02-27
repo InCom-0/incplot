@@ -14,18 +14,18 @@ CPMAddPackage(
 )
 CPMAddPackage(
     URI "gh:InCom-0/ots_cmake#cmake_unofficial"
-    OPTIONS "ots_BUILD_SHARED_LIB OFF"
+    OPTIONS "ots_BUILD_SHARED_LIB ${BUILD_SHARED_LIBS}"
     NAME ots
 )
 
 CPMAddPackage(
     URI "gh:InCom-0/incplot-lib#main"
-    OPTIONS "incplot-lib_BUILD_SHARED_LIB OFF"
+    OPTIONS "incplot-lib_BUILD_SHARED_LIB ${BUILD_SHARED_LIBS}"
     NAME incplot-lib
 )
 CPMAddPackage(
     URI "gh:InCom-0/incfontdisc#main"
-    OPTIONS "incfontdisc_BUILD_SHARED_LIB OFF"
+    OPTIONS "incfontdisc_BUILD_SHARED_LIB ${BUILD_SHARED_LIBS}"
     NAME incfontdisc
 )
 CPMAddPackage(
@@ -37,7 +37,7 @@ CPMAddPackage(
 
 CPMAddPackage(
     URI "gh:InCom-0/sqlite3-cmake#master"
-    OPTIONS "BUILD_SHARED_LIBS OFF"
+    OPTIONS "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}"
     NAME SQLite3
 )
 set(BUILD_SQLITE3_CONNECTOR ON)
@@ -74,9 +74,6 @@ else()
     set(_IN_CURL_ENABLE_UNICODE OFF)
 endif()
 
-# option(cpr_FETCHCONTENT_SOURCE_DIR_CURL "Override the location of curl sources,
-#  so that cpr does not download them in configure step (when neither cpr nor curl is found on the system)."
-#     "")
 
 ### Set FETCHCONTENT_SOURCE_DIR_CURL to override the location of curl sources.
 ### (So that cpr does not download them in configure step when cpr or curl aren't found on the system).
@@ -84,7 +81,7 @@ endif()
 CPMAddPackage(
     URI "gh:libcpr/cpr#1.14.1"
     OPTIONS
-    "BUILD_SHARED_LIBS OFF"
+    "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}"
     "BUILD_EXAMPLES OFF"
     "BUILD_CURL_EXE OFF"
     "ENABLE_UNICODE ${_IN_CURL_ENABLE_UNICODE}"
@@ -102,7 +99,7 @@ CPMAddPackage(
 CPMAddPackage(
     URI "gh:InCom-0/libarchive_superbuild#main"
     OPTIONS
-    "BUILD_SHARED_LIBS OFF"
+    "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}"
     "ENABLE_LZMA ON"
     "libarchive_sb_LZMA_FORCE_CPM TRUE"
     "ENABLE_MBEDTLS OFF"

@@ -8,7 +8,7 @@ project(incplot
     LANGUAGES CXX)
 
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory structure" ON)
 
 option(CPM_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for dependencies." ON)

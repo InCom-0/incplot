@@ -75,7 +75,7 @@ jobs:
         compiler: [gcc, clang]
         platform: ["x86_64"]
         target: ["all"]
-        cmake-override: [""]
+        cmake-override: ["-Dincplot_CPR_USE_SYSTEM_CURL=ON"]
         include:
           - msystem: ucrt64
             compiler: gcc
@@ -144,7 +144,7 @@ jobs:
         # compiler-ver: [15, 21]
         build-type: [Release, Debug]
         target: ["all"]
-        cmake-override: ["-DCPR_USE_SYSTEM_CURL=ON"]
+        cmake-override: ["-Dincplot_CPR_USE_SYSTEM_CURL=ON"]
 
         include:
           - runs-on: ubuntu-24.04
@@ -173,7 +173,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libharfbuzz-dev libfontconfig-dev nlohmann-json3-dev libwoff-dev libxxhash-dev libargparse-dev libarchive-dev libidn2-dev libcurl4-openssl-dev
+          sudo apt-get install -y libharfbuzz-dev libfontconfig-dev nlohmann-json3-dev libwoff-dev libxxhash-dev libargparse-dev libarchive-dev libidn2-dev libcurl4-openssl-dev zlib1g-dev
 
       - name: Configure
         run: |
