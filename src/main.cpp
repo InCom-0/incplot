@@ -56,13 +56,15 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // TODO: Need to do some dance if stdout is not in terminal so that we can output some stuff into the console in some cases
+    // TODO: Need to do some dance if stdout is not in terminal so that we can output some stuff into the console in
+    // some cases
 
     // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
     auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
     if (not dpctrs.has_value()) {
-        std::print("{}\n\n{}{}\n{}\n\n{}\n", "Error occurred during evaluation of command line arguments.",
-                   "The error code is: ", dpctrs.error().category().name(), dpctrs.error().get_customMessage(), "... exiting");
+        std::print("{}\n\n{}{}\n{}{}\n{}{}\n\n{}\n", "Error occurred during evaluation of command line arguments.",
+                   "The error category is: "sv, dpctrs.error().category().name(), "The error code is: "sv, dpctrs.error().message(),
+                   "Error comment: "sv, dpctrs.error().get_customMessage(), "... exiting"sv);
         std::exit(1);
     }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cpr/error.h>
 #include <incerr.hpp>
 #include <incplot/config.hpp>
 
@@ -29,5 +30,6 @@ enum class Unexp_AP {
 } // namespace incom
 
 INCERR_REGISTER(incom::terminal_plot::Unexp_AP, incom::terminal_plot);
+INCERR_REGISTER(cpr::ErrorCode, cpr);
 
 #undef INCERR_REGISTER

@@ -253,11 +253,5 @@
                 }
             }
         }
-    ],
-    "buildPresets": [
-        {
-            "name": "default",
-            "inheritConfigureEnvironment": true
-        }
     ]
 }

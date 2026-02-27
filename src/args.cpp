@@ -339,12 +339,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                     nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(sanitized.value()));
                     // std::print("Using CPR\n");
                 }
-                else {
-                    // std::print("Using CPR BAD\n");
-                    return std::unexpected(incerr_c::make(
-                        sanitized.error(),
-                        "Font sanitizer rejected the font you specified. This usually means that the font is not valid and cannot be used."sv));
-                }
+                else { return std::unexpected(sanitized.error()); }
             }
             else {
                 // Use filesystem path
@@ -359,7 +354,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                             }
                             else {
                                 // std::print("Using FS path bad\n");
-                                return std::unexpected(incerr_c::make(sanitized.error()));
+                                return std::unexpected(sanitized.error());
                             }
                         }
                         else { return std::unexpected(incerr_c::make(FONT_unknownErrorOnFileRead)); }
@@ -491,8 +486,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
     return std::vector<DesiredPlot::DP_CtorStruct>{DesiredPlot::DP_CtorStruct{.plot_type_name = std::nullopt}};
 }
 
-std::expected<std::vector<std::string>, incom::terminal_plot::Unexp_AP> process_setupCommand(
-    argparse::ArgumentParser const &setup_ap) {
+std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse::ArgumentParser const &setup_ap) {
 
     if (auto optVal = setup_ap.present<std::vector<std::string>>("-g")) {
         auto const &vosRef = optVal.value();
@@ -519,7 +513,7 @@ std::expected<std::vector<std::string>, incom::terminal_plot::Unexp_AP> process_
         }
     }
 
-    return std::unexpected(incplot::Unexp_AP::DPCTOR_UnknownError);
+    return std::unexpected(incerr_c::make(incplot::Unexp_AP::DPCTOR_UnknownError));
 }
 
 
