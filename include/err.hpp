@@ -22,6 +22,9 @@ enum class Unexp_AP {
     FONT_OTS_verificationProcessFailed,
     FONT_OTS_negativeOutputOffset,
     FONT_OTS_emptyOutput,
+
+    SETUP_schemeGrabWithoutName,
+    SETUP_schemeGrabNameTooLong,
     DPCTOR_UnknownError,
 };
 

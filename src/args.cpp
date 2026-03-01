@@ -34,7 +34,7 @@ namespace cl_args {
 namespace incplot = incom::terminal_plot;
 
 namespace {
-    
+
 std::expected<std::vector<std::byte>, incerr_c> sanitize_fontOTS(std::span<const std::byte> bytes) {
     using enum incplot::Unexp_AP;
     if (bytes.empty()) { return std::unexpected(incerr_c::make(FONT_OTS_emptyInput)); }
@@ -543,15 +543,24 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
 
 std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse::ArgumentParser const &setup_ap) {
 
-    if (auto optVal = setup_ap.present<std::vector<std::string>>("-g")) {
-        auto const &vosRef = optVal.value();
-        if (vosRef.empty()) {}
-        else if (vosRef.size() == 1) {}
+    if (auto optVal = setup_ap.present<std::string>("-g")) {
+        auto &vosRef = optVal.value();
+        if (vosRef.empty()) { return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrabWithoutName)); }
+        else if (vosRef.size() > 128) {
+            return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrabNameTooLong));
+        }
+
+        // The argument is there, the string isn't empty or too long.
+        // TODO: Next we verify that we are not trying to overwrite some of the default schemes.
+        auto schm_opt = config::get_schemeFromTerminal();
+
+        if (vosRef.size() == 1) {}
         else {
             // (vosRef.size() > 1)
             // This should be handled by argparse on 'parse_args', therefore never executing
             assert(false);
         }
+        auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
     }
     if (auto optVal = setup_ap.present<std::vector<std::string>>("-b")) {
         auto const &vosRef = optVal.value();
@@ -628,7 +637,7 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
 
     out_ap.add_argument("-f", "--font")
         .help("Font to use inside html. Either: Family name of system installed font or Path to font file "
-              "or Url to font file. Specify style name as second arg if/where relevant.")
+              "or URI to font file. Specify style name as second arg if/where relevant (ignored otherwise).")
         .nargs(1, 2);
     out_ap.add_argument("-z", "--font-size")
         .help("Specify font size to use (in pixels) [default = 12]")
@@ -665,7 +674,7 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
     subap_setup.add_argument("-g", "--grab-termscheme")
         .help("Grabs current terminal color scheme and saves it. Optionally provide name for later usage using "
               "'-l'.")
-        .nargs(0, 1);
+        .nargs(1);
 
     // Add the pre-existing subparser (the parser subap_setup intantiated object exists in main)
     out_ap.add_subparser(subap_setup);
