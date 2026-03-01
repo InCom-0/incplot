@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <expected>
 #include <string_view>
@@ -8,6 +9,7 @@
 #include <sqlpp23/sqlpp23.h>
 
 #include <args.hpp>
+#include <err.hpp>
 #include <cpr/cpr.h>
 #include <incstd/incstd_color.hpp>
 #include <incstd/incstd_console.hpp>
@@ -16,6 +18,7 @@
 #include <archive_entry.h>
 
 #include <sqlitedefs.hpp>
+#include <vector>
 
 
 namespace incom::terminal_plot::config {
@@ -38,18 +41,12 @@ inline constexpr std::string_view html_fallbackFont_URLsource =
     "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"sv;
 inline constexpr std::string_view html_fallbackFont_filePathInURLsource = "IosevkaNerdFont-Regular.ttf"sv;
 
-inline constexpr float html_fontFamilyMatch_minScore = 0.8f;
-inline constexpr float html_fontFaceMatch_minScore  = 0.8f;
+inline constexpr std::array<std::string, 13> schemes_defaultSchemesNames{
+    "dimidium",        "campbell",       "campbell_ps", "cga",         "dark_plus", "one_half_dark", "one_half_light",
+    "solarized_light", "solarized_dark", "tango_dark",  "tango_light", "ibm_5153",  "monochrome"};
 
-enum class dbErr : size_t {
-    impossibleNumberOfRecords = 1,
-    impossibleValue,
-    notFound,
-    connectionError,
-    dbAppearsCorrupted,
-    missingData,
-    unknownError,
-};
+inline constexpr float html_fontFamilyMatch_minScore = 0.8f;
+inline constexpr float html_fontFaceMatch_minScore   = 0.8f;
 
 
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator = true);
