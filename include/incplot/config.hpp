@@ -8,11 +8,12 @@
 #include <sqlpp23/sqlite3/sqlite3.h>
 #include <sqlpp23/sqlpp23.h>
 
+#include <cpr/cpr.h>
 #include <incplot/args.hpp>
 #include <incplot/err.hpp>
-#include <cpr/cpr.h>
 #include <incstd/incstd_color.hpp>
 #include <incstd/incstd_console.hpp>
+
 
 #include <archive.h>
 #include <archive_entry.h>
@@ -165,6 +166,10 @@ std::expected<size_t, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &db
 std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, std::string const &name);
 std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const id);
 
+std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB(sqlpp::sqlite3::connection &dbConn,
+                                                                          scheme256 const            &scheme);
+std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB(sqlpp::sqlite3::connection &dbConn,
+                                                                          scheme16 const             &scheme);
 
 std::expected<std::vector<std::byte>, dbErr> get_default_font(sqlpp::sqlite3::connection &dbConn);
 std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw);

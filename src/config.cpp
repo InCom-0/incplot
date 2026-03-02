@@ -5,8 +5,11 @@
 #include <expected>
 #include <filesystem>
 
+#include <functional>
+#include <incstd/console/colorschemes.hpp>
 #include <optional>
 #include <ranges>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -211,7 +214,8 @@ std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, dbErr> &db
 }
 
 namespace db {
-namespace detail {
+// Anonymous namespace for stuff used internally in this translation unit
+namespace {
 template <typename T>
 std::expected<T, dbErr> get_defaultScheme(sqlpp::sqlite3::connection &db) {
     T res{};
@@ -349,6 +353,54 @@ std::expected<size_t, dbErr> upsert_scheme(sqlpp::sqlite3::connection &db, T con
     // This should be impossible as only reached if the 'schemes' table UPSERT for loop doesn't run at all
     return std::unexpected(dbErr::unknownError);
 }
+template <typename T>
+std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB_T(sqlpp::sqlite3::connection &db,
+                                                                          T const                    &scheme) {
+    using namespace sqltables;
+
+    SchemePalette sp{};
+    Schemes       sch{};
+
+    // For all color schemes
+    for (auto const &schm :
+         db(sqlpp::select(sch.schemeId, sch.name, sch.fgColor, sch.bgColor, sch.cursorColor, sch.selColor)
+                .from(sch)
+                .where(true))) {
+        // If all 4 base colors are the same
+        if (scheme.foreground == decode_color(static_cast<uint32_t>(schm.fgColor)) &&
+            scheme.backgrond == decode_color(static_cast<uint32_t>(schm.bgColor)) &&
+            scheme.cursor == decode_color(static_cast<uint32_t>(schm.cursorColor)) &&
+            scheme.selection == decode_color(static_cast<uint32_t>(schm.selColor))) {
+
+            // Then also check all the colors in the palette
+
+            std::array<bool, std::tuple_size_v<typename std::remove_cvref_t<decltype(scheme.palette)>>> checked{};
+            bool allColorsIdentical =
+                std::ranges::all_of(db(sqlpp::select(sp.schemeId, sp.indexInPalette, sp.color)
+                                           .from(sp)
+                                           .where(sp.schemeId == schm.schemeId)),
+                                    [&](auto const &spColor) {
+                                        if (spColor.indexInPalette >=
+                                            std::tuple_size_v<typename std::remove_cvref_t<decltype(scheme.palette)>>) {
+                                            return true;
+                                        }
+                                        else {
+                                            checked.at(spColor.indexInPalette) = true;
+                                            if (scheme.palette.at(spColor.indexInPalette) ==
+                                                decode_color(static_cast<uint32_t>(spColor.color))) {
+                                                return true;
+                                            }
+                                            else { return false; }
+                                        }
+                                    });
+            // If all those are the same as well, return the name of such
+            if (allColorsIdentical && std::ranges::fold_left_first(checked, std::bit_and{})) {
+                return std::string{schm.name};
+            }
+        }
+    }
+    return std::nullopt;
+}
 
 std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path const &pathToDb) {
     auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
@@ -364,7 +416,7 @@ std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path
     }
     return dbOnDisk;
 }
-} // namespace detail
+} // namespace
 
 constexpr inline inccol::inc_sRGB decode_color(uint32_t const colInInt) {
     // Consider what to do when the uint32_t is not in the expected range for colors
@@ -381,7 +433,7 @@ std::expected<sqlpp::sqlite3::connection, dbErr> get_configConnection(const std:
     auto configPath_exp = incstd::filesys::find_configFile(std::string(appName), std::string(configFileName));
     if (configPath_exp.has_value()) {
         // Must use default 'in code' config since the sqlite config file is unavailable or somehow corrupted
-        return detail::create_dbConnection_rw(configPath_exp.value());
+        return create_dbConnection_rw(configPath_exp.value());
     }
     else { return std::unexpected(dbErr::notFound); }
 }
@@ -431,37 +483,37 @@ bool validate_SQLite_tableColNamesTypes(sqlpp::sqlite3::connection &db, std::str
 
 
 std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, size_t const id) {
-    return detail::get_scheme<scheme256>(dbConn, id);
+    return get_scheme<scheme256>(dbConn, id);
 }
 std::expected<scheme16, dbErr> get_scheme16(sqlpp::sqlite3::connection &dbConn, size_t const id) {
-    return detail::get_scheme<scheme16>(dbConn, id);
+    return get_scheme<scheme16>(dbConn, id);
 }
 std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, std::string const &name) {
-    auto schemeID = detail::get_schemeID(dbConn, name);
-    if (schemeID) { return detail::get_scheme<scheme256>(dbConn, schemeID.value()); }
+    auto schemeID = get_schemeID(dbConn, name);
+    if (schemeID) { return get_scheme<scheme256>(dbConn, schemeID.value()); }
     return std::unexpected(schemeID.error());
 }
 std::expected<scheme16, dbErr> get_scheme16(sqlpp::sqlite3::connection &dbConn, std::string const &name) {
-    auto schemeID = detail::get_schemeID(dbConn, name);
-    if (schemeID) { return detail::get_scheme<scheme16>(dbConn, schemeID.value()); }
+    auto schemeID = get_schemeID(dbConn, name);
+    if (schemeID) { return get_scheme<scheme16>(dbConn, schemeID.value()); }
     return std::unexpected(schemeID.error());
 }
 
 
 std::expected<scheme256, dbErr> get_defaultScheme256(sqlpp::sqlite3::connection &dbConn) {
-    return detail::get_defaultScheme<scheme256>(dbConn);
+    return get_defaultScheme<scheme256>(dbConn);
 }
 
 std::expected<scheme16, dbErr> get_defaultScheme16(sqlpp::sqlite3::connection &dbConn) {
-    return detail::get_defaultScheme<scheme16>(dbConn);
+    return get_defaultScheme<scheme16>(dbConn);
 }
 
 std::expected<size_t, dbErr> upsert_scheme256(sqlpp::sqlite3::connection &dbConn, scheme256 const &scheme) {
-    return detail::upsert_scheme<scheme256>(dbConn, scheme);
+    return upsert_scheme<scheme256>(dbConn, scheme);
 }
 
 std::expected<size_t, dbErr> upsert_scheme16(sqlpp::sqlite3::connection &dbConn, scheme16 const &scheme) {
-    return detail::upsert_scheme<scheme16>(dbConn, scheme);
+    return upsert_scheme<scheme16>(dbConn, scheme);
 }
 
 std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, std::string const &name) {
@@ -565,6 +617,15 @@ std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, s
 
     // That is impossible
     return std::unexpected(dbErr::impossibleNumberOfRecords);
+}
+
+std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB(sqlpp::sqlite3::connection &dbConn,
+                                                                        scheme256 const            &scheme) {
+    return check_schemeExistsInDB_T(dbConn, scheme);
+}
+std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB(sqlpp::sqlite3::connection &dbConn,
+                                                                        scheme16 const             &scheme) {
+    return check_schemeExistsInDB_T(dbConn, scheme);
 }
 
 
