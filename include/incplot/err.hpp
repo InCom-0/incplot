@@ -23,7 +23,6 @@ enum class Unexp_AP {
     FONT_OTS_negativeOutputOffset,
     FONT_OTS_emptyOutput,
 
-    SETUP_schemeGrab_notSupportedOnWindows,
     SETUP_schemeGrab_withoutName,
     SETUP_schemeGrab_nameTooLong,
     SETUP_schemeGrab_nameSameAsBuildinScheme,

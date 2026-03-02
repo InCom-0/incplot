@@ -14,9 +14,10 @@
 #include <string_view>
 #include <typeindex>
 
+#include <incplot-lib/plot_structures.hpp>
 #include <incplot/args.hpp>
 #include <incplot/config.hpp>
-#include <incplot-lib/plot_structures.hpp>
+
 
 #include <incfontdisc/incfontdisc.hpp>
 #include <incstd/core/filesys.hpp>
@@ -544,38 +545,49 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
 }
 
 std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse::ArgumentParser const &setup_ap) {
+    std::expected<std::vector<std::string>, incerr_c> res{};
 
     auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
     if (not dbConn.has_value()) { return std::unexpected(incerr_c::make(incplot::config::dbErr::connectionError)); }
 
     if (auto optVal = setup_ap.present<std::string>("-g")) {
-
-#ifdef _WIN32
-        return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_notSupportedOnWindows));
-#else
-
-#endif
-        auto const &vosRef = optVal.value();
-        if (vosRef.empty()) { return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_withoutName)); }
-        else if (vosRef.size() > 128) {
-            return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameTooLong));
+        auto const &schmNameRef = optVal.value();
+        if (schmNameRef.empty()) {
+            res = std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_withoutName));
+            goto RET;
+        }
+        else if (schmNameRef.size() > 128) {
+            res = std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameTooLong));
+            goto RET;
         }
 
         // The argument is there, the string isn't empty or too long.
-        for (auto const &defName : incplot::config::schemes_defaultSchemesNames) {
-            if (defName == vosRef) {
-                return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameSameAsBuildinScheme));
-            }
+        if (std::ranges::find(incplot::config::schemes_defaultSchemesNames, schmNameRef) !=
+            incplot::config::schemes_defaultSchemesNames.end()) {
+            res = std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameSameAsBuildinScheme));
+            goto RET;
         }
         auto schm_opt = config::get_schemeFromTerminal();
         if (not schm_opt.has_value()) {
-            return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_errorWhenQueryingTerminal));
+            res = std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_errorWhenQueryingTerminal));
+            goto RET;
         }
+        schm_opt->name = schmNameRef;
+
+        // TODO: Also consider comparing the newly got scheme against all the other schemes already in the db
+        // TODO: If there is a match then there is no need to insert anything and just report a name the user wants
 
         auto upsertRes = incom::terminal_plot::config::db::upsert_scheme16(dbConn.value(), schm_opt.value());
-        if (not upsertRes.has_value()) { return std::unexpected(incerr_c::make(upsertRes.error())); }
-    }
 
+        if (upsertRes.has_value()) {
+            res->push_back(std::format("Scheme inserted\nNew scheme ID: {}\nNew scheme name: {}\n\n", upsertRes.value(),
+                                       schmNameRef));
+        }
+        else {
+            res = std::unexpected(incerr_c::make(upsertRes.error()));
+            goto RET;
+        }
+    }
 
     if (auto optVal = setup_ap.present<std::vector<std::string>>("-b")) {
         using enum incplot::Unexp_AP;
@@ -684,8 +696,8 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
             }
         }
     }
-
-    return std::unexpected(incerr_c::make(incplot::Unexp_AP::DPCTOR_UnknownError));
+RET:
+    return res;
 }
 
 

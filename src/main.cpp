@@ -34,15 +34,10 @@ int main(int argc, char *argv[]) {
     incom::standard::console::set_cocp();
 
     if (ap.is_subcommand_used(subap_setup)) {
-        std::cout << "Used \n";
+        // std::cout << "Used \n";
 
         if (auto setupCommand_res = incplot::cl_args::process_setupCommand(subap_setup)) {
-            std::string toPrint;
-            for (auto const &oneLine : setupCommand_res.value()) {
-                toPrint.append(oneLine);
-                toPrint.push_back('\n');
-            }
-            std::cout << toPrint;
+            for (auto const &oneLine : setupCommand_res.value()) { std::cout << oneLine; }
             return 0;
         }
 
