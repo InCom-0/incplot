@@ -7,11 +7,11 @@
 #include <opentype-sanitiser.h>
 #include <ots-memory-stream.h>
 
-#include <incplot/desired_plot.hpp>
-#include <incplot/err.hpp>
+#include <incplot-lib/desired_plot.hpp>
+#include <incplot-lib/err.hpp>
 
-#include <uri.hpp>
-#include <err.hpp>
+#include <incplot/uri.hpp>
+#include <incplot/err.hpp>
 
 
 namespace incom {

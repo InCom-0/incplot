@@ -4,8 +4,8 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
-#include <incplot/config.hpp>
-#include <incplot/err.hpp>
+#include <incplot-lib/config.hpp>
+#include <incplot-lib/err.hpp>
 #include <iostream>
 #include <optional>
 #include <print>
@@ -14,9 +14,9 @@
 #include <string_view>
 #include <typeindex>
 
-#include <args.hpp>
-#include <config.hpp>
-#include <incplot/plot_structures.hpp>
+#include <incplot/args.hpp>
+#include <incplot/config.hpp>
+#include <incplot-lib/plot_structures.hpp>
 
 #include <incfontdisc/incfontdisc.hpp>
 #include <incstd/core/filesys.hpp>
@@ -26,7 +26,7 @@
 #include <opentype-sanitiser.h>
 #include <ots-memory-stream.h>
 
-#include <uri.hpp>
+#include <incplot/uri.hpp>
 
 
 namespace incom {

@@ -6,7 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <uri.hpp>
+#include <incplot/uri.hpp>
 
 
 namespace incom::terminal_plot {

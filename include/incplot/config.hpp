@@ -8,8 +8,8 @@
 #include <sqlpp23/sqlite3/sqlite3.h>
 #include <sqlpp23/sqlpp23.h>
 
-#include <args.hpp>
-#include <err.hpp>
+#include <incplot/args.hpp>
+#include <incplot/err.hpp>
 #include <cpr/cpr.h>
 #include <incstd/incstd_color.hpp>
 #include <incstd/incstd_console.hpp>
@@ -17,7 +17,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 
-#include <sqlitedefs.hpp>
+#include <incplot/sqlitedefs.hpp>
 #include <vector>
 
 

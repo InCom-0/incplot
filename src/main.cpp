@@ -4,14 +4,15 @@
 
 #include <auto/versiondef.h>
 
-#include <args.hpp>
-#include <config.hpp>
 #include <incfontdisc/incfontdisc.hpp>
-#include <incplot.hpp>
+#include <incplot-lib.hpp>
+#include <incplot/args.hpp>
+#include <incplot/config.hpp>
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
 
-#include <uri.hpp>
+
+#include <incplot/uri.hpp>
 
 
 using namespace std::literals;
@@ -56,18 +57,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // TODO: Need to do some dance if stdout is not in terminal so that we can output some stuff into the console in
-    // some cases
-
-    // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
-    auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
-    if (not dpctrs.has_value()) {
-        std::print("{}\n\n{}{}\n{}{}\n{}{}\n\n{}\n", "Error occurred during evaluation of command line arguments.",
-                   "The error category is: "sv, dpctrs.error().category().name(), "The error code is: "sv, dpctrs.error().message(),
-                   "Error comment: "sv, dpctrs.error().get_customMessage(), "... exiting"sv);
-        std::exit(1);
-    }
-
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
         std::print("{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",
@@ -77,6 +66,18 @@ int main(int argc, char *argv[]) {
     }
     // Get the input data and store it in std::string
     std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
+
+    // TODO: Need to do some dance if stdout is not in terminal so that we can output some stuff into the console in
+    // some cases
+
+    // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
+    auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
+    if (not dpctrs.has_value()) {
+        std::print("{}\n\n{}{}\n{}{}\n{}{}\n\n{}\n", "Error occurred during evaluation of command line arguments.",
+                   "The error category is: "sv, dpctrs.error().category().name(), "The error code is: "sv,
+                   dpctrs.error().message(), "Error comment: "sv, dpctrs.error().get_customMessage(), "... exiting"sv);
+        std::exit(1);
+    }
 
 
     // STDOUT IS NOT IN TERMINAL

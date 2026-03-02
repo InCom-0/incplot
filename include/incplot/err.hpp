@@ -2,7 +2,7 @@
 
 #include <cpr/error.h>
 #include <incerr.hpp>
-#include <incplot/config.hpp>
+#include <incplot-lib/config.hpp>
 
 
 namespace incom {

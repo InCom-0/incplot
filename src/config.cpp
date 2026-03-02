@@ -14,7 +14,7 @@
 #include <indicators/cursor_control.hpp>
 #include <indicators/progress_bar.hpp>
 
-#include <config.hpp>
+#include <incplot/config.hpp>
 #include <incstd/core/filesys.hpp>
 
 namespace incom::terminal_plot::config {
