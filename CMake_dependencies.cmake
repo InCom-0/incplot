@@ -79,7 +79,8 @@ endif()
 ### (So that cpr does not download them in configure step when cpr or curl aren't found on the system).
 ### The above has not effect if either is found on the system
 CPMAddPackage(
-    URI "gh:libcpr/cpr#1.14.2"
+    URL https://github.com/libcpr/cpr/archive/refs/tags/1.14.2.tar.gz
+    URL_HASH SHA256=b9b529b47083bfe80bba855ca5308d12d767ae7c7b629aef5ef018c4343cf62b
     OPTIONS
     "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}"
     "BUILD_EXAMPLES OFF"
@@ -92,6 +93,7 @@ CPMAddPackage(
     "CPR_ENABLE_CURL_HTTP_ONLY OFF"
     "CPR_USE_SYSTEM_CURL ${incplot_CPR_USE_SYSTEM_CURL}"
     "CPR_BUILD_TESTS OFF"
+    VERSION 1.14.1
     NAME cpr
 )
 
