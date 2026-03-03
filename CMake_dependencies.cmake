@@ -79,7 +79,7 @@ endif()
 ### (So that cpr does not download them in configure step when cpr or curl aren't found on the system).
 ### The above has not effect if either is found on the system
 CPMAddPackage(
-    URI "gh:libcpr/cpr#1.14.1"
+    URI "gh:libcpr/cpr#1.14.2"
     OPTIONS
     "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}"
     "BUILD_EXAMPLES OFF"
