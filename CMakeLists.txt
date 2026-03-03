@@ -16,6 +16,23 @@ option(CPM_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing
 
 option(incplot_CPR_USE_SYSTEM_CURL "Incplot transitively needs libcurl. Set to ON if you have and want to use system installed one" OFF)
 
+if(APPLE)
+    execute_process(COMMAND brew --prefix
+        OUTPUT_VARIABLE BREW_PREFIX
+        RESULT_VARIABLE BREW_RESULT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(BREW_RESULT EQUAL 0 AND EXISTS "${BREW_PREFIX}/opt/libarchive")
+        # Make sure LibArchive::LibArchive looks a brew first
+        list(APPEND CMAKE_PREFIX_PATH "${BREW_PREFIX}/opt/libarchive")
+    else()
+        message(FATAL_ERROR "LibArchive was not found.\nLibArchive is required to be installed by Homebrew on MacOS.\n")
+    endif()
+
+    unset(BREW_PREFIX)
+    unset(BREW_RESULT)
+endif()
+
 
 #####################################################################
 ### Staging ###
