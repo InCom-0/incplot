@@ -42,9 +42,9 @@ inline constexpr std::string_view html_fallbackFont_URLsource =
     "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.tar.xz"sv;
 inline constexpr std::string_view html_fallbackFont_filePathInURLsource = "IosevkaNerdFont-Regular.ttf"sv;
 
-inline constexpr std::array<std::string, 13> schemes_defaultSchemesNames{
-    "dimidium",        "campbell",       "campbell_ps", "cga",         "dark_plus", "one_half_dark", "one_half_light",
-    "solarized_light", "solarized_dark", "tango_dark",  "tango_light", "ibm_5153",  "monochrome"};
+inline constexpr std::array<std::string_view, 13> schemes_defaultSchemesNames{
+    "dimidium"sv,        "campbell"sv,       "campbell_ps"sv, "cga"sv,         "dark_plus"sv, "one_half_dark"sv, "one_half_light"sv,
+    "solarized_light"sv, "solarized_dark"sv, "tango_dark"sv,  "tango_light"sv, "ibm_5153"sv,  "monochrome"sv};
 
 inline constexpr float html_fontFamilyMatch_minScore = 0.8f;
 inline constexpr float html_fontFaceMatch_minScore   = 0.8f;
