@@ -394,7 +394,7 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB_T(sqlpp:
                                     });
             // If all those are the same as well and no palette ID is missing in DB, then return the name of such scheme
             // in DB
-            if (allColorsIdentical && std::ranges::fold_left(checked, false, std::logical_and{})) {
+            if (allColorsIdentical && std::ranges::fold_left(checked, true, std::logical_and{})) {
                 return std::string{schm.name};
             }
         }

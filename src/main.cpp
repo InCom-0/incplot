@@ -52,16 +52,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // STDIN IS IN TERMINAL (that is there is no input 'piped in')
-    if (incom::standard::console::is_stdin_inTerminal()) {
-        std::print("{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",
-                   "This is usually done using the '|' operator", "Pass '-h' to obtain more detailed help",
-                   "... exiting");
-        std::exit(1);
-    }
-    // Get the input data and store it in std::string
-    std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
-
     // TODO: Need to do some dance if stdout is not in terminal so that we can output some stuff into the console in
     // some cases
 
@@ -73,6 +63,17 @@ int main(int argc, char *argv[]) {
                    dpctrs.error().message(), "Error comment: "sv, dpctrs.error().get_customMessage(), "... exiting"sv);
         std::exit(1);
     }
+
+
+    // STDIN IS IN TERMINAL (that is there is no input 'piped in')
+    if (incom::standard::console::is_stdin_inTerminal()) {
+        std::print("{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",
+                   "This is usually done using the '|' operator", "Pass '-h' to obtain more detailed help",
+                   "... exiting");
+        std::exit(1);
+    }
+    // Get the input data and store it in std::string
+    std::string const input((std::istreambuf_iterator(std::cin)), std::istreambuf_iterator<char>());
 
 
     // STDOUT IS NOT IN TERMINAL
