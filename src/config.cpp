@@ -373,7 +373,6 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB_T(sqlpp:
             scheme.selection == decode_color(static_cast<uint32_t>(schm.selColor))) {
 
             // Then also check all the colors in the palette
-
             std::array<bool, std::tuple_size_v<typename std::remove_cvref_t<decltype(scheme.palette)>>> checked{};
             bool allColorsIdentical =
                 std::ranges::all_of(db(sqlpp::select(sp.schemeId, sp.indexInPalette, sp.color)
@@ -393,8 +392,9 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB_T(sqlpp:
                                             else { return false; }
                                         }
                                     });
-            // If all those are the same as well, return the name of such
-            if (allColorsIdentical && std::ranges::fold_left_first(checked, std::bit_and{})) {
+            // If all those are the same as well and no palette ID is missing in DB, then return the name of such scheme
+            // in DB
+            if (allColorsIdentical && std::ranges::fold_left_first(checked, std::logical_and{})) {
                 return std::string{schm.name};
             }
         }

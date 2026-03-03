@@ -577,14 +577,31 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
         // TODO: Also consider comparing the newly got scheme against all the other schemes already in the db
         // TODO: If there is a match then there is no need to insert anything and just report a name the user wants
 
-        auto upsertRes = incom::terminal_plot::config::db::upsert_scheme16(dbConn.value(), schm_opt.value());
 
-        if (upsertRes.has_value()) {
-            res->push_back(std::format("Scheme inserted\nNew scheme ID: {}\nNew scheme name: {}\n\n", upsertRes.value(),
-                                       schmNameRef));
+        if (auto maybe_alreadyExists = incplot::config::db::check_schemeExistsInDB(dbConn.value(), schm_opt.value())) {
+            // If the optional inside the expected has value
+            if (maybe_alreadyExists.value()) {
+                res->push_back(std::format("Identical scheme already exists.\nScheme name: {}\n\n",
+                                           maybe_alreadyExists.value().value()));
+            }
+            // If the optional is empty
+            else {
+                auto upsertRes = incom::terminal_plot::config::db::upsert_scheme16(dbConn.value(), schm_opt.value());
+
+                if (upsertRes.has_value()) {
+                    res->push_back(std::format("Scheme inserted\nNew scheme ID: {}\nNew scheme name: {}\n\n",
+                                               upsertRes.value(), schmNameRef));
+                }
+                else {
+                    res = std::unexpected(incerr_c::make(upsertRes.error()));
+                    goto RET;
+                }
+            }
         }
+        // else = the expected contains an error
         else {
-            res = std::unexpected(incerr_c::make(upsertRes.error()));
+            // Never happens because that function never returns unexpected
+            res = std::unexpected(incerr_c::make(maybe_alreadyExists.error()));
             goto RET;
         }
     }
