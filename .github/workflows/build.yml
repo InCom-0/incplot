@@ -211,7 +211,7 @@ jobs:
           - compiler: "clang"
             compiler-setupname: "llvm"
             compiler-ver: "21"
-            cmake-override: ["-Dincplot_CPR_USE_SYSTEM_CURL=ON"]
+            cmake-override: "-Dincplot_CPR_USE_SYSTEM_CURL=ON"
 
     steps:
       - name: "🧰 Checkout"
