@@ -14,20 +14,17 @@
 #include <string_view>
 #include <typeindex>
 
+#include <opentype-sanitiser.h>
+#include <ots-memory-stream.h>
+
 #include <incplot-lib/plot_structures.hpp>
 #include <incplot/args.hpp>
 #include <incplot/config.hpp>
-
 
 #include <incfontdisc/incfontdisc.hpp>
 #include <incstd/core/filesys.hpp>
 #include <incstd/core/typegen.hpp>
 #include <incstd/incstd_console.hpp>
-
-#include <opentype-sanitiser.h>
-#include <ots-memory-stream.h>
-
-#include <incplot/uri.hpp>
 
 
 namespace incom {
@@ -69,7 +66,7 @@ std::expected<std::vector<std::byte>, incerr_c> sanitize_fontOTS(std::span<const
     return sanitized;
 }
 
-std::expected<std::vector<std::byte>, incerr_c> download_usingCPR(incplot::URI const &uri) {
+std::expected<std::vector<std::byte>, incerr_c> download_usingCPR(incstd::web::URI const &uri) {
     cpr::Session session;
     session.SetUrl(cpr::Url{uri.toString()});
 
@@ -387,7 +384,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
             std::string &reqFamilyName     = optVal.value().front();
             bool         styleSpecified_is = (optVal.value().size() == 2);
 
-            auto uri = incplot::URI(reqFamilyName, false);
+            auto uri = incstd::web::URI(reqFamilyName, false);
 
             if (not uri.getScheme().empty()) {
                 // Use CPR
@@ -574,10 +571,6 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
         }
         schm_opt->name = schmNameRef;
 
-        // TODO: Also consider comparing the newly got scheme against all the other schemes already in the db
-        // TODO: If there is a match then there is no need to insert anything and just report a name the user wants
-
-
         if (auto maybe_alreadyExists = incplot::config::db::check_schemeExistsInDB(dbConn.value(), schm_opt.value())) {
             // If the optional inside the expected has value
             if (maybe_alreadyExists.value()) {
@@ -615,7 +608,7 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
         std::string &reqFamilyName     = optVal.value().front();
         bool         styleSpecified_is = (optVal.value().size() == 2);
 
-        auto uri = incplot::URI(reqFamilyName, false);
+        auto uri = incstd::web::URI(reqFamilyName, false);
 
         if (not uri.getScheme().empty()) {
             // Use CPR

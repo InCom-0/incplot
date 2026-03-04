@@ -10,8 +10,8 @@
 #include <incplot-lib/desired_plot.hpp>
 #include <incplot-lib/err.hpp>
 
-#include <incplot/uri.hpp>
 #include <incplot/err.hpp>
+#include <incstd/web/uri.hpp>
 
 
 namespace incom {

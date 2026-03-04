@@ -11,16 +11,13 @@
 #include <incstd/core/filesys.hpp>
 #include <incstd/incstd_console.hpp>
 
-
-#include <incplot/uri.hpp>
-
-
-using namespace std::literals;
+#include <incstd/web/uri.hpp>
 
 
 int main(int argc, char *argv[]) {
+    using namespace std::literals;
 
-    auto uri1 = incom::terminal_plot::URI("https://kurzlinks.de/german_economy"sv, true);
+    auto uri1 = incstd::web::URI("https://kurzlinks.de/german_economy"sv, true);
 
 
     // Create and populate ArgumentParser
