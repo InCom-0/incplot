@@ -205,6 +205,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                 auto lus_exp = config::db::get_defaultScheme16(dbConn.value());
                 if (lus_exp) {
                     auto validated = config::validate_terminalPaletteSameness(3, lus_exp.value().palette);
+                    // TODO: Register the err_terminal with incerr so that we can get the info out of it
                     if (not validated.has_value()) {
                         // Can't validate beacuse can't get color information out of terminal
                         // Must use the 'unvalidated' scheme from the config

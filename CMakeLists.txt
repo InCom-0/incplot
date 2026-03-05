@@ -52,6 +52,12 @@ if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
     add_compile_definitions(NOMINMAX)
 endif()
 
+### TODO: Attempt removal later as the build used to work without this
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 13.3)
+endif()
+
+
 ### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX) or MSVC_STL(USING_MSVC_STL)
 include(cmake/stdlibQuery.cmake)
 
