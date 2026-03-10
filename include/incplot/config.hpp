@@ -12,7 +12,6 @@
 #include <incplot/args.hpp>
 #include <incplot/err.hpp>
 #include <incstd/incstd_color.hpp>
-#include <incstd/incstd_console.hpp>
 
 
 #include <archive.h>
@@ -43,8 +42,9 @@ inline constexpr std::string_view html_fallbackFont_URLsource =
 inline constexpr std::string_view html_fallbackFont_filePathInURLsource = "IosevkaNerdFont-Regular.ttf"sv;
 
 inline constexpr std::array<std::string_view, 13> schemes_defaultSchemesNames{
-    "dimidium"sv,        "campbell"sv,       "campbell_ps"sv, "cga"sv,         "dark_plus"sv, "one_half_dark"sv, "one_half_light"sv,
-    "solarized_light"sv, "solarized_dark"sv, "tango_dark"sv,  "tango_light"sv, "ibm_5153"sv,  "monochrome"sv};
+    "dimidium"sv,       "campbell"sv,        "campbell_ps"sv,    "cga"sv,        "dark_plus"sv,   "one_half_dark"sv,
+    "one_half_light"sv, "solarized_light"sv, "solarized_dark"sv, "tango_dark"sv, "tango_light"sv, "ibm_5153"sv,
+    "monochrome"sv};
 
 inline constexpr float html_fontFamilyMatch_minScore = 0.8f;
 inline constexpr float html_fontFaceMatch_minScore   = 0.8f;
@@ -104,12 +104,12 @@ RET:
     return res;
 }
 
-std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
-                                                                            const inccol::palette16 &against);
-std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
-                                                                            const inccol::palette256 &against);
-std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(
-    std::vector<std::uint8_t> colorIDs_toValidate, const inccol::palette256 &against);
+std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::uint8_t             colorCount_toValidate,
+                                                               const inccol::palette16 &against);
+std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::uint8_t              colorCount_toValidate,
+                                                               const inccol::palette256 &against);
+std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::vector<std::uint8_t> colorIDs_toValidate,
+                                                               const inccol::palette256 &against);
 
 
 scheme256 get_defaultColScheme256();
@@ -167,9 +167,9 @@ std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, s
 std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const id);
 
 std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB(sqlpp::sqlite3::connection &dbConn,
-                                                                          scheme256 const            &scheme);
+                                                                        scheme256 const            &scheme);
 std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB(sqlpp::sqlite3::connection &dbConn,
-                                                                          scheme16 const             &scheme);
+                                                                        scheme16 const             &scheme);
 
 std::expected<std::vector<std::byte>, dbErr> get_default_font(sqlpp::sqlite3::connection &dbConn);
 std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw);

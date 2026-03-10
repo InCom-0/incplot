@@ -210,9 +210,11 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                         // Must use the 'unvalidated' scheme from the config
                         nonDifferentiated.colScheme     = lus_exp.value();
                         nonDifferentiated.forceRGB_bool = true;
-                        nonDifferentiated.additionalInfo.push_back(
-                            std::string("Error encountered while querying terminal for colors.\nUsing default color "
-                                        "scheme from config."));
+                        nonDifferentiated.additionalInfo.push_back(std::format(
+                            "{}\n\n{}{}\n{}{}\n{}{}\n\n{}", "Error encountered while querying terminal for colors."sv,
+                            "The error category is: "sv, validated.error().category().name(), "The error code is: "sv,
+                            validated.error().message(), "Error comment: "sv, validated.error().get_customMessage(),
+                            "Using default color scheme from config."sv));
                     }
                     else {
                         if (validated.value()) {

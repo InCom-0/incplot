@@ -3,6 +3,7 @@
 #include <cpr/error.h>
 #include <incerr.hpp>
 #include <incplot-lib/config.hpp>
+#include <incstd/incstd_console.hpp>
 
 
 namespace incom {
@@ -28,7 +29,7 @@ enum class Unexp_AP {
     SETUP_schemeGrab_nameSameAsBuildinScheme,
     SETUP_schemeGrab_errorWhenQueryingTerminal,
 
-    
+
     SETUP_fbFont_,
     SETUP_fbFont_1,
     SETUP_fbFont_noReadAccessToFontFile,
@@ -55,6 +56,7 @@ enum class dbErr : size_t {
 
 INCERR_REGISTER(incom::terminal_plot::Unexp_AP, incom::terminal_plot);
 INCERR_REGISTER(incom::terminal_plot::config::dbErr, incom::terminal_plot::config);
+INCERR_REGISTER(incom::standard::console::err_terminal, incom::standard::console);
 INCERR_REGISTER(cpr::ErrorCode, cpr);
 
 #undef INCERR_REGISTER

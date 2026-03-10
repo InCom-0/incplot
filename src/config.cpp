@@ -1,12 +1,10 @@
 #include <algorithm>
 #include <array>
-#include <cctype>
 #include <cstddef>
 #include <expected>
 #include <filesystem>
 
 #include <functional>
-#include <incstd/console/colorschemes.hpp>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -19,6 +17,7 @@
 
 #include <incplot/config.hpp>
 #include <incstd/core/filesys.hpp>
+#include <incstd/console/colorschemes.hpp>
 
 namespace incom::terminal_plot::config {
 
@@ -73,13 +72,13 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
 }
 
 
-std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
-                                                                            const inccol::palette16 &against) {
+std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::uint8_t             colorCount_toValidate,
+                                                               const inccol::palette16 &against) {
     colorCount_toValidate = std::min(static_cast<size_t>(colorCount_toValidate),
                                      std::tuple_size_v<typename std::remove_cvref_t<decltype(against)>>);
     for (size_t i = 0; i < colorCount_toValidate; ++i) {
         auto queryRes = inccons::ColorQuery::get_paletteIdx(i);
-        if (not queryRes.has_value()) { return std::unexpected(queryRes.error()); }
+        if (not queryRes.has_value()) { return std::unexpected(incerr_c::make(queryRes.error())); }
         else if (queryRes.value() != against[i]) { return false; }
     }
 
@@ -87,24 +86,24 @@ std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std:
     return true;
 }
 
-std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(std::uint8_t colorCount_toValidate,
-                                                                            const inccol::palette256 &against) {
+std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::uint8_t              colorCount_toValidate,
+                                                               const inccol::palette256 &against) {
     colorCount_toValidate = std::min(static_cast<size_t>(colorCount_toValidate),
                                      std::tuple_size_v<typename std::remove_cvref_t<decltype(against)>>);
     for (size_t i = 0; i < colorCount_toValidate; ++i) {
         auto queryRes = inccons::ColorQuery::get_paletteIdx(i);
-        if (not queryRes.has_value()) { return std::unexpected(queryRes.error()); }
+        if (not queryRes.has_value()) { return std::unexpected(incerr_c::make(queryRes.error())); }
         else if (queryRes.value() != against[i]) { return false; }
     }
 
     // If all pass then its validated
     return true;
 }
-std::expected<bool, inccons::err_terminal> validate_terminalPaletteSameness(
-    std::vector<std::uint8_t> colorIDs_toValidate, const inccol::palette256 &against) {
+std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::vector<std::uint8_t> colorIDs_toValidate,
+                                                               const inccol::palette256 &against) {
     for (auto colToVal : colorIDs_toValidate) {
         auto queryRes = inccons::ColorQuery::get_paletteIdx(colToVal);
-        if (not queryRes.has_value()) { return std::unexpected(queryRes.error()); }
+        if (not queryRes.has_value()) { return std::unexpected(incerr_c::make(queryRes.error())); }
         else if (queryRes.value() != against[colToVal]) { return false; }
     }
 
