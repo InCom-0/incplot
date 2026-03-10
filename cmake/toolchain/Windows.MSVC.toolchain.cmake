@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------------------------------------------------------
 # MIT License
 #
-# Copyright (c) 2021 Mark Schofield
+# Copyright (c) 2026 Mark Schofield
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -36,8 +36,8 @@
 # | CMAKE_VS_VERSION_PRERELEASE                 | Whether 'prerelease' versions of Visual Studio should be considered. Defaults to 'OFF'                                   |
 # | CMAKE_VS_VERSION_RANGE                      | A verson range for VS instances to find. For example, '[16.0,17.0)' will find versions '16.*'. Defaults to '[16.0,17.0)' |
 # | CMAKE_WINDOWS_KITS_10_DIR                   | The location of the root of the Windows Kits 10 directory.                                                               |
-# | TOOLCHAIN_UPDATE_PROGRAM_PATH               | Whether the toolchain should update CMAKE_PROGRAM_PATH. Defaults to 'ON'.                                                |
 # | TOOLCHAIN_ADD_VS_NINJA_PATH                 | Whether the toolchain should add the path to the VS Ninja to the CMAKE_SYSTEM_PROGRAM_PATH. Defaults to 'ON'.            |
+# | TOOLCHAIN_UPDATE_PROGRAM_PATH               | Whether the toolchain should update CMAKE_PROGRAM_PATH. Defaults to 'ON'.                                                |
 # | VS_EXPERIMENTAL_MODULE                      | Whether experimental module support should be enabled.                                                                   |
 # | VS_INSTALLATION_PATH                        | The location of the root of the Visual Studio installation. If not specified VSWhere will be used to search for one.     |
 # | VS_PLATFORM_TOOLSET_VERSION                 | The version of the MSVC toolset to use. For example, 14.29.30133. Defaults to the highest available.                     |
@@ -54,9 +54,10 @@
 # | CMAKE_RC_COMPILER                           | The path tp the 'rc.exe' tool to use.                                                                 |
 # | CMAKE_SYSTEM_NAME                           | "Windows", when cross-compiling                                                                       |
 # | CMAKE_VS_PLATFORM_TOOLSET_VERSION           | The version of the MSVC toolset being used - e.g. 14.29.30133.                                        |
-# | WIN32                                       | 1                                                                                                     |
 # | MSVC                                        | 1                                                                                                     |
 # | MSVC_VERSION                                | The '<major><minor>' version of the C++ compiler being used. For example, '1929'                      |
+# | VS_INSTALLATION_PATH                        | The location of the root of the Visual Studio installation.                                           |
+# | WIN32                                       | 1                                                                                                     |
 #
 # Other configuration:
 #
@@ -80,11 +81,16 @@ option(TOOLCHAIN_ADD_VS_NINJA_PATH "Whether the toolchain should add the path to
 
 set(UNUSED ${CMAKE_TOOLCHAIN_FILE}) # Note: only to prevent cmake unused variable warninig
 list(APPEND CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
+    CMAKE_C_COMPILER
+    CMAKE_CXX_COMPILER
+    CMAKE_MT
+    CMAKE_RC_COMPILER
     CMAKE_SYSTEM_PROCESSOR
     CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE
     CMAKE_VS_PRODUCTS
     CMAKE_VS_VERSION_PRERELEASE
     CMAKE_VS_VERSION_RANGE
+    CMAKE_WINDOWS_KITS_10_DIR
     VS_INSTALLATION_PATH
     VS_INSTALLATION_VERSION
     VS_PLATFORM_TOOLSET_VERSION
@@ -105,16 +111,16 @@ if(NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL ${CMAKE_HOST_SYSTEM_PROCESSOR}))
     set(CMAKE_SYSTEM_NAME Windows)
 endif()
 
-if(NOT CMAKE_VS_VERSION_RANGE)
-    set(CMAKE_VS_VERSION_RANGE "[16.0,)")
+if(NOT CMAKE_VS_PRODUCTS)
+    set(CMAKE_VS_PRODUCTS "*")
 endif()
 
 if(NOT CMAKE_VS_VERSION_PRERELEASE)
     set(CMAKE_VS_VERSION_PRERELEASE OFF)
 endif()
 
-if(NOT CMAKE_VS_PRODUCTS)
-    set(CMAKE_VS_PRODUCTS "*")
+if(NOT CMAKE_VS_VERSION_RANGE)
+    set(CMAKE_VS_VERSION_RANGE "[16.0,)")
 endif()
 
 if(NOT CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE)
