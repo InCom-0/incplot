@@ -3,7 +3,7 @@
 #     set(CPM_USE_LOCAL_PACKAGES OFF CACHE BOOL "Forbid finding local packages" FORCE)
 # endif()
 
-include(cmake/CPM.cmake)
+include(cmake/lefticus/CPM.cmake)
 
 
 CPMAddPackage(

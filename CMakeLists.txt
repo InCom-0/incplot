@@ -37,8 +37,8 @@ endif()
 #####################################################################
 ### Staging ###
 #####################################################################
-include(cmake/StageOutputs.cmake)
-include(cmake/MingwRuntimeDeps.cmake)
+include(cmake/incom/StageOutputs.cmake)
+include(cmake/incom/MingwRuntimeDeps.cmake)
 if(incplot_STAGE_OUTPUTS)
     stageOutputDirsFor(incplot)
 endif()
@@ -54,7 +54,7 @@ endif()
 
 
 ### This attempts to compile sample program to find out if we are using libc++(USING_LIBCXX) or libstdc++(USING_LIBSTDCXX) or MSVC_STL(USING_MSVC_STL)
-include(cmake/stdlibQuery.cmake)
+include(cmake/incom/StdlibQuery.cmake)
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT INCPLOT_LTO OUTPUT INCPLOT_LTO_OUTPUT)

@@ -203,17 +203,17 @@
         {
             "name": "_MSVC",
             "hidden": true,
-            "toolchainFile": "cmake/toolchain/Windows.MSVC.toolchain.cmake"
+            "toolchainFile": "cmake/WindowsToolchain/Windows.MSVC.toolchain.cmake"
         },
         {
             "name": "_windows_clang",
             "hidden": true,
-            "toolchainFile": "cmake/toolchain/Windows.Clang.toolchain.cmake"
+            "toolchainFile": "cmake/WindowsToolchain/Windows.Clang.toolchain.cmake"
         },
         {
             "name": "_windows_clang_cl",
             "hidden": true,
-            "toolchainFile": "cmake/toolchain/Windows.Clang.toolchain.cmake",
+            "toolchainFile": "cmake/WindowsToolchain/Windows.Clang.toolchain.cmake",
             "cacheVariables": {
                 "CMAKE_C_COMPILER_FRONTEND_VARIANT": "MSVC",
                 "CMAKE_CXX_COMPILER_FRONTEND_VARIANT": "MSVC"

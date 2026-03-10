@@ -1,4 +1,25 @@
-# detect_stdlib.cmake
+#=============================================================================
+# StdlibQuery.cmake
+#
+# 1. Tries to compile three different tiny source files to find out what
+#    standard library is being used
+#    (this can be useful in other places in CMake, where one might depend
+#    on the platform being used and not just the compiler)
+#
+# Usage:
+#   include(StdlibQuery.cmake)
+##
+# This will define:
+#   USING_LIBSTDCXX
+#   USING_LIBCXX
+#   USING_MSVC_STL
+#
+#   Note that only one of the above will be set to truthy value. The remaining two will be false.
+#   Triggers FATAL_ERROR on configure should more than one of the above evaluate to truthy value.
+#
+#=============================================================================
+
+# StdlibQuery.cmake
 
 get_property(__STDLIB_ALREADY_RUN GLOBAL PROPERTY STDLIB_DETECTED SET)
 if(__STDLIB_ALREADY_RUN)
