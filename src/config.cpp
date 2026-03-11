@@ -364,7 +364,7 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB_T(sqlpp:
     for (auto const &schm :
          db(sqlpp::select(sch.schemeId, sch.name, sch.fgColor, sch.bgColor, sch.cursorColor, sch.selColor)
                 .from(sch)
-                .where(true))) {
+                .where(sch.name != incom::terminal_plot::config::fromTerminalSchemeName))) {
         // If all 4 base colors are the same
         if (scheme.foreground == decode_color(static_cast<uint32_t>(schm.fgColor)) &&
             scheme.backgrond == decode_color(static_cast<uint32_t>(schm.bgColor)) &&
