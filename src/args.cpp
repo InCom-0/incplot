@@ -132,7 +132,7 @@ std::optional<bool> prompt_YesNo(std::string_view question, bool defaultNo = tru
 }
 } // namespace
 
-std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruct(argparse::ArgumentParser const &ap) {
+std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStructs(argparse::ArgumentParser const &ap) {
     using enum incplot::Unexp_AP;
 
     DesiredPlot::DP_CtorStruct nonDifferentiated;
@@ -304,7 +304,6 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
             // Happy path
             if (exp_fallBack_font.has_value()) {
                 nonDifferentiated.htmlMode_ttfs_lastResort.push_back(std::move(exp_fallBack_font.value()));
-                // std::cout << "LastResort set from database\n";
             }
 
             else {
@@ -333,22 +332,23 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                                 else { return false; }
                             });
 
-                        if (extracted.has_value() && extracted.value().size() == 1) {
-                            // Put the fallback into configDB
-                            if (incom::terminal_plot::config::db::set_default_font(dbConn.value(),
-                                                                                   extracted.value().front())
-                                    .has_value()) {
-                                // Only if that succeeds do we set that font as 'last resort'
-                                nonDifferentiated.htmlMode_ttfs_lastResort.push_back(extracted.value().front());
-                                // std::cout << "LastResort set from download\n";
+                        // if (extracted.has_value() && extracted.value().size() == 1)
+                        if (extracted.has_value()) {
+                            if (auto sanitized = sanitize_fontOTS(extracted.value().front())) {
+                                // Put the fallback into configDB
+                                if (auto dfExp = incom::terminal_plot::config::db::set_default_font(
+                                        dbConn.value(), sanitized.value())) {
+                                    // Only if that succeeds do we set that font as 'last resort'
+                                    nonDifferentiated.htmlMode_ttfs_lastResort.push_back(extracted.value().front());
+                                    // std::cout << "LastResort set from download\n";
+                                }
+                                else { return std::unexpected(incerr_c::make(dfExp.error())); }
                             }
+                            else { return std::unexpected(sanitized.error()); }
                         }
-
                         else {
                             // configDB does not behave as expected ... should never ever happen
-                            nonDifferentiated.additionalInfo.push_back(
-                                std::string("Incplot config database is somehow corrupted on saving fallback font. "
-                                            "Incplot will continue to work with limited functionality."));
+                            return std::unexpected(extracted.error());
                         }
                     }
                     else {
@@ -432,7 +432,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                         bool fontOK = false;
                         if (matched->family_score < config::html_fontFamilyMatch_minScore) {
                             nonDifferentiated.additionalInfo.push_back(
-                                std::format("{}{}\n{}\n{}{}\n{}", "Tried selection system font by the name of: "sv,
+                                std::format("{}{}\n{}\n{}{}\n{}", "Tried selecting system font by the name of: "sv,
                                             reqFamilyName, "However, no such font exists on the system."sv,
                                             "The closest matching font on the system is: "sv, matched->font.family,
                                             "The font above will NOT be used."));
@@ -460,16 +460,12 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                                 nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(fnt.value()));
                             }
                             else {
-                                return std::unexpected(incerr_c::make(FONT_systemFontDiscoveredButImpossibleToLoad));
                                 // Font data cannot be loaded, this should never happen and points to system failure
-                                // nonDifferentiated.additionalInfo.push_back(std::format(
-                                //     "{}\n{}\n{}", "System font discovery failed"sv, "The specified font will not be
-                                //     used"sv, "Incplot will continue to work without this feature"sv));
+                                return std::unexpected(incerr_c::make(FONT_systemFontDiscoveredButImpossibleToLoad));
                             }
                         }
                     }
                     else {
-                        std::print("Matches no value.\n");
                         nonDifferentiated.additionalInfo.push_back(std::format(
                             "{}\n{}\n{}", "System font discovery failed"sv, "The specified font will not be used"sv,
                             "Incplot will continue to work without this feature"sv));
@@ -539,7 +535,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
     return res;
 }
 
-std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruct() {
+std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStructs() {
     return std::vector<DesiredPlot::DP_CtorStruct>{DesiredPlot::DP_CtorStruct{.plot_type_name = std::nullopt}};
 }
 
@@ -552,24 +548,20 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
     if (auto optVal = setup_ap.present<std::string>("-g")) {
         auto const &schmNameRef = optVal.value();
         if (schmNameRef.empty()) {
-            res = std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_withoutName));
-            goto RET;
+            return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_withoutName));
         }
         else if (schmNameRef.size() > 128) {
-            res = std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameTooLong));
-            goto RET;
+            return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameTooLong));
         }
 
         // The argument is there, the string isn't empty or too long.
         if (std::ranges::find(incplot::config::schemes_defaultSchemesNames, schmNameRef) !=
             incplot::config::schemes_defaultSchemesNames.end()) {
-            res = std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameSameAsBuildinScheme));
-            goto RET;
+            return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameSameAsBuildinScheme));
         }
         auto schm_opt = config::get_schemeFromTerminal();
         if (not schm_opt.has_value()) {
-            res = std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_errorWhenQueryingTerminal));
-            goto RET;
+            return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_errorWhenQueryingTerminal));
         }
         schm_opt->name = schmNameRef;
 
@@ -584,131 +576,135 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
                 auto upsertRes = incom::terminal_plot::config::db::upsert_scheme16(dbConn.value(), schm_opt.value());
 
                 if (upsertRes.has_value()) {
-                    res->push_back(std::format("Scheme inserted\nNew scheme ID: {}\nNew scheme name: {}\n\n",
+                    res->push_back(std::format("Scheme inserted\nNew scheme ID: {}\nNew scheme name: {}",
                                                upsertRes.value(), schmNameRef));
                 }
-                else {
-                    res = std::unexpected(incerr_c::make(upsertRes.error()));
-                    goto RET;
-                }
+                else { return std::unexpected(incerr_c::make(upsertRes.error())); }
             }
         }
         // else = the expected contains an error
         else {
             // Never happens because that function never returns unexpected
-            res = std::unexpected(incerr_c::make(maybe_alreadyExists.error()));
-            goto RET;
+            return std::unexpected(incerr_c::make(maybe_alreadyExists.error()));
         }
     }
 
-    if (auto optVal = setup_ap.present<std::vector<std::string>>("-b")) {
-        using enum incplot::Unexp_AP;
-        if (optVal.value().size() == 0 || optVal.value().size() > 2) {
+    if (setup_ap.is_used("-b")) {
+        if (auto optVal = setup_ap.present<std::vector<std::string>>("-b")) {
+            using enum incplot::Unexp_AP;
+
             // This should never ever happen as it is checked by argparse already
-            return std::unexpected(incerr_c::make(SETUP_fbFont_unknownError));
-        }
-        std::string &reqFamilyName     = optVal.value().front();
-        bool         styleSpecified_is = (optVal.value().size() == 2);
+            if (optVal.value().size() > 2) { return std::unexpected(incerr_c::make(SETUP_fbFont_unknownError)); }
 
-        auto uri = incstd::web::URI(reqFamilyName, false);
+            // When the fallback font is somehow specified do the following
+            else {
+                std::string &reqFamilyName     = optVal.value().front();
+                bool         styleSpecified_is = (optVal.value().size() == 2);
 
-        if (not uri.getScheme().empty()) {
-            // Use CPR
+                auto uri = incstd::web::URI(reqFamilyName, false);
 
-            if (auto sanitized = download_usingCPR(uri).and_then(sanitize_fontOTS)) {
-                // TODO: Somehow input into the config database
+                if (not uri.getScheme().empty()) {
+                    // Use CPR
 
-                // nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(sanitized.value()));
+                    if (auto sanitized = download_usingCPR(uri).and_then(sanitize_fontOTS)) {
+                        //  Input the found font into the database
+                        if (auto dfExp = config::db::set_default_font(dbConn.value(), sanitized.value())) {}
+                        else { return std::unexpected(incerr_c::make(dfExp.error())); }
+                    }
+                    else { return std::unexpected(sanitized.error()); }
+                }
+                else {
+                    // Use filesystem path
+                    auto pthToFont = std::filesystem::path(reqFamilyName);
+                    if (auto ca = incom::standard::filesys::check_access(pthToFont)) {
+                        // File found, proceed to check whether we can read it
+                        if (ca->readable) {
+                            if (auto res = incstd::filesys::get_file_bytes(pthToFont.generic_string())) {
+                                if (auto sanitized = sanitize_fontOTS(res.value())) {
+                                    //  Input the found font into the database
+                                    if (auto dfExp = config::db::set_default_font(dbConn.value(), sanitized.value())) {}
+                                    else { return std::unexpected(incerr_c::make(dfExp.error())); }
+                                }
+                                else { return std::unexpected(sanitized.error()); }
+                            }
+                            else { return std::unexpected(incerr_c::make(SETUP_fbFont_unknownErrorOnFileRead)); }
+                        }
+                        else {
+                            // Unreadable file which exists
+                            return std::unexpected(incerr_c::make(SETUP_fbFont_noReadAccessToFontFile));
+                        }
+                    }
+
+                    // File not found if tried as path ... Try as if it were system font name
+                    else {
+                        auto matched = incfontdisc::match_fonts(incfontdisc::FontQuery{
+                            .family = reqFamilyName,
+                            .style =
+                                (styleSpecified_is ? std::optional<std::string>{optVal.value().at(1)} : std::nullopt)});
+
+                        if (matched.has_value()) {
+                            bool fontOK = false;
+                            if (matched->family_score < config::html_fontFamilyMatch_minScore) {
+                                res->push_back(
+                                    std::format("{}{}\n{}\n{}{}\n{}", "Tried selecting system font by the name of: "sv,
+                                                reqFamilyName, "However, no such font exists on the system."sv,
+                                                "The closest matching font on the system is: "sv, matched->font.family,
+                                                "The font above will NOT be used as fallback font."));
+                            }
+
+                            else if (matched->face_score < config::html_fontFaceMatch_minScore && styleSpecified_is) {
+                                res->push_back(std::format("{}\n{}{}{}{}\n{}",
+                                                           "No such font/style exists on the system."sv,
+                                                           "The closest matching font/style on the system is: "sv,
+                                                           matched->font.family, " : "sv, matched->font.style,
+                                                           "The font above will NOT be used as fallback font."sv));
+                            }
+                            else if (matched->face_score != 1.0f || matched->family_score != 1.0f) {
+                                res->push_back(std::format(
+                                    "Requested font/style has a close enough but non-exact match on the system."sv));
+                                fontOK = true;
+                            }
+                            else {
+                                std::cout << "TTTT\n";
+                                fontOK = true;
+                                // Nothing, we have an exact font match
+                            }
+
+                            if (fontOK) {
+                                if (auto fnt = incfontdisc::load_font_data(matched->font.id)) {
+                                    //  Input the found font into the database
+                                    if (auto dfExp = config::db::set_default_font(dbConn.value(), fnt.value())) {
+                                        res->push_back(std::format(
+                                            "{}{} : {} {}", "Font: "sv, matched->font.family, matched->font.style,
+                                            "was stored in the database as a fallback font for future use"sv));
+                                    }
+                                    else { return std::unexpected(incerr_c::make(dfExp.error())); }
+                                }
+                                else {
+                                    // Font data cannot be loaded, this should never happen and points to system failure
+                                    return std::unexpected(
+                                        incerr_c::make(FONT_systemFontDiscoveredButImpossibleToLoad));
+                                }
+                            }
+                        }
+                        else {
+                            res->push_back(std::format("{}\n{}\n{}", "System font discovery failed"sv,
+                                                       "The specified font will not be used"sv,
+                                                       "Incplot will continue to work without this feature"sv));
+                        }
+                    }
+                }
             }
-            else { return std::unexpected(sanitized.error()); }
         }
         else {
-            // Use filesystem path
-            auto pthToFont = std::filesystem::path(reqFamilyName);
-            if (auto ca = incom::standard::filesys::check_access(pthToFont)) {
-                // File found, proceed to check whether we can read it
-                if (ca->readable) {
-                    if (auto res = incstd::filesys::get_file_bytes(pthToFont.generic_string())) {
-                        if (auto sanitized = sanitize_fontOTS(res.value())) {
-                            // TODO: Somehow input into the config database
-
-                            // nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(sanitized.value()));
-                            // std::print("Using FS path\n");
-                        }
-                        else {
-                            // std::print("Using FS path bad\n");
-                            return std::unexpected(sanitized.error());
-                        }
-                    }
-                    else { return std::unexpected(incerr_c::make(SETUP_fbFont_unknownErrorOnFileRead)); }
-                }
-                else {
-                    // Unreadable file which exists
-                    return std::unexpected(incerr_c::make(SETUP_fbFont_noReadAccessToFontFile));
-                }
+            // This is 'removing' the default font from the database (to allow redownloading the default one)
+            if (auto remExp = config::db::remove_default_font(dbConn.value())) {
+                res->push_back(std::format("Fallback font was removed.\nThis allows re-downloading of the default "
+                                           "fallback when using '-o' or '-j' arguments."));
             }
-
-            // File not found if tried as path ... Try as if it were system font name
-            else {
-                auto matched = incfontdisc::match_fonts(incfontdisc::FontQuery{
-                    .family = reqFamilyName,
-                    .style  = (styleSpecified_is ? std::optional<std::string>{optVal.value().at(1)} : std::nullopt)});
-
-                if (matched.has_value()) {
-                    bool fontOK = false;
-                    if (matched->family_score < config::html_fontFamilyMatch_minScore) {
-                        // nonDifferentiated.additionalInfo.push_back(
-                        //     std::format("{}{}\n{}\n{}{}\n{}", "Tried selection system font by the name of: "sv,
-                        //                 reqFamilyName, "However, no such font exists on the system."sv,
-                        //                 "The closest matching font on the system is: "sv, matched->font.family,
-                        //                 "The font above will NOT be used."));
-                    }
-
-                    else if (matched->face_score < config::html_fontFaceMatch_minScore && styleSpecified_is) {
-                        // nonDifferentiated.additionalInfo.push_back(
-                        //     std::format("{}\n{}{}{}{}\n{}", "No such font/style exists on the system."sv,
-                        //                 "The closest matching font/style on the system is: "sv, matched->font.family,
-                        //                 " : "sv, matched->font.style, "The font above will NOT be used."));
-                    }
-                    else if (matched->face_score != 1.0f) {
-                        // nonDifferentiated.additionalInfo.push_back(
-                        //     std::format("{}\n{}{}{}{}\n{}",
-                        //                 "Requested font/style has a close enough but non-exact match on the
-                        //                 system."sv, "The closest matching font/style on the system is: "sv,
-                        //                 matched->font.family, " : "sv, matched->font.style, "The font above will be
-                        //                 used."));
-                        fontOK = true;
-                    }
-                    else {
-                        fontOK = true;
-                        // Nothing, we have an exact font match
-                    }
-
-                    if (fontOK) {
-                        if (auto fnt = incfontdisc::load_font_data(matched->font.id)) {
-                            // TODO: Somehow input into the config database
-
-                            // nonDifferentiated.htmlMode_ttfs_toSubset.push_back(std::move(fnt.value()));
-                        }
-                        else {
-                            return std::unexpected(incerr_c::make(FONT_systemFontDiscoveredButImpossibleToLoad));
-                            // Font data cannot be loaded, this should never happen and points to system failure
-                            // nonDifferentiated.additionalInfo.push_back(std::format(
-                            //     "{}\n{}\n{}", "System font discovery failed"sv, "The specified font will not be
-                            //     used"sv, "Incplot will continue to work without this feature"sv));
-                        }
-                    }
-                }
-                else {
-                    std::print("Matches no value.\n");
-                    // nonDifferentiated.additionalInfo.push_back(std::format(
-                    //     "{}\n{}\n{}", "System font discovery failed"sv, "The specified font will not be used"sv,
-                    //     "Incplot will continue to work without this feature"sv));
-                }
-            }
+            else { return std::unexpected(incerr_c::make(remExp.error())); }
         }
     }
-RET:
     return res;
 }
 
@@ -801,8 +797,9 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
 
     subap_setup.add_description("Various setup and maintenance functionality:");
     subap_setup.add_argument("-b", "--input-fallback-font")
-        .help("Change the fallback font (identical argument logic as the --font argument in top level)")
-        .nargs(1, 2);
+        .help("Change the fallback font (identical argument logic as the --font argument in top level). Pass with no "
+              "arguments to remove the fallback font (allows redownloading the default).")
+        .nargs(0, 2);
     subap_setup.add_argument("-g", "--grab-termscheme")
         .help("Grabs current terminal color scheme and saves it. Optionally provide name for later usage using "
               "'-l'.")

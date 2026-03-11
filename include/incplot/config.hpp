@@ -53,9 +53,9 @@ inline constexpr float html_fontFaceMatch_minScore   = 0.8f;
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator = true);
 
 template <typename FUNC>
-std::expected<std::vector<std::vector<std::byte>>, int> extract_fromArchive(std::span<const std::byte> rawMemory,
-                                                                            FUNC const                &filter_func) {
-    std::expected<std::vector<std::vector<std::byte>>, int> res = std::vector<std::vector<std::byte>>{};
+std::expected<std::vector<std::vector<std::byte>>, incerr_c> extract_fromArchive(std::span<const std::byte> rawMemory,
+                                                                                 FUNC const &filter_func) {
+    std::vector<std::vector<std::byte>> res{};
 
     struct archive       *a;
     struct archive_entry *entry;
@@ -67,8 +67,7 @@ std::expected<std::vector<std::vector<std::byte>>, int> extract_fromArchive(std:
     // archive_read_open_memory(a, downloaded.data(), downloaded.size());
     ok_r = archive_read_open_memory(a, rawMemory.data(), rawMemory.size_bytes());
     if (ok_r != ARCHIVE_OK) {
-        res = std::unexpected(-1);
-        goto RET;
+        return std::unexpected(incerr_c::make(incom::terminal_plot::Unexp_AP::FONT_LIBARCHIVE_cannotOpenArchive));
     }
 
     while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
@@ -77,30 +76,29 @@ std::expected<std::vector<std::vector<std::byte>>, int> extract_fromArchive(std:
         if (filter_func(entry)) {
             auto const size64 = archive_entry_size(entry);
             if (size64 < 0) {
-                res = std::unexpected(-1);
-                goto RET;
+                return std::unexpected(
+                    incerr_c::make(incom::terminal_plot::Unexp_AP::FONT_LIBARCHIVE_cannotReadArchiveEntrySize));
             }
-            res.value().push_back(std::vector<std::byte>(static_cast<std::size_t>(size64)));
+            res.push_back(std::vector<std::byte>(static_cast<std::size_t>(size64)));
             std::size_t offset = 0;
 
-            while (offset < res.value().back().size()) {
+            while (offset < res.back().size()) {
                 auto const n =
-                    archive_read_data(a, res.value().back().data() + offset, res.value().back().size() - offset);
+                    archive_read_data(a, res.back().data() + offset, res.back().size() - offset);
                 if (n == 0) { break; }
                 if (n < 0) {
-                    res = std::unexpected(-1);
-                    goto RET;
+                    return std::unexpected(
+                        incerr_c::make(incom::terminal_plot::Unexp_AP::FONT_LIBARCHIVE_unknownErrorWhenReading));
                 }
                 offset += static_cast<std::size_t>(n);
             }
-            res.value().back().resize(offset);
+            res.back().resize(offset);
         }
         archive_read_data_skip(a); // Note 2
     }
     ok_r = archive_read_free(a);   // Note 3
     if (ok_r != ARCHIVE_OK) { std::exit(1); }
 
-RET:
     return res;
 }
 
@@ -173,6 +171,7 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB(sqlpp::s
 
 std::expected<std::vector<std::byte>, dbErr> get_default_font(sqlpp::sqlite3::connection &dbConn);
 std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw);
+std::expected<size_t, dbErr> remove_default_font(sqlpp::sqlite3::connection &dbConn);
 
 
 } // namespace db

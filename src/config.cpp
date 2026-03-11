@@ -16,8 +16,9 @@
 #include <indicators/progress_bar.hpp>
 
 #include <incplot/config.hpp>
-#include <incstd/core/filesys.hpp>
 #include <incstd/console/colorschemes.hpp>
+#include <incstd/core/filesys.hpp>
+
 
 namespace incom::terminal_plot::config {
 
@@ -652,6 +653,16 @@ std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn
                          .set(dfnt_tbl.content = std::span<std::uint8_t>(
                                   reinterpret_cast<std::uint8_t *>(ttf_font_raw.data()), ttf_font_raw.size()))
                          .where(true));
+
+    if (rs.affected_rows == 1) { return 0uz; }
+    else { return std::unexpected(dbErr::impossibleNumberOfRecords); }
+}
+
+std::expected<size_t, dbErr> remove_default_font(sqlpp::sqlite3::connection &dbConn) {
+    using namespace sqltables;
+    DefaultFont dfnt_tbl{};
+
+    auto rs = dbConn(sqlpp::sqlite3::update(dfnt_tbl).set(dfnt_tbl.content = std::nullopt).where(true));
 
     if (rs.affected_rows == 1) { return 0uz; }
     else { return std::unexpected(dbErr::impossibleNumberOfRecords); }

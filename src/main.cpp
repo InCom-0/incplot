@@ -34,11 +34,16 @@ int main(int argc, char *argv[]) {
         // std::cout << "Used \n";
 
         if (auto setupCommand_res = incplot::cl_args::process_setupCommand(subap_setup)) {
-            for (auto const &oneLine : setupCommand_res.value()) { std::cout << oneLine; }
+            for (auto const &oneLine : setupCommand_res.value()) { std::cout << oneLine << '\n'; }
             return 0;
         }
 
-        else { return 1; }
+        else {
+            std::print("{}\n\n{}{}\n{}{}\n{}{}\n", "Error occurred during evaluation of command line arguments.",
+                       "The error category is: "sv, setupCommand_res.error().category().name(), "The error code is: "sv,
+                       setupCommand_res.error().message(), "Error comment: "sv, setupCommand_res.error().get_customMessage());
+            std::exit(1);
+        }
     }
 
     // Get connection to configDB
@@ -53,7 +58,7 @@ int main(int argc, char *argv[]) {
     // some cases
 
     // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
-    auto dpctrs = incplot::cl_args::get_dpCtorStruct(ap);
+    auto dpctrs = incplot::cl_args::get_dpCtorStructs(ap);
     if (not dpctrs.has_value()) {
         std::print("{}\n\n{}{}\n{}{}\n{}{}\n\n{}\n", "Error occurred during evaluation of command line arguments.",
                    "The error category is: "sv, dpctrs.error().category().name(), "The error code is: "sv,

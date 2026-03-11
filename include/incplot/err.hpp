@@ -23,6 +23,9 @@ enum class Unexp_AP {
     FONT_OTS_verificationProcessFailed,
     FONT_OTS_negativeOutputOffset,
     FONT_OTS_emptyOutput,
+    FONT_LIBARCHIVE_cannotOpenArchive,
+    FONT_LIBARCHIVE_cannotReadArchiveEntrySize,
+    FONT_LIBARCHIVE_unknownErrorWhenReading,
 
     SETUP_schemeGrab_withoutName,
     SETUP_schemeGrab_nameTooLong,

@@ -1,8 +1,3 @@
-# TODO: Need to fix this logic somehow
-# if(USING_MSVC_STL OR (MINGW AND (CMAKE_BUILD_TYPE STREQUAL "Release")))
-#     set(CPM_USE_LOCAL_PACKAGES OFF CACHE BOOL "Forbid finding local packages" FORCE)
-# endif()
-
 include(cmake/lefticus/CPM.cmake)
 
 
