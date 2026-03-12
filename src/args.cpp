@@ -4,11 +4,8 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
-#include <incplot-lib/config.hpp>
-#include <incplot-lib/err.hpp>
 #include <iostream>
 #include <optional>
-#include <print>
 #include <span>
 #include <string>
 #include <string_view>
@@ -502,6 +499,19 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
     }
     else { nonDifferentiated.htmlMode_fontSize = incom::terminal_plot::config::html_defaultFontSize; }
 
+    if (auto optVal = ap.present<std::vector<int>>("-n")) {
+        if (optVal.value().size() < 3 || optVal.value().size() > 3) {
+            // This should never ever happen as it is checked by argparse already
+            return std::unexpected(incerr_c::make(DPCTOR_UnknownError));
+        }
+
+        if (std::ranges::any_of(optVal.value(), [](int oneVal) -> bool { return (oneVal < 0 || oneVal > 255); })) {
+            return std::unexpected(incerr_c::make(COLOR_outOfBoundColorValue));
+        }
+        nonDifferentiated.colScheme_HTMLbackgroundOverride =
+            inc_sRGB(optVal.value().at(0), optVal.value().at(1), optVal.value().at(2));
+    }
+
 
     // Check whether we have at least some font available
     if (ap.get<bool>("-o") || ap.get<bool>("-j")) {
@@ -665,7 +675,6 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
                                 fontOK = true;
                             }
                             else {
-                                std::cout << "TTTT\n";
                                 fontOK = true;
                                 // Nothing, we have an exact font match
                             }
@@ -710,15 +719,11 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
 
 
 void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_setup) {
-    out_ap.add_description("Draw coloured plots using unicode symbols inside terminal.\nCan also output the plot "
-                           "as visually identical "
-                           "self-contained html "
-                           "document.\n\nAutomatically infers what to display and "
-                           "how based on the shape of the data piped in.\nPipe in data in JSON, JSON Lines, "
-                           "NDJSON, CSV or TSV formats. "
-                           "All "
-                           "arguments "
-                           "are optional");
+    out_ap.add_description("Draw coloured plots using unicode symbols inside terminal.\n"
+                           "Can also output the plot as visually identical self-contained HTML document.\n\n"
+                           "Pipe in data in JSON, JSON Lines, NDJSON, CSV or TSV formats.\n"
+                           "Automatically infers what to display and how based on the shape of the data piped in.\n"
+                           "All arguments are optional.");
 
     out_ap.add_group("Plot type options");
     out_ap.add_argument("-B", "--barV").help("Draw vertical [B]ar plot [flag]").flag().nargs(0);
@@ -772,6 +777,10 @@ void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_
         // .default_value<int>(12)
         .scan<'d', size_t>()
         .nargs(1);
+    out_ap.add_argument("-n", "--override-background")
+        .help("Override background color (RGB 0-255 values)")
+        .nargs(3)
+        .scan<'d', int>();
 
 
     // Schemes and colors options

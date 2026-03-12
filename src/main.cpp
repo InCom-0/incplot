@@ -1,4 +1,3 @@
-#include <cstring>
 #include <print>
 #include <string_view>
 
@@ -99,6 +98,7 @@ int main(int argc, char *argv[]) {
 
     // Do the thing ... ie. make all the plots and print them
     // TODO: need to somehow handle multiple plots emitted in HTML mode
+    // TODO: Also need to figure out some way to customize just the background color in HTML mode
     for (auto const &dpctr : dpctrs.value()) { std::cout << incplot::make_plot_collapseUnExp(dpctr, input) << '\n'; }
     return 0;
 }

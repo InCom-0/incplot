@@ -27,11 +27,12 @@ enum class Unexp_AP {
     FONT_LIBARCHIVE_cannotReadArchiveEntrySize,
     FONT_LIBARCHIVE_unknownErrorWhenReading,
 
+    COLOR_outOfBoundColorValue,
+
     SETUP_schemeGrab_withoutName,
     SETUP_schemeGrab_nameTooLong,
     SETUP_schemeGrab_nameSameAsBuildinScheme,
     SETUP_schemeGrab_errorWhenQueryingTerminal,
-
 
     SETUP_fbFont_,
     SETUP_fbFont_1,
