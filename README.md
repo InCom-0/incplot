@@ -75,8 +75,6 @@ curl -sL https://kurzlinks.de/german_economy | incplot
 ```
 <img width="800" alt="multiline" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_default.png" />
 </details>
-
-<br>
 <details>
 <summary>Horizontal stacked bar plot</summary>
 
@@ -85,8 +83,6 @@ curl -sL https://kurzlinks.de/german_economy | incplot -T
 ```
 <img width="800" alt="BarHS" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_BarHS.png" />
 </details>
-
-<br>
 <details>
 <summary>Vertical simple bar plot</summary>
 
@@ -95,8 +91,6 @@ curl -sL https://kurzlinks.de/german_economy | incplot -B
 ```
 <img width="800" alt="BarV" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_BarV.png" />
 </details>
-
-<br>
 <details>
 <summary>Horizontal multi bar plot</summary>
 
@@ -106,8 +100,6 @@ curl -sL https://kurzlinks.de/german_economy | incplot -H -y 2 3 4 5
 ```
 <img width="800" alt="BarV" src="https://media.githubusercontent.com/media/InCom-0/incplot/6572c23a11d32823161f957330ed5b9d1b390f92/images/readme/showcase/g_eco_BarHM.png" />
 </details>
-
-<br>
 <details>
 <summary>Scatter plot</summary>
 
