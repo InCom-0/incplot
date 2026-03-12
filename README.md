@@ -15,7 +15,8 @@
 </div>
 <div align="center">
 Incplot is a command like tool for drawing great looking plots in the terminal using unicode characters.<br>
-Automatically infers what to display and how based on the data piped in.<br><br>
+Automatically infers what to display and how based on the data piped in.<br>
+Can also generate identical looking plot in HTML purely using text.<br><br>
 'As quick and as easy as possible' visualization of small to moderate sized data and information.
 </div>
 
@@ -33,7 +34,7 @@ scoop bucket add incoms https://github.com/InCom-0/ScoopBucket_InCom
 scoop install incoms/incplot
 ```
 
-Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/releases/) in the repository itself.
+Windows binaries are also provided [releases](https://github.com/InCom-0/incplot/releases/) in the repository itself.
 
 
 ## Features ##
@@ -42,11 +43,14 @@ Otherwise there are precompiled [releases](https://github.com/InCom-0/incplot/re
 * Zero configuration required, super simple to use
 * No command line arguments necessary most of the time due to automatic inferrence
 * Mainstream platform support (Windows, Linux, MacOS)
-* Users can optionally specify some or all arguments in any (sensible) combination
 * Accepts piped in data in [JSON](https://en.wikipedia.org/wiki/JSON), [JSON Lines](https://jsonlines.org/), [NDJSON](https://github.com/ndjson), [CSV](https://en.wikipedia.org/wiki/Comma-separated_values), [TSV](https://en.wikipedia.org/wiki/Tab-separated_values)
+* Users can optionally specify some or all arguments in any (sensible) combination
 * Blazingly fast
-* Powerful coloring support through integrated color schemes
-* Powerful ability to 'grab' currently used colors/scheme from the user's terminal and use it (if supported by the terminal app) with sensible fallback
+* Coloring support through integrated color schemes
+* Ability to 'grab' currently used colors/scheme from the user's terminal and use it (if supported by the terminal app) with sensible fallback
+* HTML mode that outputs the plot as self-contained 'pure text' static HTML page visually identical to the terminal version
+* HTML mode allows to specify (any) font to be used (so that the plot can be made 'visually compatible' with other content)
+* HTML mode can be used to generate plot content to embed into other pages eg. using \<iframe> element 
 * Automatic but configurable filtering of extreme values
 * Automatic sizing
 * Automatic value labels and scaling with [metric prefixes](https://en.wikipedia.org/wiki/Metric_prefix)
@@ -150,9 +154,32 @@ The common case of having extreme values in the data that would normally prevent
 
 ## Technical information ##
 
-Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal. Incplot uses the following external dependencies directly: [argparse](https://github.com/p-ranav/argparse) for command line argument parsing, [sqlite](https://github.com/sqlite/sqlite) for storage (mostly color schemes), [sqlpp23](https://github.com/rbock/sqlpp23) for using SQL in a sane way from C++.
+Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal.<br>
+With the introduction of HTML mode support and its features related to fonts the number of dependencies increased quite a bit
 
-Incplot also uses other external dependencies indirectly through [incplot-lib](https://github.com/InCom-0/incplot-lib), these are all shallow and lightweight header only libraries.
+#### Incplot uses the following external dependencies directly: ####
+* [argparse](https://github.com/p-ranav/argparse) - Command line argument parsing
+* [indicators](https://github.com/p-ranav/indicators) - Activity indicators for command line
+* [sqlpp23](https://github.com/rbock/sqlpp23) - Using SQL in a sane way from C++.
+     * [sqlite](https://github.com/sqlite/sqlite) - Storage (in incplot mostly for color schemes and fonts)
+
+
+#### Incplot also uses the following external dependencies to support features related to HTML output and fonts: ####
+* [ots](https://github.com/InCom-0/ots_cmake) - Sanitization of fonts
+* [incfontdisc](https://github.com/InCom-0/incfontdisc) - Cross-platform wrapper for discovering and using system fonts
+* [cpr](https://github.com/libcpr/cpr) - Wrapper for libcurl so that it can be used in a sane way in 2025
+     * [libcurl](https://github.com/curl/curl) - For transferring data using URI syntax
+* [libarchive](https://github.com/InCom-0/libarchive_superbuild) - Dealing with compression archives
+
+
+#### Transitive dependencies included through incplot-lib: ####
+* [otfccxx](https://github.com/InCom-0/otfccxx) - Programmatic modifications of OpenType fonts.
+     * [harfbuzz](https://github.com/harfbuzz/harfbuzz)
+     * [otfcc_cmake](https://github.com/InCom-0/otfcc_cmake)
+     * [fmem](https://github.com/InCom-0/fmem)
+     * [WOFF2](https://github.com/InCom-0/woff2)
+
+[incplot-lib](https://github.com/InCom-0/incplot-lib) also includes several shallow and lightweight header only libraries.
 
 ## Building ##
 
