@@ -120,6 +120,9 @@ curl -sL https://kurzlinks.de/german_economy | incplot -S
 
 
 ## Hints, tips and tricks ##
+<details>
+<summary>Hints, tips and tricks</summary>
+
 ### Autoguessing ###
 
 Incplot tries to be smart and makes an educated heuristic guess as to what it is the user wants displayed. However, it may not always succeed in guessing or guessing right. For this reason it is usually best to pipe in only the data (ie. the data columns) that the user wants displayed. It is especially not advisable to pipe in entire 'databases' worth of data of dozens of columns. If that is what the user is starting with it is generally advisable to use some dataframes library or the tools/features provided by your shell to do the heavy data wrangling upfront before piping the data into incplot.  
@@ -136,9 +139,9 @@ Vertical bar plots have their height fully dependant on the data itself (similar
 ### Extreme values ###
 The common case of having extreme values in the data that would normally prevent drawing 'nice' and useful plots can be taken care of with the optional [-e VAR] command line parameter which instructs incplot to filter out all observations (ie. rows) with any value above and below VAR standard deviations from mean. Defaults to [-e 6]. [-e 0] turns this feature off.
 
-## Features under consideration ##
-
-* Export/Conversion into HTML. Proper support for this will require solid amount of non-trivial 'font engineering' ...
+### HTML output ###
+Incplot uses the same color schemes for HTML output as for the regular output to terminal. This is usually fine, but when one wants to include the plot created in another page, it may be advisable to force the background color to match the background of the including page. Incplot provides [-n VAR VAR VAR] command line parameter to specify the RGB color value to override the background used by incplot in HTML mode.
+</details>
 
 ## Non-Features ##
 
@@ -154,8 +157,12 @@ The common case of having extreme values in the data that would normally prevent
 
 ## Technical information ##
 
-Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal.<br>
-With the introduction of HTML mode support and its features related to fonts the number of dependencies increased quite a bit
+Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal.<br><br>
+In order to provide some of the more advanced features not commonly (or at all) found in other similar tools incplot has a moderate number of both direct and transitive dependencies.<br>
+<i>Note: The CMake build system of the project is setup such that it can build and use its entirely dependency tree if need be (eg. on native Windows) </i>
+
+<details>
+<summary>Dependencies</summary>
 
 #### Incplot uses the following external dependencies directly: ####
 * [argparse](https://github.com/p-ranav/argparse) - Command line argument parsing
@@ -165,21 +172,28 @@ With the introduction of HTML mode support and its features related to fonts the
 
 
 #### Incplot also uses the following external dependencies to support features related to HTML output and fonts: ####
-* [ots](https://github.com/InCom-0/ots_cmake) - Sanitization of fonts
+* [ots](https://github.com/InCom-0/ots_cmake) - Font sanitization
 * [incfontdisc](https://github.com/InCom-0/incfontdisc) - Cross-platform wrapper for discovering and using system fonts
 * [cpr](https://github.com/libcpr/cpr) - Wrapper for libcurl so that it can be used in a sane way in 2025
      * [libcurl](https://github.com/curl/curl) - For transferring data using URI syntax
 * [libarchive](https://github.com/InCom-0/libarchive_superbuild) - Dealing with compression archives
 
 
-#### Transitive dependencies included through incplot-lib: ####
+#### Transitive dependencies included through [incplot-lib](https://github.com/InCom-0/incplot-lib): ####
 * [otfccxx](https://github.com/InCom-0/otfccxx) - Programmatic modifications of OpenType fonts.
      * [harfbuzz](https://github.com/harfbuzz/harfbuzz)
      * [otfcc_cmake](https://github.com/InCom-0/otfcc_cmake)
      * [fmem](https://github.com/InCom-0/fmem)
      * [WOFF2](https://github.com/InCom-0/woff2)
+* [nlohmann_json](https://github.com/nlohmann/json) - JSON parsing
+* [csv2](https://github.com/p-ranav/csv2) - CSV, TSV parsing
+* [utf-cpp](https://github.com/ww898/utf-cpp) - Dealing with unicode conversions
+* [incstd](https://github.com/InCom-0/incstd) - 
+* [incerr](https://github.com/InCom-0/incerr)
 
-[incplot-lib](https://github.com/InCom-0/incplot-lib) also includes several shallow and lightweight header only libraries.
+</details>
+
+
 
 ## Building ##
 
