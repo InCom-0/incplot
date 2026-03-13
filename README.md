@@ -150,8 +150,8 @@ Incplot uses the same color schemes for HTML output as for the regular output to
 ## Technical information ##
 
 Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal.<br><br>
-In order to provide some of the more advanced features not commonly (or at all) found in other similar tools incplot has a moderate number of both direct and transitive dependencies.<br>
-<i>Note: The CMake build system of the project is setup such that it can build and use its entirely dependency tree if need be (eg. on native Windows) </i>
+In order to provide some of the more advanced features not commonly (or at all) found in other similar tools incplot employs a moderate number of direct and transitive dependencies.<br>
+<i>Note: The CMake build system of the project is setup such that it can build and use its entire dependency tree if need be (eg. on native Windows)</i>
 
 <details>
 <summary>Dependencies</summary>
@@ -180,8 +180,8 @@ In order to provide some of the more advanced features not commonly (or at all) 
 * [nlohmann_json](https://github.com/nlohmann/json) - JSON parsing
 * [csv2](https://github.com/p-ranav/csv2) - CSV, TSV parsing
 * [utf-cpp](https://github.com/ww898/utf-cpp) - Dealing with unicode conversions
-* [incstd](https://github.com/InCom-0/incstd) - 
-* [incerr](https://github.com/InCom-0/incerr)
+* [incstd](https://github.com/InCom-0/incstd) - Header-only general C++ library
+* [incerr](https://github.com/InCom-0/incerr) - Header-only library for error codes
 
 </details>
 
