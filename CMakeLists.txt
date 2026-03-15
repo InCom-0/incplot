@@ -91,12 +91,16 @@ target_sources(incplot
     BASE_DIRS
     include)
 
+set(INCPLOT_GENERATED_CONFIG_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+include(cmake/config/configScript.cmake)
+
 target_sources(incplot
     PRIVATE
     FILE_SET priv_auto_config
     TYPE HEADERS
     BASE_DIRS
-    cmake/config)
+    "${INCPLOT_GENERATED_CONFIG_DIR}")
+
 
 target_compile_features(incplot PRIVATE cxx_std_23)
 
@@ -177,22 +181,6 @@ add_custom_command(TARGET incplot POST_BUILD
     "${CMAKE_SOURCE_DIR}/data/configDB.sqlite"
     "$<TARGET_FILE_DIR:incplot>"
 )
-
-#############################################################
-### Automatic code generation (for version numbers, etc.) ###
-#############################################################
-set(COM_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/auto/versiondef.h)
-
-add_custom_command(
-    OUTPUT ${COM_OUTPUT}
-    COMMAND ${CMAKE_COMMAND} -D TOP_DIR=${CMAKE_CURRENT_SOURCE_DIR} -D VER_MAJOR=${PROJECT_VERSION_MAJOR} -D VER_MINOR=${PROJECT_VERSION_MINOR} -D VER_PATCH=${PROJECT_VERSION_PATCH} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/versionUpdate.cmake
-    DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
-    VERBATIM)
-
-add_custom_target(incplot_autoFileDeps ALL DEPENDS ${COM_OUTPUT})
-add_dependencies(incplot incplot_autoFileDeps)
-
 
 ########################################################
 ### Install specification ###

@@ -1,7 +1,7 @@
 #include <print>
 #include <string_view>
 
-#include <auto/versiondef.h>
+#include <auto/versiondef.hpp>
 
 #include <incfontdisc/incfontdisc.hpp>
 #include <incplot-lib.hpp>
@@ -16,13 +16,13 @@
 int main(int argc, char *argv[]) {
     using namespace std::literals;
 
-    auto uri1 = incstd::web::URI("https://kurzlinks.de/german_economy"sv, true);
-
+    // auto uri1 = incstd::web::URI("https://kurzlinks.de/german_economy"sv, true);
 
     // Create and populate ArgumentParser
-    argparse::ArgumentParser ap(std::string(incplot::config::appName), INCPLOT_VERSION_MEDIUM,
-                                argparse::default_arguments::all);
-    argparse::ArgumentParser subap_setup("setup", INCPLOT_VERSION_MEDIUM, argparse::default_arguments::help);
+    argparse::ArgumentParser ap(std::string(incplot::config::appName),
+                                std::string(incom::terminal_plot::version::medium), argparse::default_arguments::all);
+    argparse::ArgumentParser subap_setup("setup", std::string(incom::terminal_plot::version::medium),
+                                         argparse::default_arguments::help);
     incplot::cl_args::finishAp(ap, subap_setup);
     incplot::cl_args::populateAp(ap, argc, argv);
 
@@ -40,7 +40,8 @@ int main(int argc, char *argv[]) {
         else {
             std::print("{}\n\n{}{}\n{}{}\n{}{}\n", "Error occurred during evaluation of command line arguments.",
                        "The error category is: "sv, setupCommand_res.error().category().name(), "The error code is: "sv,
-                       setupCommand_res.error().message(), "Error comment: "sv, setupCommand_res.error().get_customMessage());
+                       setupCommand_res.error().message(), "Error comment: "sv,
+                       setupCommand_res.error().get_customMessage());
             std::exit(1);
         }
     }

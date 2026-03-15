@@ -1,0 +1,13 @@
+#pragma once
+
+#include <string_view>
+
+namespace incom::terminal_plot::version {
+
+inline constexpr int major = @VER_MAJOR@;
+inline constexpr int minor = @VER_MINOR@;
+inline constexpr int patch = @VER_PATCH@;
+
+inline constexpr std::string_view medium = "v@VER_MAJOR@.@VER_MINOR@.@VER_PATCH@";
+
+} // namespace incom::terminal_plot::version
