@@ -3,7 +3,9 @@
 #include <array>
 #include <cstddef>
 #include <expected>
+#include <filesystem>
 #include <string_view>
+#include <system_error>
 
 #include <sqlpp23/sqlite3/sqlite3.h>
 #include <sqlpp23/sqlpp23.h>
@@ -29,9 +31,13 @@ namespace inccons = incstd::console;
 using namespace incstd::console::color_schemes;
 
 inline const color_schemes::scheme16 default_scheme16 = incstd::console::color_schemes::windows_terminal::campbell;
-inline constexpr std::string_view    appName("incplot"sv);
-inline constexpr std::string_view    configFileName("configDB.sqlite"sv);
-inline constexpr std::string_view    fromTerminalSchemeName("__fromTerminalScheme"sv);
+inline constexpr std::string_view    appName{"incplot"sv};
+inline constexpr std::string_view    configFileName{"configDB.sqlite"sv};
+inline constexpr std::string_view    configSeedFileName{"configDB.seed.sqlite"sv};
+inline constexpr std::string_view    portableMarkerName{".incplot-portable"sv};
+
+inline constexpr std::string_view    fromTerminalSchemeName{"__fromTerminalScheme"sv};
+
 
 inline constexpr size_t html_defaultFontSize = 16uz;
 inline constexpr size_t html_minFontSize     = 1uz;
@@ -51,6 +57,8 @@ inline constexpr float html_fontFaceMatch_minScore   = 0.8f;
 
 
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator = true);
+
+std::expected<std::filesystem::path, std::error_code> get_portableMarkerDir();
 
 template <typename FUNC>
 std::expected<std::vector<std::vector<std::byte>>, incerr_c> extract_fromArchive(std::span<const std::byte> rawMemory,
@@ -83,8 +91,7 @@ std::expected<std::vector<std::vector<std::byte>>, incerr_c> extract_fromArchive
             std::size_t offset = 0;
 
             while (offset < res.back().size()) {
-                auto const n =
-                    archive_read_data(a, res.back().data() + offset, res.back().size() - offset);
+                auto const n = archive_read_data(a, res.back().data() + offset, res.back().size() - offset);
                 if (n == 0) { break; }
                 if (n < 0) {
                     return std::unexpected(

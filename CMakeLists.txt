@@ -40,7 +40,7 @@ endif()
 include(cmake/incom/StageOutputs.cmake)
 include(cmake/incom/MingwRuntimeDeps.cmake)
 if(incplot_STAGE_OUTPUTS)
-    stageOutputDirsFor(incplot)
+    stageOutputDirsFor(${PROJECT_NAME})
 endif()
 
 
@@ -171,15 +171,21 @@ endif()
 
 
 
-#############################################################
-### Automatic copying certain assets to build directory   ###
-#############################################################
+############################################################################################
+### Automatic copying certain assets to build directory (mimic structure as installed)   ###
+############################################################################################
 add_custom_command(TARGET incplot POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "Copying SQLite ConfigDB and JetBrainsMonoNerdFont to output directory"
+    COMMAND ${CMAKE_COMMAND} -E echo "Recreating portable installation file structure in build staging directory"
+    COMMAND ${CMAKE_COMMAND} -E touch "$<TARGET_FILE_DIR:incplot>/.incplot-portable"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+    "${CMAKE_SOURCE_DIR}/data/"
+    "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/data/JetBrainsMonoNerdFont-Regular.ttf"
-    "${CMAKE_SOURCE_DIR}/data/configDB.sqlite"
-    "$<TARGET_FILE_DIR:incplot>"
+    "${CMAKE_SOURCE_DIR}/LICENSE.txt"
+    "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}/LICENSE.txt"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/README.md"
+    "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DOCDIR}/README.md"
 )
 
 ########################################################
@@ -190,10 +196,12 @@ install(TARGETS incplot
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+message(${${PROJECT_NAME}_STAGEDIR})
 
+install(FILES data/configDB.seed.sqlite DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/")
 
-install(FILES README.md LICENSE.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES data/configDB.sqlite DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES LICENSE.txt DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}/")
 
 if(PROJECT_IS_TOP_LEVEL)
     add_subdirectory(cmake/packaging)

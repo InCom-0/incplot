@@ -4,13 +4,17 @@
 #include <expected>
 #include <filesystem>
 
+#include <cerrno>
 #include <functional>
 #include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 
+
+#include <auto/platform_folder.hpp>
 #include <indicators/color.hpp>
 #include <indicators/cursor_control.hpp>
 #include <indicators/progress_bar.hpp>
@@ -23,6 +27,38 @@
 namespace incom::terminal_plot::config {
 
 namespace fs = std::filesystem;
+
+std::expected<fs::path, std::error_code> get_portableMarkerDir() {
+    auto exeDirExp = incstd::filesys::get_curExeDir();
+    if (! exeDirExp.has_value()) { return std::unexpected(exeDirExp.error()); }
+
+    fs::path const markerPath = exeDirExp.value() / std::string(portableMarkerName);
+
+    std::error_code ec;
+    if (! fs::exists(markerPath, ec)) {
+        if (ec) { return std::unexpected(ec); }
+        return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
+    }
+    if (ec) { return std::unexpected(ec); }
+
+    if (! fs::is_regular_file(markerPath, ec)) {
+        if (ec) { return std::unexpected(ec); }
+        return std::unexpected(std::make_error_code(std::errc::invalid_argument));
+    }
+    if (ec) { return std::unexpected(ec); }
+
+    auto accessExp = incstd::filesys::check_access(exeDirExp.value());
+    if (! accessExp.has_value()) {
+        if (accessExp.error() == fs::file_type::not_found) {
+            return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
+        }
+        return std::unexpected(std::make_error_code(std::errc::operation_not_permitted));
+    }
+
+    if (! accessExp->writable) { return std::unexpected(std::make_error_code(std::errc::permission_denied)); }
+
+    return exeDirExp.value();
+}
 
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
     auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
@@ -416,7 +452,118 @@ std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path
     }
     return dbOnDisk;
 }
+
+std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_ro(fs::path const &pathToDb) {
+    auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
+    connConfig->path_to_database = pathToDb.generic_string();
+    connConfig->flags            = SQLITE_OPEN_READONLY;
+
+    sqlpp::sqlite3::connection dbOnDisk;
+    try {
+        dbOnDisk.connect_using(connConfig); // This can throw an exception.
+    }
+    catch (const sqlpp::sqlite3::exception &) {
+        return std::unexpected(dbErr::connectionError);
+    }
+    return dbOnDisk;
+}
 } // namespace
+
+namespace detail {
+
+std::expected<fs::path, dbErr> get_seedDbPath() {
+    auto const seedPath = incom::terminal_plot::platform_folders::install_datadir / std::string(configSeedFileName);
+    std::error_code ec;
+    if (! fs::exists(seedPath, ec) || ec) { return std::unexpected(dbErr::notFound); }
+    if (! fs::is_regular_file(seedPath, ec) || ec) { return std::unexpected(dbErr::notFound); }
+    return seedPath;
+}
+
+std::expected<fs::path, dbErr> get_userConfigDbPath(std::string_view appName, std::string_view fileName) {
+    return incstd::filesys::locations::data_dir(appName)
+        .transform([&](fs::path const &baseDir) { return baseDir / std::string(fileName); })
+        .transform_error([](std::error_code const &) { return dbErr::notFound; });
+}
+
+std::expected<std::vector<std::array<std::string, 4>>, dbErr> get_schemaRows(sqlpp::sqlite3::connection &db) {
+    std::vector<std::array<std::string, 4>> rows;
+    try {
+        auto result = db(sqlpp::statement_t{} << sqlpp::verbatim("SELECT type, name, tbl_name, IFNULL(sql, '') AS sql "
+                                                                 "FROM sqlite_schema "
+                                                                 "WHERE name NOT LIKE 'sqlite_%' "
+                                                                 "ORDER BY type, name, tbl_name, sql;")
+                                              << with_result_type_of(sqlpp::select(
+                                                     sqlpp::verbatim<sqlpp::text>("type").as(sqlpp::alias::a),
+                                                     sqlpp::verbatim<sqlpp::text>("name").as(sqlpp::alias::b),
+                                                     sqlpp::verbatim<sqlpp::text>("tbl_name").as(sqlpp::alias::c),
+                                                     sqlpp::verbatim<sqlpp::text>("sql").as(sqlpp::alias::d))));
+
+        for (auto const &row : result) {
+            std::array<std::string, 4> schemaRow{};
+            schemaRow[0] = std::string(row.a.value_or(""));
+            schemaRow[1] = std::string(row.b.value_or(""));
+            schemaRow[2] = std::string(row.c.value_or(""));
+            schemaRow[3] = std::string(row.d.value_or(""));
+            rows.push_back(std::move(schemaRow));
+        }
+    }
+    catch (const sqlpp::sqlite3::exception &) {
+        return std::unexpected(dbErr::dbAppearsCorrupted);
+    }
+    return rows;
+}
+
+std::expected<bool, dbErr> schema_matches(sqlpp::sqlite3::connection &lhs, sqlpp::sqlite3::connection &rhs) {
+    return get_schemaRows(lhs).and_then([&](std::vector<std::array<std::string, 4>> const &lhsRows) {
+        return get_schemaRows(rhs).transform(
+            [&](std::vector<std::array<std::string, 4>> const &rhsRows) { return lhsRows == rhsRows; });
+    });
+}
+
+std::expected<size_t, dbErr> copy_seedToUserDb(fs::path const &seedPath, fs::path const &targetPath) {
+    std::error_code ec;
+    fs::create_directories(targetPath.parent_path(), ec);
+    if (ec) { return std::unexpected(dbErr::unknownError); }
+
+    fs::copy_file(seedPath, targetPath, fs::copy_options::overwrite_existing, ec);
+    if (ec) { return std::unexpected(dbErr::unknownError); }
+    return 1uz;
+}
+
+std::expected<fs::path, dbErr> ensure_userConfigDbIsCurrent(std::string_view appName, std::string_view fileName) {
+    auto seedPath_exp = get_seedDbPath();
+    if (! seedPath_exp.has_value()) { return std::unexpected(seedPath_exp.error()); }
+
+    auto userDbPath_exp = get_userConfigDbPath(appName, fileName);
+    if (! userDbPath_exp.has_value()) { return std::unexpected(userDbPath_exp.error()); }
+
+    auto const &seedPath   = seedPath_exp.value();
+    auto const &userDbPath = userDbPath_exp.value();
+
+    std::error_code ec;
+    bool const      fileExists = fs::exists(userDbPath, ec);
+    if (ec) { return std::unexpected(dbErr::unknownError); }
+
+    if (! fileExists) {
+        return copy_seedToUserDb(seedPath, userDbPath).transform([&](size_t) { return userDbPath; });
+    }
+
+    auto userDb_exp = create_dbConnection_ro(userDbPath);
+    if (! userDb_exp.has_value()) { return std::unexpected(userDb_exp.error()); }
+
+    auto seedDb_exp = create_dbConnection_ro(seedPath);
+    if (! seedDb_exp.has_value()) { return std::unexpected(seedDb_exp.error()); }
+
+    auto schemaMatch_exp = schema_matches(userDb_exp.value(), seedDb_exp.value());
+    if (! schemaMatch_exp.has_value()) { return std::unexpected(schemaMatch_exp.error()); }
+
+    if (! schemaMatch_exp.value()) {
+        return copy_seedToUserDb(seedPath, userDbPath).transform([&](size_t) { return userDbPath; });
+    }
+    return userDbPath;
+}
+
+} // namespace detail
 
 constexpr inline inccol::inc_sRGB decode_color(uint32_t const colInInt) {
     // Consider what to do when the uint32_t is not in the expected range for colors
@@ -430,12 +577,9 @@ constexpr uint32_t encode_color(inccol::inc_sRGB const &srgb) {
 
 std::expected<sqlpp::sqlite3::connection, dbErr> get_configConnection(const std::string_view &appName,
                                                                       const std::string_view &configFileName) {
-    auto configPath_exp = incstd::filesys::find_configFile(std::string(appName), std::string(configFileName));
-    if (configPath_exp.has_value()) {
-        // Must use default 'in code' config since the sqlite config file is unavailable or somehow corrupted
-        return create_dbConnection_rw(configPath_exp.value());
-    }
-    else { return std::unexpected(dbErr::notFound); }
+    return detail::ensure_userConfigDbIsCurrent(appName, configFileName).and_then([](fs::path const &dbPath) {
+        return create_dbConnection_rw(dbPath);
+    });
 }
 
 bool validate_configDB(sqlpp::sqlite3::connection &db) {

@@ -25,8 +25,5 @@ inline const fs::path rel_sysconfdir = "@INCPLOT_REL_SYSCONFDIR@";
 inline const fs::path rel_localstatedir = "@INCPLOT_REL_LOCALSTATEDIR@";
 inline const fs::path rel_runstatedir = "@INCPLOT_REL_RUNSTATEDIR@";
 
-// Project-scoped defaults under standard install roots.
-inline const fs::path app_data_dir = "@INCPLOT_APP_DATA_DIR@";
-inline const fs::path app_config_dir = "@INCPLOT_APP_CONFIG_DIR@";
 
 } // namespace incom::terminal_plot::platform_folders
