@@ -27,16 +27,18 @@ namespace incom::terminal_plot::config {
 
 namespace inccol  = incstd::color;
 namespace inccons = incstd::console;
+namespace fs      = std::filesystem;
 
 using namespace incstd::console::color_schemes;
+
 
 inline const color_schemes::scheme16 default_scheme16 = incstd::console::color_schemes::windows_terminal::campbell;
 inline constexpr std::string_view    appName{"incplot"sv};
 inline constexpr std::string_view    configFileName{"configDB.sqlite"sv};
 inline constexpr std::string_view    configSeedFileName{"configDB.seed.sqlite"sv};
-inline constexpr std::string_view    portableMarkerName{".incplot-portable"sv};
+inline constexpr std::string_view    devBuildMarkerFilename{".incplot-dev-build"sv};
 
-inline constexpr std::string_view    fromTerminalSchemeName{"__fromTerminalScheme"sv};
+inline constexpr std::string_view fromTerminalSchemeName{"__fromTerminalScheme"sv};
 
 
 inline constexpr size_t html_defaultFontSize = 16uz;
@@ -58,7 +60,10 @@ inline constexpr float html_fontFaceMatch_minScore   = 0.8f;
 
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator = true);
 
-std::expected<std::filesystem::path, std::error_code> get_portableMarkerDir();
+bool is_devBuildMarkerExists();
+std::expected<fs::path, std::error_code>              canonicalPath_fromSamePrefix(fs::path         srcPath,
+                                                                                   std::string_view srcPath_postfix,
+                                                                                   std::string_view resPath_postFix);
 
 template <typename FUNC>
 std::expected<std::vector<std::vector<std::byte>>, incerr_c> extract_fromArchive(std::span<const std::byte> rawMemory,

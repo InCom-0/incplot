@@ -8,6 +8,12 @@ set(VER_PATCH ${PROJECT_VERSION_PATCH})
 
 set(INCPLOT_PROJECT_NAME "${PROJECT_NAME}")
 
+if(incplot_PORTABLE_LAYOUT)
+    set(INCPLOT_PORTABLE_LAYOUT_BOOL "true")
+else()
+    set(INCPLOT_PORTABLE_LAYOUT_BOOL "false")
+endif()
+
 # Normalize all paths to forward slashes so generated C/C++ string literals are portable.
 file(TO_CMAKE_PATH "${CMAKE_INSTALL_PREFIX}" INCPLOT_INSTALL_PREFIX)
 file(TO_CMAKE_PATH "${CMAKE_INSTALL_FULL_BINDIR}" INCPLOT_INSTALL_BINDIR)

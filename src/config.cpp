@@ -28,37 +28,62 @@ namespace incom::terminal_plot::config {
 
 namespace fs = std::filesystem;
 
-std::expected<fs::path, std::error_code> get_portableMarkerDir() {
+bool is_devBuildMarkerExists() {
     auto exeDirExp = incstd::filesys::get_curExeDir();
-    if (! exeDirExp.has_value()) { return std::unexpected(exeDirExp.error()); }
+    if (! exeDirExp.has_value()) { return false; }
 
-    fs::path const markerPath = exeDirExp.value() / std::string(portableMarkerName);
+    fs::path const markerPath = exeDirExp.value() / std::string(devBuildMarkerFilename);
 
     std::error_code ec;
-    if (! fs::exists(markerPath, ec)) {
-        if (ec) { return std::unexpected(ec); }
-        return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
-    }
-    if (ec) { return std::unexpected(ec); }
+    if (! fs::exists(markerPath, ec)) { return false; }
+    if (ec) { return false; }
 
-    if (! fs::is_regular_file(markerPath, ec)) {
-        if (ec) { return std::unexpected(ec); }
-        return std::unexpected(std::make_error_code(std::errc::invalid_argument));
-    }
-    if (ec) { return std::unexpected(ec); }
-
-    auto accessExp = incstd::filesys::check_access(exeDirExp.value());
-    if (! accessExp.has_value()) {
-        if (accessExp.error() == fs::file_type::not_found) {
-            return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
-        }
-        return std::unexpected(std::make_error_code(std::errc::operation_not_permitted));
-    }
-
-    if (! accessExp->writable) { return std::unexpected(std::make_error_code(std::errc::permission_denied)); }
-
-    return exeDirExp.value();
+    return true;
 }
+
+std::expected<fs::path, std::error_code> canonicalPath_fromSamePrefix(fs::path         srcPath,
+                                                                      std::string_view srcPath_postfix,
+                                                                      std::string_view resPath_postFix) {
+    try {
+        // existing logic using ec overloads
+        if (srcPath.has_filename()) { srcPath = srcPath.parent_path(); }
+        std::error_code ec;
+        srcPath = fs::weakly_canonical(srcPath, ec);
+        if (ec) { return std::unexpected(ec); }
+
+        const fs::path fp_pf  = fs::path(srcPath_postfix).lexically_normal();
+        const fs::path tp_pf  = fs::path(resPath_postFix).lexically_normal();
+        fs::path       prefix = srcPath;
+
+        if (! fp_pf.empty() && fp_pf != ".") {
+            for (const auto &_ : fp_pf) {
+                (void)_;
+                if (prefix.has_parent_path()) { prefix = prefix.parent_path(); }
+                else { return std::unexpected(std::make_error_code(std::errc::invalid_argument)); }
+            }
+
+            // std::filesystem-only validation (no custom suffix matcher).
+            if ((prefix / fp_pf).lexically_normal() != srcPath.lexically_normal()) {
+                return std::unexpected(std::make_error_code(std::errc::invalid_argument));
+            }
+        }
+
+        fs::path result = fs::weakly_canonical(prefix / tp_pf, ec);
+        if (ec) { return std::unexpected(ec); }
+        return result;
+    }
+    catch (const std::bad_alloc &) {
+        return std::unexpected(std::make_error_code(std::errc::not_enough_memory));
+    }
+    catch (const std::filesystem::filesystem_error &e) {
+        if (e.code()) { return std::unexpected(e.code()); }
+        return std::unexpected(std::make_error_code(std::errc::io_error));
+    }
+    catch (...) {
+        return std::unexpected(std::make_error_code(std::errc::io_error));
+    }
+}
+
 
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
     auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
@@ -472,7 +497,8 @@ std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_ro(fs::path
 namespace detail {
 
 std::expected<fs::path, dbErr> get_seedDbPath() {
-    auto const seedPath = incom::terminal_plot::platform_folders::install_datadir / std::string(configSeedFileName);
+    auto const seedPath = std::filesystem::path(incom::terminal_plot::platform_folders::install_datadir) /
+                          std::string(configSeedFileName);
     std::error_code ec;
     if (! fs::exists(seedPath, ec) || ec) { return std::unexpected(dbErr::notFound); }
     if (! fs::is_regular_file(seedPath, ec) || ec) { return std::unexpected(dbErr::notFound); }

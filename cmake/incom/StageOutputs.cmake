@@ -23,16 +23,14 @@
 #   plus their per-config equivalents when applicable.
 #=============================================================================
 
-include(GNUInstallDirs)
-
 
 # The NAME is only used to name the [NAME]_STAGEDIR variable.
 # The NAME has no relation to any other name or variable in CMake or elsewhere and can be anything.
 # A sensible idea is to have the NAME the same as the name of the project.
-function(stageOutputDirsFor NAME)
+function(stageOutputDirs NAME PORTABLE_LAYOUT)
     if(NOT NAME)
         message(FATAL_ERROR
-            "configure_staging_output_dirs(): NAME argument is required."
+            "stageOutputDirsFor(): NAME argument is required."
         )
     endif()
 
@@ -53,9 +51,26 @@ function(stageOutputDirsFor NAME)
     endmacro()
 
     # Baseline (single-config and fallback for multi-config)
-    _set_output_dir(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_INSTALL_BINDIR}")
-    _set_output_dir(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
-    _set_output_dir(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
+    if(PORTABLE_LAYOUT)
+        _set_output_dir(CMAKE_RUNTIME_OUTPUT_DIRECTORY "")
+        _set_output_dir(CMAKE_LIBRARY_OUTPUT_DIRECTORY "")
+        _set_output_dir(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "")
+        # if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+        #     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${_stagedir}" PARENT_SCOPE)
+        # endif()
+        # if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        #     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${_stagedir}" PARENT_SCOPE)
+        # endif()
+        # if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+        #     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${_stagedir}" PARENT_SCOPE)
+        # endif()
+    else()
+        _set_output_dir(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_INSTALL_BINDIR}")
+        _set_output_dir(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
+        _set_output_dir(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
+    endif()
+
+
 
     # Multi-config generators (Visual Studio, Xcode, Ninja Multi-Config)
     if(CMAKE_CONFIGURATION_TYPES)
@@ -63,24 +78,48 @@ function(stageOutputDirsFor NAME)
             string(TOUPPER "${_cfg}" _cfg_uc)
 
             if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_cfg_uc})
-                set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_cfg_uc}
-                    "${_stagedir}/${CMAKE_INSTALL_BINDIR}"
-                    PARENT_SCOPE
-                )
+                if(PORTABLE_LAYOUT)
+                    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_cfg_uc}
+                        "${_stagedir}"
+                        PARENT_SCOPE
+                    )
+                else()
+                    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_cfg_uc}
+                        "${_stagedir}/${CMAKE_INSTALL_BINDIR}"
+                        PARENT_SCOPE
+                    )
+                endif()
+
             endif()
 
             if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY_${_cfg_uc})
-                set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${_cfg_uc}
-                    "${_stagedir}/${CMAKE_INSTALL_LIBDIR}"
-                    PARENT_SCOPE
-                )
+                if(PORTABLE_LAYOUT)
+                    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${_cfg_uc}
+                        "${_stagedir}"
+                        PARENT_SCOPE
+                    )
+                else()
+                    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${_cfg_uc}
+                        "${_stagedir}/${CMAKE_INSTALL_LIBDIR}"
+                        PARENT_SCOPE
+                    )
+                endif()
+
             endif()
 
             if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_cfg_uc})
-                set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_cfg_uc}
-                    "${_stagedir}/${CMAKE_INSTALL_LIBDIR}"
-                    PARENT_SCOPE
-                )
+                if(PORTABLE_LAYOUT)
+                    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_cfg_uc}
+                        "${_stagedir}"
+                        PARENT_SCOPE
+                    )
+                else()
+                    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_cfg_uc}
+                        "${_stagedir}/${CMAKE_INSTALL_LIBDIR}"
+                        PARENT_SCOPE
+                    )
+                endif()
+
             endif()
         endforeach()
     endif()

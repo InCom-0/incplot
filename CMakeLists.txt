@@ -9,10 +9,12 @@ project(incplot
 
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory structure" ON)
 
 option(CPM_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for dependencies." ON)
 option(CPM_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing dependencies." OFF)
+
+option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory structure" ON)
+option(incplot_PORTABLE_LAYOUT "Use flat (Windows-like / portable) install layout" ON)
 
 option(incplot_CPR_USE_SYSTEM_CURL "Incplot transitively needs libcurl. Set to ON if you have and want to use system installed one" OFF)
 
@@ -35,12 +37,16 @@ endif()
 
 
 #####################################################################
-### Staging ###
+### Staging and Install dirs setting ###
 #####################################################################
 include(cmake/incom/StageOutputs.cmake)
 include(cmake/incom/MingwRuntimeDeps.cmake)
+
+include(GNUInstallDirs)
+set(incplot_PORTABLE_LAYOUT_INSTALL_DIR "/" CACHE PATH "Dir under prefix to install to in portable layout mode")
+
 if(incplot_STAGE_OUTPUTS)
-    stageOutputDirsFor(${PROJECT_NAME})
+    stageOutputDirs(${PROJECT_NAME} ${incplot_PORTABLE_LAYOUT})
 endif()
 
 
@@ -170,38 +176,70 @@ endif()
 # endif()
 
 
-
 ############################################################################################
 ### Automatic copying certain assets to build directory (mimic structure as installed)   ###
 ############################################################################################
-add_custom_command(TARGET incplot POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "Recreating portable installation file structure in build staging directory"
-    COMMAND ${CMAKE_COMMAND} -E touch "$<TARGET_FILE_DIR:incplot>/.incplot-portable"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-    "${CMAKE_SOURCE_DIR}/data/"
-    "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/LICENSE.txt"
-    "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}/LICENSE.txt"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/README.md"
-    "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DOCDIR}/README.md"
-)
+if(incplot_PORTABLE_LAYOUT)
+    add_custom_command(TARGET incplot POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "Recreating portable installation file structure in build staging directory"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+        "${CMAKE_SOURCE_DIR}/data/"
+        "${${PROJECT_NAME}_STAGEDIR}/${incplot_PORTABLE_LAYOUT_INSTALL_DIR}"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/README.md"
+        "${${PROJECT_NAME}_STAGEDIR}/${incplot_PORTABLE_LAYOUT_INSTALL_DIR}/README.md"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/LICENSE.txt"
+        "${${PROJECT_NAME}_STAGEDIR}/${incplot_PORTABLE_LAYOUT_INSTALL_DIR}/LICENSE.txt"
+    )
+
+else()
+    ### '.incplot-dev-build' gets created next to the binary in 'CMAKE_RUNTIME_OUTPUT_DIRECTORY'
+    ### The above enables running incplot from inside build directory (without installing it)
+    add_custom_command(TARGET incplot POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "Recreating GNUInstallDirs installation file structure in build staging directory"
+        COMMAND ${CMAKE_COMMAND} -E touch "$<TARGET_FILE_DIR:incplot>/.incplot-dev-build"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+        "${CMAKE_SOURCE_DIR}/data/"
+        "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/README.md"
+        "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DOCDIR}/README.md"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/LICENSE.txt"
+        "${${PROJECT_NAME}_STAGEDIR}/${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}/LICENSE.txt"
+    )
+endif()
+
 
 ########################################################
 ### Install specification ###
 ########################################################
-install(TARGETS incplot
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-message(${${PROJECT_NAME}_STAGEDIR})
+if(incplot_PORTABLE_LAYOUT)
+    install(TARGETS incplot
+        RUNTIME DESTINATION ${incplot_PORTABLE_LAYOUT_INSTALL_DIR}
+    )
 
-install(FILES data/configDB.seed.sqlite DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/")
+    install(FILES data/configDB.seed.sqlite DESTINATION "${incplot_PORTABLE_LAYOUT_INSTALL_DIR}")
+    install(FILES README.md DESTINATION ${incplot_PORTABLE_LAYOUT_INSTALL_DIR})
+    install(FILES LICENSE.txt DESTINATION "${incplot_PORTABLE_LAYOUT_INSTALL_DIR}")
 
-install(FILES README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
-install(FILES LICENSE.txt DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}/")
+else()
+    install(TARGETS incplot
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+    install(FILES data/configDB.seed.sqlite DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/")
+    install(FILES README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
+    install(FILES LICENSE.txt DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME}/")
+endif()
+
 
 if(PROJECT_IS_TOP_LEVEL)
     add_subdirectory(cmake/packaging)
