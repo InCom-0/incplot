@@ -15,7 +15,6 @@
 #include <incplot/err.hpp>
 #include <incstd/incstd_color.hpp>
 
-
 #include <archive.h>
 #include <archive_entry.h>
 
@@ -32,11 +31,11 @@ namespace fs      = std::filesystem;
 using namespace incstd::console::color_schemes;
 
 
-inline const color_schemes::scheme16 default_scheme16 = incstd::console::color_schemes::windows_terminal::campbell;
-inline constexpr std::string_view    appName{"incplot"sv};
-inline constexpr std::string_view    configFileName{"configDB.sqlite"sv};
-inline constexpr std::string_view    configSeedFileName{"configDB.seed.sqlite"sv};
-inline constexpr std::string_view    devBuildMarkerFilename{".incplot-dev-build"sv};
+inline const scheme16             default_scheme16 = windows_terminal::campbell;
+inline constexpr std::string_view appName{"incplot"sv};
+inline constexpr std::string_view configFileName{"configDB.sqlite"sv};
+inline constexpr std::string_view configSeedFileName{"configDB.seed.sqlite"sv};
+inline constexpr std::string_view devBuildMarkerFilename{".incplot-dev-build"sv};
 
 inline constexpr std::string_view fromTerminalSchemeName{"__fromTerminalScheme"sv};
 
@@ -60,10 +59,9 @@ inline constexpr float html_fontFaceMatch_minScore   = 0.8f;
 
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator = true);
 
-bool is_devBuildMarkerExists();
-std::expected<fs::path, std::error_code>              canonicalPath_fromSamePrefix(fs::path         srcPath,
-                                                                                   std::string_view srcPath_postfix,
-                                                                                   std::string_view resPath_postFix);
+bool                                     check_devBuildMarkerExists();
+std::expected<fs::path, std::error_code> create_cPath_fromSamePrefix(fs::path srcPath, std::string_view srcPath_postfix,
+                                                                     std::string_view resPath_postFix);
 
 template <typename FUNC>
 std::expected<std::vector<std::vector<std::byte>>, incerr_c> extract_fromArchive(std::span<const std::byte> rawMemory,
@@ -121,7 +119,7 @@ std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::uint8_t     
 std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::vector<std::uint8_t> colorIDs_toValidate,
                                                                const inccol::palette256 &against);
 
-
+namespace scheme {
 scheme256 get_defaultColScheme256();
 scheme16  get_defaultColScheme16();
 scheme256 get_monochromeColScheme256();
@@ -132,7 +130,8 @@ std::optional<scheme16> get_schemeFromTerminal();
 std::string get_showInternalSchemes();
 std::string get_showCongfigDBSchemes(sqlpp::sqlite3::connection &db);
 
-std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, dbErr> &db);
+std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, incerr_c> &db);
+} // namespace scheme
 
 namespace db {
 
@@ -140,7 +139,7 @@ constexpr inccol::inc_sRGB decode_color(uint32_t const colInInt);
 constexpr uint32_t         encode_color(inccol::inc_sRGB const &srgb);
 
 bool                                             validate_configDB(sqlpp::sqlite3::connection &db);
-std::expected<sqlpp::sqlite3::connection, dbErr> get_configConnection(const std::string_view &appName,
+std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection(const std::string_view &appName,
                                                                       const std::string_view &configFileName);
 
 bool        validate_SQLite_tableExistence(sqlpp::sqlite3::connection &db, std::string const &tableName);

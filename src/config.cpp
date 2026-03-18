@@ -4,8 +4,9 @@
 #include <expected>
 #include <filesystem>
 
-#include <cerrno>
 #include <functional>
+#include <incplot-lib.hpp>
+#include <incplot-lib/err.hpp>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -28,7 +29,7 @@ namespace incom::terminal_plot::config {
 
 namespace fs = std::filesystem;
 
-bool is_devBuildMarkerExists() {
+bool check_devBuildMarkerExists() {
     auto exeDirExp = incstd::filesys::get_curExeDir();
     if (! exeDirExp.has_value()) { return false; }
 
@@ -41,12 +42,15 @@ bool is_devBuildMarkerExists() {
     return true;
 }
 
-std::expected<fs::path, std::error_code> canonicalPath_fromSamePrefix(fs::path         srcPath,
-                                                                      std::string_view srcPath_postfix,
-                                                                      std::string_view resPath_postFix) {
+std::expected<fs::path, std::error_code> get_db() {
+
+    return std::unexpected(std::make_error_code(std::errc::invalid_argument));
+}
+
+
+std::expected<fs::path, std::error_code> create_cPath_fromSamePrefix(fs::path srcPath, std::string_view srcPath_postfix,
+                                                                     std::string_view resPath_postFix) {
     try {
-        // existing logic using ec overloads
-        if (srcPath.has_filename()) { srcPath = srcPath.parent_path(); }
         std::error_code ec;
         srcPath = fs::weakly_canonical(srcPath, ec);
         if (ec) { return std::unexpected(ec); }
@@ -56,9 +60,13 @@ std::expected<fs::path, std::error_code> canonicalPath_fromSamePrefix(fs::path  
         fs::path       prefix = srcPath;
 
         if (! fp_pf.empty() && fp_pf != ".") {
-            for (const auto &_ : fp_pf) {
-                (void)_;
-                if (prefix.has_parent_path()) { prefix = prefix.parent_path(); }
+            for (const auto &pthPart : std::ranges::reverse_view(fp_pf)) {
+                auto ar = prefix.filename().generic_string();
+                if (pthPart == prefix.filename()) {}
+                else { return std::unexpected(std::make_error_code(std::errc::invalid_argument)); }
+
+                if (prefix.has_parent_path()) {
+                     prefix = prefix.parent_path(); }
                 else { return std::unexpected(std::make_error_code(std::errc::invalid_argument)); }
             }
 
@@ -83,8 +91,6 @@ std::expected<fs::path, std::error_code> canonicalPath_fromSamePrefix(fs::path  
         return std::unexpected(std::make_error_code(std::errc::io_error));
     }
 }
-
-
 std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
     auto cb_writer = [](std::string_view data, intptr_t userdata) -> bool {
         std::vector<std::byte> *pf = reinterpret_cast<std::vector<std::byte> *>(userdata);
@@ -172,8 +178,7 @@ std::expected<bool, incerr_c> validate_terminalPaletteSameness(std::vector<std::
     // If all pass then its validated
     return true;
 }
-
-
+namespace scheme {
 inccons::color_schemes::scheme256 get_defaultColScheme256() {
     return color_schemes::defaultScheme256;
 }
@@ -262,7 +267,7 @@ std::string get_showCongfigDBSchemes(sqlpp::sqlite3::connection &db) {
     return res;
 }
 
-std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, dbErr> &db) {
+std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, incerr_c> &db) {
     std::string res(1, '\n');
     res.append("Integrated color schemes:\n");
     res.append(get_showInternalSchemes());
@@ -273,6 +278,7 @@ std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, dbErr> &db
     res.append("\n");
     return res;
 }
+} // namespace scheme
 
 namespace db {
 // Anonymous namespace for stuff used internally in this translation unit
@@ -463,7 +469,7 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB_T(sqlpp:
     return std::nullopt;
 }
 
-std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path const &pathToDb) {
+std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_rw(fs::path const &pathToDb) {
     auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
     connConfig->path_to_database = pathToDb.generic_string();
     connConfig->flags            = SQLITE_OPEN_READWRITE;
@@ -473,12 +479,12 @@ std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_rw(fs::path
         dbOnDisk.connect_using(connConfig); // This can throw an exception.
     }
     catch (const sqlpp::sqlite3::exception &e) {
-        return std::unexpected(dbErr::connectionError);
+        return std::unexpected(incerr_c::make(dbErr::connectionError));
     }
     return dbOnDisk;
 }
 
-std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_ro(fs::path const &pathToDb) {
+std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_ro(fs::path const &pathToDb) {
     auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
     connConfig->path_to_database = pathToDb.generic_string();
     connConfig->flags            = SQLITE_OPEN_READONLY;
@@ -488,7 +494,7 @@ std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_ro(fs::path
         dbOnDisk.connect_using(connConfig); // This can throw an exception.
     }
     catch (const sqlpp::sqlite3::exception &) {
-        return std::unexpected(dbErr::connectionError);
+        return std::unexpected(incerr_c::make(dbErr::connectionError));
     }
     return dbOnDisk;
 }
@@ -496,22 +502,45 @@ std::expected<sqlpp::sqlite3::connection, dbErr> create_dbConnection_ro(fs::path
 
 namespace detail {
 
-std::expected<fs::path, dbErr> get_seedDbPath() {
+std::expected<fs::path, incerr_c> get_userConfigDbPath_seed() {
     auto const seedPath = std::filesystem::path(incom::terminal_plot::platform_folders::install_datadir) /
                           std::string(configSeedFileName);
     std::error_code ec;
-    if (! fs::exists(seedPath, ec) || ec) { return std::unexpected(dbErr::notFound); }
-    if (! fs::is_regular_file(seedPath, ec) || ec) { return std::unexpected(dbErr::notFound); }
+    if (! fs::exists(seedPath, ec) || ec) { return std::unexpected(incerr_c::make(dbErr::notFound)); }
+    if (! fs::is_regular_file(seedPath, ec) || ec) { return std::unexpected(incerr_c::make(dbErr::notFound)); }
     return seedPath;
 }
 
-std::expected<fs::path, dbErr> get_userConfigDbPath(std::string_view appName, std::string_view fileName) {
-    return incstd::filesys::locations::data_dir(appName)
-        .transform([&](fs::path const &baseDir) { return baseDir / std::string(fileName); })
-        .transform_error([](std::error_code const &) { return dbErr::notFound; });
+std::expected<fs::path, incerr_c> get_userConfigDbPath() {
+    namespace fs    = std::filesystem;
+    namespace incfs = incstd::filesys;
+
+    std::error_code ec;
+
+    auto exeDir_exp = incstd::filesys::get_curExeDir();
+    if (not exeDir_exp.has_value()) { return std::unexpected(incerr_c::make(dbErr::unknownError)); }
+    auto &exeDir = exeDir_exp.value();
+
+    if constexpr (incplot::platform_folders::portable_layout) {
+        // If we are in 'portable layout mode', everything is always located in the dir as the excutable
+    }
+    else {
+        // Check if we are running from build directory
+        if (fs::exists(exeDir / incplot::config::devBuildMarkerFilename, ec)) {
+
+            // If we are use relative path from executable
+        }
+        else {
+            // If we are not, use hardcoded paths (because presumably incplot is installed)
+        }
+    }
+
+    return incfs::locations::data_dir(appName)
+        .transform([&](fs::path const &baseDir) { return baseDir / std::string(""); })
+        .transform_error([](std::error_code const &) { return incerr_c::make(dbErr::notFound); });
 }
 
-std::expected<std::vector<std::array<std::string, 4>>, dbErr> get_schemaRows(sqlpp::sqlite3::connection &db) {
+std::expected<std::vector<std::array<std::string, 4>>, incerr_c> get_schemaRows(sqlpp::sqlite3::connection &db) {
     std::vector<std::array<std::string, 4>> rows;
     try {
         auto result = db(sqlpp::statement_t{} << sqlpp::verbatim("SELECT type, name, tbl_name, IFNULL(sql, '') AS sql "
@@ -534,33 +563,33 @@ std::expected<std::vector<std::array<std::string, 4>>, dbErr> get_schemaRows(sql
         }
     }
     catch (const sqlpp::sqlite3::exception &) {
-        return std::unexpected(dbErr::dbAppearsCorrupted);
+        return std::unexpected(incerr_c::make(dbErr::dbAppearsCorrupted));
     }
     return rows;
 }
 
-std::expected<bool, dbErr> schema_matches(sqlpp::sqlite3::connection &lhs, sqlpp::sqlite3::connection &rhs) {
+std::expected<bool, incerr_c> schema_matches(sqlpp::sqlite3::connection &lhs, sqlpp::sqlite3::connection &rhs) {
     return get_schemaRows(lhs).and_then([&](std::vector<std::array<std::string, 4>> const &lhsRows) {
         return get_schemaRows(rhs).transform(
             [&](std::vector<std::array<std::string, 4>> const &rhsRows) { return lhsRows == rhsRows; });
     });
 }
 
-std::expected<size_t, dbErr> copy_seedToUserDb(fs::path const &seedPath, fs::path const &targetPath) {
+std::expected<size_t, incerr_c> copy_seedToUserDb(fs::path const &seedPath, fs::path const &targetPath) {
     std::error_code ec;
     fs::create_directories(targetPath.parent_path(), ec);
-    if (ec) { return std::unexpected(dbErr::unknownError); }
+    if (ec) { std::unexpected(incerr_c::make(dbErr::unknownError)); }
 
     fs::copy_file(seedPath, targetPath, fs::copy_options::overwrite_existing, ec);
-    if (ec) { return std::unexpected(dbErr::unknownError); }
+    if (ec) { return std::unexpected(incerr_c::make(dbErr::unknownError)); }
     return 1uz;
 }
 
-std::expected<fs::path, dbErr> ensure_userConfigDbIsCurrent(std::string_view appName, std::string_view fileName) {
-    auto seedPath_exp = get_seedDbPath();
+std::expected<fs::path, incerr_c> ensure_userConfigDbIsCurrent(std::string_view appName, std::string_view fileName) {
+    auto seedPath_exp = get_userConfigDbPath_seed();
     if (! seedPath_exp.has_value()) { return std::unexpected(seedPath_exp.error()); }
 
-    auto userDbPath_exp = get_userConfigDbPath(appName, fileName);
+    auto userDbPath_exp = get_userConfigDbPath();
     if (! userDbPath_exp.has_value()) { return std::unexpected(userDbPath_exp.error()); }
 
     auto const &seedPath   = seedPath_exp.value();
@@ -568,7 +597,7 @@ std::expected<fs::path, dbErr> ensure_userConfigDbIsCurrent(std::string_view app
 
     std::error_code ec;
     bool const      fileExists = fs::exists(userDbPath, ec);
-    if (ec) { return std::unexpected(dbErr::unknownError); }
+    if (ec) { return std::unexpected(incerr_c::make(dbErr::unknownError)); }
 
     if (! fileExists) {
         return copy_seedToUserDb(seedPath, userDbPath).transform([&](size_t) { return userDbPath; });
@@ -601,8 +630,8 @@ constexpr uint32_t encode_color(inccol::inc_sRGB const &srgb) {
            (static_cast<uint32_t>(srgb.b));
 }
 
-std::expected<sqlpp::sqlite3::connection, dbErr> get_configConnection(const std::string_view &appName,
-                                                                      const std::string_view &configFileName) {
+std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection(const std::string_view &appName,
+                                                                         const std::string_view &configFileName) {
     return detail::ensure_userConfigDbIsCurrent(appName, configFileName).and_then([](fs::path const &dbPath) {
         return create_dbConnection_rw(dbPath);
     });

@@ -18,6 +18,13 @@ int main(int argc, char *argv[]) {
 
     // auto uri1 = incstd::web::URI("https://kurzlinks.de/german_economy"sv, true);
 
+    auto cure = incstd::filesys::get_curExeDir();
+    // std::cout << cure->replace_filename(std::filesystem::path("fff.txxt")).generic_string() << '\n';
+
+
+    auto cp1 = incplot::config::create_cPath_fromSamePrefix(cure.value(), "build/stage", "generated/auto");
+    std::cout << cp1->generic_string() << '\n';
+
     // Create and populate ArgumentParser
     argparse::ArgumentParser ap(std::string(incplot::config::appName),
                                 std::string(incom::terminal_plot::version::medium), argparse::default_arguments::all);
@@ -50,7 +57,7 @@ int main(int argc, char *argv[]) {
     if (ap.get<bool>("-s")) {
         auto dbCon =
             incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
-        std::cout << incplot::config::get_showSchemes(dbCon);
+        std::cout << incplot::config::scheme::get_showSchemes(dbCon);
         return 0;
     }
 

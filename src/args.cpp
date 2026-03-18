@@ -157,7 +157,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
     // #####################################################################
     auto schemeGetter = [&]() -> void {
         auto setSchemeFromTermOrDefault = [&]() -> bool {
-            auto schm_opt = config::get_schemeFromTerminal();
+            auto schm_opt = config::scheme::get_schemeFromTerminal();
             if (schm_opt) {
                 // Use the scheme obtained from the terminal
                 nonDifferentiated.colScheme     = schm_opt.value();
@@ -569,7 +569,7 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
             incplot::config::schemes_defaultSchemesNames.end()) {
             return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_nameSameAsBuildinScheme));
         }
-        auto schm_opt = config::get_schemeFromTerminal();
+        auto schm_opt = config::scheme::get_schemeFromTerminal();
         if (not schm_opt.has_value()) {
             return std::unexpected(incerr_c::make(incplot::Unexp_AP::SETUP_schemeGrab_errorWhenQueryingTerminal));
         }

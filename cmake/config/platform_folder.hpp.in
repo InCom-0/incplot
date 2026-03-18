@@ -1,10 +1,8 @@
 #pragma once
 
-#include <filesystem>
 #include <string_view>
 
 namespace incom::terminal_plot::platform_folders {
-namespace fs = std::filesystem;
 
 inline constexpr bool portable_layout = @INCPLOT_PORTABLE_LAYOUT_BOOL@;
 
