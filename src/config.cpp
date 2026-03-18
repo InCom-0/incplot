@@ -65,8 +65,7 @@ std::expected<fs::path, std::error_code> create_cPath_fromSamePrefix(fs::path sr
                 if (pthPart == prefix.filename()) {}
                 else { return std::unexpected(std::make_error_code(std::errc::invalid_argument)); }
 
-                if (prefix.has_parent_path()) {
-                     prefix = prefix.parent_path(); }
+                if (prefix.has_parent_path()) { prefix = prefix.parent_path(); }
                 else { return std::unexpected(std::make_error_code(std::errc::invalid_argument)); }
             }
 
@@ -501,45 +500,52 @@ std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_ro(fs::p
 } // namespace
 
 namespace detail {
+// Obtains a path to some resource installed with the program
+// Args:
+// 1) Install dir (corresponds to eg. CMAKE_INSTALL_DATADIR) ... this is relative to 'prefix' (eg. CMAKE_INSTALL_PREFIX)
+// 2) Absolute install dir (corresponds to eg. CMAKE_INSTALL_FULL_DATADIR)
+// 3) Relative path from the install dir
+// 4) Relative path from executable dir  to 'dev marker' that gets checked
+//      a. If it exists, we are in 'dev mode' (project not installed, all resources located in build staging area)
+//      b. If it does not exist, it is assumed we are in 'installed mode'
 
-std::expected<fs::path, incerr_c> get_userConfigDbPath_seed() {
-    auto const seedPath = std::filesystem::path(incom::terminal_plot::platform_folders::install_datadir) /
-                          std::string(configSeedFileName);
-    std::error_code ec;
-    if (! fs::exists(seedPath, ec) || ec) { return std::unexpected(incerr_c::make(dbErr::notFound)); }
-    if (! fs::is_regular_file(seedPath, ec) || ec) { return std::unexpected(incerr_c::make(dbErr::notFound)); }
-    return seedPath;
-}
-
-std::expected<fs::path, incerr_c> get_userConfigDbPath() {
-    namespace fs    = std::filesystem;
-    namespace incfs = incstd::filesys;
-
-    std::error_code ec;
-
-    auto exeDir_exp = incstd::filesys::get_curExeDir();
-    if (not exeDir_exp.has_value()) { return std::unexpected(incerr_c::make(dbErr::unknownError)); }
-    auto &exeDir = exeDir_exp.value();
+std::expected<fs::path, incerr_c> get_pth2InstalledPth(
+    std::string_view relInstallDirPth_toPrefix, std::string_view absInstallDirPth_whenInstalled,
+    std::string_view relPth_toTarget, std::optional<std::string_view> relPth_toDevMarker = std::nullopt) {
+    namespace fs = std::filesystem;
 
     if constexpr (incplot::platform_folders::portable_layout) {
-        // If we are in 'portable layout mode', everything is always located in the dir as the excutable
+        // If we are in 'portable layout mode', everything is always located in the dir of the excutable
+
+        // Check if local version exists ... if it does then proceed
+        // If there isnt a match overwrite with the seedDB and proceed
+        return incstd::filesys::get_curExeDir()
+            .transform_error([](auto const &err) { return incerr_c::make(dbErr::unknownError); })
+            .transform([&](auto const &pth) { return pth / relPth_toTarget; });
     }
     else {
-        // Check if we are running from build directory
-        if (fs::exists(exeDir / incplot::config::devBuildMarkerFilename, ec)) {
+        auto exeDir_exp = incstd::filesys::get_curExeDir();
+        if (exeDir_exp
+                .transform([&](auto const &pth) {
+                    if (relPth_toDevMarker.has_value()) { return false; }
+                    else { return fs::exists(pth / relPth_toDevMarker.value()); }
+                })
+                .value_or(false)) {
 
-            auto pt = create_cPath_fromSamePrefix(exeDir, incplot::platform_folders::rel_bindir, incplot::platform_folders::rel_localstatedir);
-            // If we are use relative path from executable
+            // If there is 'devBuildMaker', we look into the build directory
+            // We base the returned path on mimicking install folder structure
+            return create_cPath_fromSamePrefix(exeDir_exp.value(), incplot::platform_folders::rel_bindir,
+                                               relInstallDirPth_toPrefix)
+                .transform_error([](auto const &err) { return incerr_c::make(dbErr::unknownError); })
+                .transform([&](auto const &pth) { return pth / relPth_toTarget; });
         }
-        else {
-            // If we are not, use hardcoded paths (because presumably incplot is installed)
-        }
+
+        // If there is NOT 'devBuildMaker', it means we should be properly installed
+        // Return 'baked-in' where the file is supposed to be installed
+        else { return fs::path(absInstallDirPth_whenInstalled) / relPth_toTarget; }
     }
-
-    return incfs::locations::data_dir(appName)
-        .transform([&](fs::path const &baseDir) { return baseDir / std::string(""); })
-        .transform_error([](std::error_code const &) { return incerr_c::make(dbErr::notFound); });
 }
+
 
 std::expected<std::vector<std::array<std::string, 4>>, incerr_c> get_schemaRows(sqlpp::sqlite3::connection &db) {
     std::vector<std::array<std::string, 4>> rows;
@@ -586,37 +592,29 @@ std::expected<size_t, incerr_c> copy_seedToUserDb(fs::path const &seedPath, fs::
     return 1uz;
 }
 
-std::expected<fs::path, incerr_c> ensure_userConfigDbIsCurrent(std::string_view appName, std::string_view fileName) {
-    auto seedPath_exp = get_userConfigDbPath_seed();
-    if (! seedPath_exp.has_value()) { return std::unexpected(seedPath_exp.error()); }
-
-    auto userDbPath_exp = get_userConfigDbPath();
-    if (! userDbPath_exp.has_value()) { return std::unexpected(userDbPath_exp.error()); }
-
-    auto const &seedPath   = seedPath_exp.value();
-    auto const &userDbPath = userDbPath_exp.value();
+std::expected<fs::path, incerr_c> ensure_userConfigDbIsCurrent(fs::path seedConfigDb, fs::path configDB) {
 
     std::error_code ec;
-    bool const      fileExists = fs::exists(userDbPath, ec);
+    bool const      fileExists = fs::exists(configDB, ec);
     if (ec) { return std::unexpected(incerr_c::make(dbErr::unknownError)); }
 
     if (! fileExists) {
-        return copy_seedToUserDb(seedPath, userDbPath).transform([&](size_t) { return userDbPath; });
+        return copy_seedToUserDb(seedConfigDb, configDB).transform([&](size_t) { return configDB; });
     }
 
-    auto userDb_exp = create_dbConnection_ro(userDbPath);
+    auto userDb_exp = create_dbConnection_ro(configDB);
     if (! userDb_exp.has_value()) { return std::unexpected(userDb_exp.error()); }
 
-    auto seedDb_exp = create_dbConnection_ro(seedPath);
+    auto seedDb_exp = create_dbConnection_ro(seedConfigDb);
     if (! seedDb_exp.has_value()) { return std::unexpected(seedDb_exp.error()); }
 
     auto schemaMatch_exp = schema_matches(userDb_exp.value(), seedDb_exp.value());
     if (! schemaMatch_exp.has_value()) { return std::unexpected(schemaMatch_exp.error()); }
 
     if (! schemaMatch_exp.value()) {
-        return copy_seedToUserDb(seedPath, userDbPath).transform([&](size_t) { return userDbPath; });
+        return copy_seedToUserDb(seedConfigDb, configDB).transform([&](size_t) { return configDB; });
     }
-    return userDbPath;
+    return configDB;
 }
 
 } // namespace detail
@@ -631,11 +629,13 @@ constexpr uint32_t encode_color(inccol::inc_sRGB const &srgb) {
            (static_cast<uint32_t>(srgb.b));
 }
 
-std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection(const std::string_view &appName,
-                                                                         const std::string_view &configFileName) {
-    return detail::ensure_userConfigDbIsCurrent(appName, configFileName).and_then([](fs::path const &dbPath) {
-        return create_dbConnection_rw(dbPath);
-    });
+std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection() {
+    // return detail::ensure_userConfigDbIsCurrent(appName, configFileName).and_then([](fs::path const &dbPath) {
+    //     return create_dbConnection_rw(dbPath);
+    // });
+
+
+    return create_dbConnection_rw(fs::path());
 }
 
 bool validate_configDB(sqlpp::sqlite3::connection &db) {

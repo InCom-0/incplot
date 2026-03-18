@@ -11,7 +11,7 @@ namespace terminal_plot {
 using namespace std::literals;
 using incerr_c = incerr::incerr_code;
 
-enum class Unexp_AP {
+enum class Unexp_AP : size_t {
     OK                          = 0,
     FONT_incfontdiscSystemError = 1,
     FONT_noReadAccessToFontFile,

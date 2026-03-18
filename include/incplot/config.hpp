@@ -33,8 +33,8 @@ using namespace incstd::console::color_schemes;
 
 inline const scheme16             default_scheme16 = windows_terminal::campbell;
 inline constexpr std::string_view appName{"incplot"sv};
-inline constexpr std::string_view configFileName{"configDB.sqlite"sv};
-inline constexpr std::string_view configSeedFileName{"configDB.seed.sqlite"sv};
+inline constexpr std::string_view configDBFileName{"configDB.sqlite"sv};
+inline constexpr std::string_view configSeedDBFileName{"configDB.seed.sqlite"sv};
 inline constexpr std::string_view devBuildMarkerFilename{".incplot-dev-build"sv};
 
 inline constexpr std::string_view fromTerminalSchemeName{"__fromTerminalScheme"sv};
@@ -138,9 +138,8 @@ namespace db {
 constexpr inccol::inc_sRGB decode_color(uint32_t const colInInt);
 constexpr uint32_t         encode_color(inccol::inc_sRGB const &srgb);
 
-bool                                             validate_configDB(sqlpp::sqlite3::connection &db);
-std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection(const std::string_view &appName,
-                                                                      const std::string_view &configFileName);
+bool                                                validate_configDB(sqlpp::sqlite3::connection &db);
+std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection();
 
 bool        validate_SQLite_tableExistence(sqlpp::sqlite3::connection &db, std::string const &tableName);
 // Must provide all colName and all colTypes in the right order

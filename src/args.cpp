@@ -171,7 +171,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
             }
             return not(nonDifferentiated.forceRGB_bool.value());
         };
-        auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
+        auto dbConn = config::db::get_configConnection();
         if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
             if (ap.is_used("-l")) {
                 // Path of explicitly specified theme
@@ -294,7 +294,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
         nonDifferentiated.htmlMode_bool       = (not ap.get<bool>("-j"));
         nonDifferentiated.htmlModeCanvas_bool = ap.get<bool>("-j");
 
-        auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
+        auto dbConn = config::db::get_configConnection();
         if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
             auto exp_fallBack_font = incom::terminal_plot::config::db::get_default_font(dbConn.value());
 
@@ -552,7 +552,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
 std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse::ArgumentParser const &setup_ap) {
     std::expected<std::vector<std::string>, incerr_c> res{};
 
-    auto dbConn = config::db::get_configConnection(config::appName, config::configFileName);
+    auto dbConn = config::db::get_configConnection();
     if (not dbConn.has_value()) { return std::unexpected(incerr_c::make(incplot::config::dbErr::connectionError)); }
 
     if (auto optVal = setup_ap.present<std::string>("-g")) {

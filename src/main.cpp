@@ -16,15 +16,6 @@
 int main(int argc, char *argv[]) {
     using namespace std::literals;
 
-    // auto uri1 = incstd::web::URI("https://kurzlinks.de/german_economy"sv, true);
-
-    auto cure = incstd::filesys::get_curExeDir();
-    // std::cout << cure->replace_filename(std::filesystem::path("fff.txxt")).generic_string() << '\n';
-
-
-    auto cp1 = incplot::config::create_cPath_fromSamePrefix(cure.value(), "build/stage", "generated/auto");
-    std::cout << cp1->generic_string() << '\n';
-
     // Create and populate ArgumentParser
     argparse::ArgumentParser ap(std::string(incplot::config::appName),
                                 std::string(incom::terminal_plot::version::medium), argparse::default_arguments::all);
@@ -35,6 +26,9 @@ int main(int argc, char *argv[]) {
 
     // Set the right character page of the terminal
     incom::standard::console::set_cocp();
+
+
+    auto dbCon = incplot::config::db::get_configConnection();
 
     if (ap.is_subcommand_used(subap_setup)) {
         // std::cout << "Used \n";
@@ -55,8 +49,7 @@ int main(int argc, char *argv[]) {
 
     // Get connection to configDB
     if (ap.get<bool>("-s")) {
-        auto dbCon =
-            incplot::config::db::get_configConnection(incplot::config::appName, incplot::config::configFileName);
+        auto dbCon = incplot::config::db::get_configConnection();
         std::cout << incplot::config::scheme::get_showSchemes(dbCon);
         return 0;
     }

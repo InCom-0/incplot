@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.30...4.2)
 
 project(incplot
     HOMEPAGE_URL "https://github.com/InCom-0/incplot"
-    VERSION "0.5.0"
+    VERSION "1.0.0"
     DESCRIPTION
     "CLI tool for drawing great looking plots in the terminal focused on user ergonomics and simplicity."
     LANGUAGES CXX)
@@ -43,9 +43,6 @@ include(cmake/incom/StageOutputs.cmake)
 include(cmake/incom/MingwRuntimeDeps.cmake)
 
 include(GNUInstallDirs)
-set(CMAKE_INSTALL_DATADIR
-    ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}
-)
 set(incplot_PORTABLE_LAYOUT_INSTALL_DIR "/" CACHE PATH "Dir under prefix to install to in portable layout mode")
 
 if(incplot_STAGE_OUTPUTS)
