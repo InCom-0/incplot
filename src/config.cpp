@@ -528,6 +528,7 @@ std::expected<fs::path, incerr_c> get_userConfigDbPath() {
         // Check if we are running from build directory
         if (fs::exists(exeDir / incplot::config::devBuildMarkerFilename, ec)) {
 
+            auto pt = create_cPath_fromSamePrefix(exeDir, incplot::platform_folders::rel_bindir, incplot::platform_folders::rel_localstatedir);
             // If we are use relative path from executable
         }
         else {

@@ -7,21 +7,22 @@ namespace incom::terminal_plot::platform_folders {
 inline constexpr bool portable_layout = @INCPLOT_PORTABLE_LAYOUT_BOOL@;
 
 // Install prefix and canonical install directories resolved by CMake at configure time.
-inline constexpr std::string_view install_prefix = "@INCPLOT_INSTALL_PREFIX@";
-inline constexpr std::string_view install_bindir = "@INCPLOT_INSTALL_BINDIR@";
-inline constexpr std::string_view install_libdir = "@INCPLOT_INSTALL_LIBDIR@";
-inline constexpr std::string_view install_datadir = "@INCPLOT_INSTALL_DATADIR@";
-inline constexpr std::string_view install_sysconfdir = "@INCPLOT_INSTALL_SYSCONFDIR@";
+inline constexpr std::string_view install_prefix        = "@INCPLOT_INSTALL_PREFIX@";
+inline constexpr std::string_view install_bindir        = "@INCPLOT_INSTALL_BINDIR@";
+inline constexpr std::string_view install_libdir        = "@INCPLOT_INSTALL_LIBDIR@";
+inline constexpr std::string_view install_datadir       = "@INCPLOT_INSTALL_DATADIR@";
+inline constexpr std::string_view install_sysconfdir    = "@INCPLOT_INSTALL_SYSCONFDIR@";
 inline constexpr std::string_view install_localstatedir = "@INCPLOT_INSTALL_LOCALSTATEDIR@";
-inline constexpr std::string_view install_runstatedir = "@INCPLOT_INSTALL_RUNSTATEDIR@";
+inline constexpr std::string_view install_runstatedir   = "@INCPLOT_INSTALL_RUNSTATEDIR@";
 
 // Relative install directories (from prefix). Useful for relocatable layouts.
-inline constexpr std::string_view rel_bindir = "@INCPLOT_REL_BINDIR@";
-inline constexpr std::string_view rel_libdir = "@INCPLOT_REL_LIBDIR@";
-inline constexpr std::string_view rel_datadir = "@INCPLOT_REL_DATADIR@";
-inline constexpr std::string_view rel_sysconfdir = "@INCPLOT_REL_SYSCONFDIR@";
+inline constexpr std::string_view rel_bindir        = "@INCPLOT_REL_BINDIR@";
+inline constexpr std::string_view rel_libdir        = "@INCPLOT_REL_LIBDIR@";
+inline constexpr std::string_view rel_datarootdir   = "@INCPLOT_REL_DATAROOTDIR@";
+inline constexpr std::string_view rel_datadir       = "@INCPLOT_REL_DATADIR@";
+inline constexpr std::string_view rel_sysconfdir    = "@INCPLOT_REL_SYSCONFDIR@";
 inline constexpr std::string_view rel_localstatedir = "@INCPLOT_REL_LOCALSTATEDIR@";
-inline constexpr std::string_view rel_runstatedir = "@INCPLOT_REL_RUNSTATEDIR@";
+inline constexpr std::string_view rel_runstatedir   = "@INCPLOT_REL_RUNSTATEDIR@";
 
 
 } // namespace incom::terminal_plot::platform_folders
