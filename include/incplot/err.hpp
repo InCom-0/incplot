@@ -47,6 +47,7 @@ enum class dbErr : size_t {
     impossibleNumberOfRecords = 1,
     impossibleValue,
     notFound,
+    seedNotFound,
     connectionError,
     dbAppearsCorrupted,
     missingData,

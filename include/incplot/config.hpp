@@ -63,6 +63,20 @@ bool                                     check_devBuildMarkerExists();
 std::expected<fs::path, std::error_code> create_cPath_fromSamePrefix(fs::path srcPath, std::string_view srcPath_postfix,
                                                                      std::string_view resPath_postFix);
 
+// Obtains a path to some resource installed with the program
+// Args:
+// 1) Install dir (corresponds to eg. CMAKE_INSTALL_DATADIR) ... this is relative to 'prefix' (eg. CMAKE_INSTALL_PREFIX)
+// 2) Absolute install dir (corresponds to eg. CMAKE_INSTALL_FULL_DATADIR)
+// 3) Relative path from the install dir
+// 4) Possibility to insert 'project name' into the search (before 3) )
+// 5) Relative path from executable dir  to 'dev marker' that gets checked
+//      a. If it exists, we are in 'dev mode' (project not installed, all resources located in build staging area)
+//      b. If it does not exist, it is assumed we are in 'installed mode'
+std::expected<fs::path, incerr_c> get_pth2InstalledRes(
+    std::string_view relInstallDirPth_toPrefix, std::string_view absInstallDirPth_whenInstalled,
+    std::string_view relPth_toTarget, std::optional<std::string_view> toInsert_projNameFolder = std::nullopt,
+    std::optional<std::string_view> relPth_toDevMarker = std::nullopt);
+
 template <typename FUNC>
 std::expected<std::vector<std::vector<std::byte>>, incerr_c> extract_fromArchive(std::span<const std::byte> rawMemory,
                                                                                  FUNC const &filter_func) {

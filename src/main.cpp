@@ -16,6 +16,11 @@
 int main(int argc, char *argv[]) {
     using namespace std::literals;
 
+
+    auto cnf = incplot::config::get_pth2InstalledRes(
+        incplot::platform_folders::rel_datadir, incplot::platform_folders::install_datadir,
+        incplot::config::configDBFileName, "incplot"sv, incplot::config::devBuildMarkerFilename);
+
     // Create and populate ArgumentParser
     argparse::ArgumentParser ap(std::string(incplot::config::appName),
                                 std::string(incom::terminal_plot::version::medium), argparse::default_arguments::all);
