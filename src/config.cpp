@@ -14,6 +14,11 @@
 #include <system_error>
 #include <utility>
 
+#if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 
 #include <auto/platform_folder.hpp>
 #include <indicators/color.hpp>
@@ -143,10 +148,10 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
         return true;
     };
 
-#if defined(_WIN32)
     class ScopedStdoutToConsole {
     public:
         ScopedStdoutToConsole() {
+#if defined(_WIN32)
             oldOut_ = GetStdHandle(STD_OUTPUT_HANDLE);
             conOut_ = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                                   OPEN_EXISTING, 0, nullptr);
@@ -155,21 +160,47 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
                 // Make indicators' GetStdHandle(STD_OUTPUT_HANDLE) see a console
                 switched_ = SetStdHandle(STD_OUTPUT_HANDLE, conOut_) != 0;
             }
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+            oldOut_ = ::dup(STDOUT_FILENO);
+            if (oldOut_ == -1) { return; }
+
+            conOut_ = ::open("/dev/tty", O_WRONLY);
+            if (conOut_ == -1) { return; }
+
+            switched_ = (::dup2(conOut_, STDOUT_FILENO) != -1);
+#else
+        switched_ = false;
+#endif
         }
 
         ~ScopedStdoutToConsole() {
+#if defined(_WIN32)
             if (switched_ && oldOut_ && oldOut_ != INVALID_HANDLE_VALUE) { SetStdHandle(STD_OUTPUT_HANDLE, oldOut_); }
             if (conOut_ != INVALID_HANDLE_VALUE) { CloseHandle(conOut_); }
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+            if (switched_ && oldOut_ != -1) { (void)::dup2(oldOut_, STDOUT_FILENO); }
+            if (conOut_ != -1) { (void)::close(conOut_); }
+            if (oldOut_ != -1) { (void)::close(oldOut_); }
+#else
+        // No-op on unsupported platforms.
+#endif
         }
 
         [[nodiscard]] bool is_active() const { return switched_; }
 
     private:
+#if defined(_WIN32)
         HANDLE oldOut_{INVALID_HANDLE_VALUE};
         HANDLE conOut_{INVALID_HANDLE_VALUE};
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+        int oldOut_{-1};
+        int conOut_{-1};
+#else
+    int oldOut_{-1};
+    int conOut_{-1};
+#endif
         bool   switched_{false};
     };
-#endif
 
     using namespace indicators;
 
@@ -204,13 +235,11 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
     std::vector<std::byte> res{};
     if (auto resLength = session.GetDownloadFileLength(); resLength > 0) {
 
-#if defined(_WIN32)
         std::optional<ScopedStdoutToConsole> stdoutHack;
         if (indicator) {
             stdoutHack.emplace();
             indicator = stdoutHack->is_active();
         }
-#endif
         if (indicator) { session.SetProgressCallback(cpr::ProgressCallback{cb_progress, 0}); }
         res.reserve(static_cast<size_t>(resLength));
         if (indicator) { show_console_cursor(false); }
