@@ -14,7 +14,7 @@ option(CPM_USE_LOCAL_PACKAGES "Use local (usually system installed) packages for
 option(CPM_LOCAL_PACKAGES_ONLY "Forbid the build system from downloading missing dependencies." OFF)
 
 option(incplot_STAGE_OUTPUTS "Stage build output artifacts into proper directory structure" ON)
-option(incplot_PORTABLE_LAYOUT "Use flat (Windows-like / portable) install layout" OFF)
+option(incplot_PORTABLE_LAYOUT "Use flat (Windows-like / portable) install layout" ON)
 
 option(incplot_CPR_USE_SYSTEM_CURL "Incplot transitively needs libcurl. Set to ON if you have and want to use system installed one" OFF)
 

@@ -511,38 +511,6 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB_T(sqlpp:
     return std::nullopt;
 }
 
-std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_rw(fs::path const &pathToDb) {
-    auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
-    connConfig->path_to_database = pathToDb.generic_string();
-    connConfig->flags            = SQLITE_OPEN_READWRITE;
-
-    sqlpp::sqlite3::connection dbOnDisk;
-    try {
-        dbOnDisk.connect_using(connConfig); // This can throw an exception.
-    }
-    catch (const sqlpp::sqlite3::exception &e) {
-        return std::unexpected(incerr_c::make(dbErr::connectionError));
-    }
-    return dbOnDisk;
-}
-
-std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_ro(fs::path const &pathToDb) {
-    auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
-    connConfig->path_to_database = pathToDb.generic_string();
-    connConfig->flags            = SQLITE_OPEN_READONLY;
-
-    sqlpp::sqlite3::connection dbOnDisk;
-    try {
-        dbOnDisk.connect_using(connConfig); // This can throw an exception.
-    }
-    catch (const sqlpp::sqlite3::exception &) {
-        return std::unexpected(incerr_c::make(dbErr::connectionError));
-    }
-    return dbOnDisk;
-}
-} // namespace
-
-namespace detail {
 
 std::expected<std::vector<std::array<std::string, 4>>, incerr_c> get_schemaRows(sqlpp::sqlite3::connection &db) {
     std::vector<std::array<std::string, 4>> rows;
@@ -589,16 +557,36 @@ std::expected<int, incerr_c> copy_seedToUserDb(fs::path const &seedPath, fs::pat
     return 0;
 }
 
-} // namespace detail
+} // namespace
 
-constexpr inline inccol::inc_sRGB decode_color(uint32_t const colInInt) {
-    // Consider what to do when the uint32_t is not in the expected range for colors
-    // Even if it isn't it is not catastrophic
-    return inccol::inc_sRGB((colInInt >> 16) & 0xFF, (colInInt >> 8) & 0xFF, colInInt & 0xFF);
+std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_rw(fs::path const &pathToDb) {
+    auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
+    connConfig->path_to_database = pathToDb.generic_string();
+    connConfig->flags            = SQLITE_OPEN_READWRITE;
+
+    sqlpp::sqlite3::connection dbOnDisk;
+    try {
+        dbOnDisk.connect_using(connConfig); // This can throw an exception.
+    }
+    catch (const sqlpp::sqlite3::exception &e) {
+        return std::unexpected(incerr_c::make(dbErr::connectionError));
+    }
+    return dbOnDisk;
 }
-constexpr uint32_t encode_color(inccol::inc_sRGB const &srgb) {
-    return (static_cast<uint32_t>(srgb.r) << 16) | (static_cast<uint32_t>(srgb.g) << 8) |
-           (static_cast<uint32_t>(srgb.b));
+
+std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_ro(fs::path const &pathToDb) {
+    auto connConfig              = std::make_shared<sqlpp::sqlite3::connection_config>();
+    connConfig->path_to_database = pathToDb.generic_string();
+    connConfig->flags            = SQLITE_OPEN_READONLY;
+
+    sqlpp::sqlite3::connection dbOnDisk;
+    try {
+        dbOnDisk.connect_using(connConfig); // This can throw an exception.
+    }
+    catch (const sqlpp::sqlite3::exception &) {
+        return std::unexpected(incerr_c::make(dbErr::connectionError));
+    }
+    return dbOnDisk;
 }
 
 std::expected<fs::path, incerr_c> getPath_configDB() {
@@ -617,42 +605,16 @@ std::expected<fs::path, incerr_c> getPath_configSeedDB() {
 }
 
 std::expected<bool, incerr_c> check_is_configDBCurrent(fs::path const &configDB, fs::path const &seedConfigDB) {
-    namespace fs = std::filesystem;
-
     auto userDb_exp = create_dbConnection_ro(configDB);
     if (not userDb_exp.has_value()) { return std::unexpected(userDb_exp.error()); }
     auto seedDb_exp = create_dbConnection_ro(seedConfigDB);
     if (not seedDb_exp.has_value()) { return std::unexpected(seedDb_exp.error()); }
 
-    auto schemaMatch_exp = detail::schema_matches(userDb_exp.value(), seedDb_exp.value());
+    auto schemaMatch_exp = schema_matches(userDb_exp.value(), seedDb_exp.value());
     if (not schemaMatch_exp.has_value()) { return std::unexpected(schemaMatch_exp.error()); }
     else if (not schemaMatch_exp.value()) { return false; }
 
     return true;
-}
-
-std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection() {
-
-    auto configDBpth = getPath_configDB();
-    if (not configDBpth.has_value()) { return std::unexpected(std::move(configDBpth.error())); }
-
-    auto configSeedDBpth = getPath_configSeedDB();
-    if (not configSeedDBpth.has_value()) { return std::unexpected(std::move(configSeedDBpth.error())); }
-
-    if (not fs::exists(configSeedDBpth.value())) { return std::unexpected(incerr_c::make(dbErr::notFound)); }
-    if (fs::exists(configDBpth.value())) {
-        auto checkRes = check_is_configDBCurrent(configDBpth.value(), configSeedDBpth.value());
-        if (not checkRes.has_value()) { return std::unexpected(std::move(checkRes.error())); }
-        if (checkRes.value() == true) { return create_dbConnection_rw(configDBpth.value()); }
-    }
-
-    // We overwrite the configDB with configSeedDB
-    if (auto copyRes = detail::copy_seedToUserDb(configSeedDBpth.value(), configDBpth.value()); not copyRes) {
-        return std::unexpected(std::move(copyRes.error()));
-    }
-
-    // ... and we return connection to it
-    return create_dbConnection_rw(configDBpth.value());
 }
 
 bool validate_configDB(sqlpp::sqlite3::connection &db) {
@@ -660,6 +622,27 @@ bool validate_configDB(sqlpp::sqlite3::connection &db) {
     if (not validate_SQLite_tableExistence(db, "scheme_palette")) { return false; }
     if (not validate_SQLite_tableExistence(db, "default_scheme")) { return false; }
     return true;
+}
+
+std::expected<fs::path, incerr_c> validate_configDBversion(fs::path const &configDBpth) {
+
+    auto configSeedDBpth = getPath_configSeedDB();
+    if (not configSeedDBpth.has_value()) { return std::unexpected(std::move(configSeedDBpth.error())); }
+
+    if (not fs::exists(configSeedDBpth.value())) { return std::unexpected(incerr_c::make(dbErr::notFound)); }
+    if (fs::exists(configDBpth)) {
+        auto checkRes = check_is_configDBCurrent(configDBpth, configSeedDBpth.value());
+        if (not checkRes.has_value()) { return std::unexpected(std::move(checkRes.error())); }
+        if (checkRes.value() == true) { return configDBpth; }
+    }
+
+    // We overwrite the configDB with configSeedDB
+    if (auto copyRes = copy_seedToUserDb(configSeedDBpth.value(), configDBpth); not copyRes) {
+        return std::unexpected(std::move(copyRes.error()));
+    }
+
+    // ... and we return connection to it
+    return configDBpth;
 }
 
 
@@ -698,6 +681,15 @@ bool validate_SQLite_tableColNamesTypes(sqlpp::sqlite3::connection &db, std::str
     return true;
 }
 
+constexpr inccol::inc_sRGB decode_color(uint32_t const colInInt) {
+    // Consider what to do when the uint32_t is not in the expected range for colors
+    // Even if it isn't it is not catastrophic
+    return inccol::inc_sRGB((colInInt >> 16) & 0xFF, (colInInt >> 8) & 0xFF, colInInt & 0xFF);
+}
+constexpr uint32_t encode_color(inccol::inc_sRGB const &srgb) {
+    return (static_cast<uint32_t>(srgb.r) << 16) | (static_cast<uint32_t>(srgb.g) << 8) |
+           (static_cast<uint32_t>(srgb.b));
+}
 
 std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, size_t const id) {
     return get_scheme<scheme256>(dbConn, id);

@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <print>
 #include <string_view>
 
@@ -17,6 +18,7 @@
 
 int main(int argc, char *argv[]) {
     using namespace std::literals;
+    namespace conf = incplot::config;
 
 
     auto cnf = incplot::config::get_pth2InstalledRes(
@@ -34,8 +36,10 @@ int main(int argc, char *argv[]) {
     // Set the right character page of the terminal
     incom::standard::console::set_cocp();
 
-    // Get connection to configDB (also performs checks on he DB)
-    auto dbCon = incplot::config::db::get_configConnection();
+    // Get connection to configDB (also performs checks on the DB)
+    auto dbCon = conf::db::getPath_configDB()
+                     .and_then(conf::db::validate_configDBversion)
+                     .and_then(conf::db::create_dbConnection_rw);
 
     if (ap.is_subcommand_used(subap_setup)) {
         if (auto setupCommand_res = incplot::cl_args::process_setupCommand(subap_setup, dbCon)) {
@@ -43,7 +47,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         else {
-            std::print("{}", incplot::to_string(setupCommand_res.error()));
+            std::print(stderr, "{}", incplot::to_string(setupCommand_res.error()));
             std::exit(1);
         }
     }
@@ -53,20 +57,17 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // TODO: Need to do some dance if stdout is not in terminal so that we can output some stuff into the console in
-    // some cases
-
     // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
     auto dpctrs = incplot::cl_args::get_dpCtorStructs(ap, dbCon);
     if (not dpctrs.has_value()) {
-        std::print("{}", incplot::to_string(dpctrs.error()));
+        std::print(stderr, "{}", incplot::to_string(dpctrs.error()));
         std::exit(1);
     }
 
 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
-        std::print("{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",
+        std::print(stderr, "{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",
                    "This is usually done using the '|' operator", "Pass '-h' to obtain more detailed help",
                    "... exiting");
         std::exit(1);
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]) {
         // Then the user needs to specify width
         if (not ap.present<int>("-w").has_value()) {
             std::print(
-                "{}\n{}\n{}\n", "Incplot's output was not connected to console screen buffer.",
+                stderr, "{}\n{}\n{}\n", "Incplot's output was not connected to console screen buffer.",
                 "Incplot requires '-w' command line argument for this usecase, but it was not given by the user.",
                 " ... exiting");
             std::exit(1);

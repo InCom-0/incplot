@@ -149,11 +149,15 @@ std::string get_showSchemes(std::expected<sqlpp::sqlite3::connection, incerr_c> 
 
 namespace db {
 
-constexpr inccol::inc_sRGB decode_color(uint32_t const colInInt);
-constexpr uint32_t         encode_color(inccol::inc_sRGB const &srgb);
+std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_rw(fs::path const &pathToDb);
+std::expected<sqlpp::sqlite3::connection, incerr_c> create_dbConnection_ro(fs::path const &pathToDb);
 
-bool                                                validate_configDB(sqlpp::sqlite3::connection &db);
-std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection();
+std::expected<fs::path, incerr_c> getPath_configDB();
+std::expected<fs::path, incerr_c> getPath_configSeedDB();
+std::expected<bool, incerr_c>     check_is_configDBCurrent(fs::path const &configDB, fs::path const &seedConfigDB);
+
+bool                              validate_configDB(sqlpp::sqlite3::connection &db);
+std::expected<fs::path, incerr_c> validate_configDBversion(fs::path const &configDBpth);
 
 bool        validate_SQLite_tableExistence(sqlpp::sqlite3::connection &db, std::string const &tableName);
 // Must provide all colName and all colTypes in the right order
@@ -162,6 +166,10 @@ bool        validate_SQLite_tableExistence(sqlpp::sqlite3::connection &db, std::
 inline bool validate_SQLite_tableColNamesTypes(sqlpp::sqlite3::connection &db, std::string const &tableName,
                                                std::vector<std::string_view> const &colNames,
                                                std::vector<std::string_view> const &colTypes);
+
+
+constexpr inccol::inc_sRGB decode_color(uint32_t const colInInt);
+constexpr uint32_t         encode_color(inccol::inc_sRGB const &srgb);
 
 std::expected<scheme256, dbErr> get_scheme256(sqlpp::sqlite3::connection &dbConn, size_t const id);
 std::expected<scheme16, dbErr>  get_scheme16(sqlpp::sqlite3::connection &dbConn, size_t const id);
