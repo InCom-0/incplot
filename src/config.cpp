@@ -54,9 +54,11 @@ std::expected<fs::path, std::error_code> create_cPath_fromSamePrefix(fs::path sr
         fs::path       prefix = srcPath;
 
         if (! fp_pf.empty() && fp_pf != ".") {
-            for (const auto &pthPart : std::ranges::reverse_view(fp_pf)) {
+            // TODO: Possibly figure out a better way to do this, this seems like a very hacky solution
+            for (auto fakeRbegin = fp_pf.end(); fakeRbegin != fp_pf.begin();) {
+                --fakeRbegin;
                 auto ar = prefix.filename().generic_string();
-                if (pthPart == prefix.filename()) {}
+                if (*fakeRbegin == prefix.filename()) {}
                 else { return std::unexpected(std::make_error_code(std::errc::invalid_argument)); }
 
                 if (prefix.has_parent_path()) { prefix = prefix.parent_path(); }
@@ -550,7 +552,7 @@ std::expected<bool, incerr_c> schema_matches(sqlpp::sqlite3::connection &lhs, sq
 std::expected<int, incerr_c> copy_seedToUserDb(fs::path const &seedPath, fs::path const &targetPath) {
     std::error_code ec;
     fs::create_directories(targetPath.parent_path(), ec);
-    if (ec) { std::unexpected(incerr_c::make(dbErr::unknownError)); }
+    if (ec) { return std::unexpected(incerr_c::make(dbErr::unknownError)); }
 
     fs::copy_file(seedPath, targetPath, fs::copy_options::overwrite_existing, ec);
     if (ec) { return std::unexpected(incerr_c::make(dbErr::unknownError)); }

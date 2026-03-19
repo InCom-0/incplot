@@ -36,9 +36,7 @@ inline constexpr std::string_view appName{"incplot"sv};
 inline constexpr std::string_view configDBFileName{"configDB.sqlite"sv};
 inline constexpr std::string_view configSeedDBFileName{"configDB.seed.sqlite"sv};
 inline constexpr std::string_view devBuildMarkerFilename{".incplot-dev-build"sv};
-
 inline constexpr std::string_view fromTerminalSchemeName{"__fromTerminalScheme"sv};
-
 
 inline constexpr size_t html_defaultFontSize = 16uz;
 inline constexpr size_t html_minFontSize     = 1uz;
