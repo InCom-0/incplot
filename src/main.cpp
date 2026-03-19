@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         std::exit(1);
     }
 
-
+ 
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
         std::print(stderr, "{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",

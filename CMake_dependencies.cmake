@@ -76,6 +76,7 @@ endif()
 CPMAddPackage(
     URL https://github.com/libcpr/cpr/archive/refs/tags/1.14.2.tar.gz
     URL_HASH SHA256=b9b529b47083bfe80bba855ca5308d12d767ae7c7b629aef5ef018c4343cf62b
+    EXCLUDE_FROM_ALL TRUE
     OPTIONS
     "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}"
     "BUILD_EXAMPLES OFF"
