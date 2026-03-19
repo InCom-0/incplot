@@ -161,6 +161,8 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
                 switched_ = SetStdHandle(STD_OUTPUT_HANDLE, conOut_) != 0;
             }
 #elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+            // Keep any prior stdout bytes on the original destination before redirecting.
+            (void)std::fflush(stdout);
             oldOut_ = ::dup(STDOUT_FILENO);
             if (oldOut_ == -1) { return; }
 
@@ -178,6 +180,8 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
             if (switched_ && oldOut_ && oldOut_ != INVALID_HANDLE_VALUE) { SetStdHandle(STD_OUTPUT_HANDLE, oldOut_); }
             if (conOut_ != INVALID_HANDLE_VALUE) { CloseHandle(conOut_); }
 #elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+            // Ensure cursor control escape sequences are flushed to tty before restoring stdout.
+            (void)std::fflush(stdout);
             if (switched_ && oldOut_ != -1) { (void)::dup2(oldOut_, STDOUT_FILENO); }
             if (conOut_ != -1) { (void)::close(conOut_); }
             if (oldOut_ != -1) { (void)::close(oldOut_); }
