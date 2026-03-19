@@ -1,7 +1,9 @@
 #include <print>
 #include <string_view>
 
+#include <auto/platform_folder.hpp>
 #include <auto/versiondef.hpp>
+
 
 #include <incfontdisc/incfontdisc.hpp>
 #include <incplot-lib.hpp>
@@ -32,29 +34,21 @@ int main(int argc, char *argv[]) {
     // Set the right character page of the terminal
     incom::standard::console::set_cocp();
 
-
+    // Get connection to configDB (also performs checks on he DB)
     auto dbCon = incplot::config::db::get_configConnection();
 
     if (ap.is_subcommand_used(subap_setup)) {
-        // std::cout << "Used \n";
-
-        if (auto setupCommand_res = incplot::cl_args::process_setupCommand(subap_setup)) {
+        if (auto setupCommand_res = incplot::cl_args::process_setupCommand(subap_setup, dbCon)) {
             for (auto const &oneLine : setupCommand_res.value()) { std::cout << oneLine << '\n'; }
             return 0;
         }
-
         else {
-            std::print("{}\n\n{}{}\n{}{}\n{}{}\n", "Error occurred during evaluation of command line arguments.",
-                       "The error category is: "sv, setupCommand_res.error().category().name(), "The error code is: "sv,
-                       setupCommand_res.error().message(), "Error comment: "sv,
-                       setupCommand_res.error().get_customMessage());
+            std::print("{}", incplot::to_string(setupCommand_res.error()));
             std::exit(1);
         }
     }
 
-    // Get connection to configDB
     if (ap.get<bool>("-s")) {
-        auto dbCon = incplot::config::db::get_configConnection();
         std::cout << incplot::config::scheme::get_showSchemes(dbCon);
         return 0;
     }
@@ -63,11 +57,9 @@ int main(int argc, char *argv[]) {
     // some cases
 
     // We create the dpCtors (ie. create the instructions from what was parsed by ArgumentParser)
-    auto dpctrs = incplot::cl_args::get_dpCtorStructs(ap);
+    auto dpctrs = incplot::cl_args::get_dpCtorStructs(ap, dbCon);
     if (not dpctrs.has_value()) {
-        std::print("{}\n\n{}{}\n{}{}\n{}{}\n\n{}\n", "Error occurred during evaluation of command line arguments.",
-                   "The error category is: "sv, dpctrs.error().category().name(), "The error code is: "sv,
-                   dpctrs.error().message(), "Error comment: "sv, dpctrs.error().get_customMessage(), "... exiting"sv);
+        std::print("{}", incplot::to_string(dpctrs.error()));
         std::exit(1);
     }
 

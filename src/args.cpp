@@ -129,7 +129,8 @@ std::optional<bool> prompt_YesNo(std::string_view question, bool defaultNo = tru
 }
 } // namespace
 
-std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStructs(argparse::ArgumentParser const &ap) {
+std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStructs(
+    argparse::ArgumentParser const &ap, std::expected<sqlpp::sqlite3::connection, incerr_c> &dbCon) {
     using enum incplot::Unexp_AP;
 
     DesiredPlot::DP_CtorStruct nonDifferentiated;
@@ -171,12 +172,11 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
             }
             return not(nonDifferentiated.forceRGB_bool.value());
         };
-        auto dbConn = config::db::get_configConnection();
-        if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
+        if (dbCon.has_value() && config::db::validate_configDB(dbCon.value())) {
             if (ap.is_used("-l")) {
                 // Path of explicitly specified theme
                 auto schm_name = ap.get<std::string>("-l");
-                auto schmExp   = config::db::get_scheme16(dbConn.value(), schm_name);
+                auto schmExp   = config::db::get_scheme16(dbCon.value(), schm_name);
 
                 if (not schmExp.has_value()) {
                     if (schmExp.error() == config::dbErr::notFound) {
@@ -199,7 +199,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
             }
             else {
                 // Path of 'pure default'
-                auto lus_exp = config::db::get_defaultScheme16(dbConn.value());
+                auto lus_exp = config::db::get_defaultScheme16(dbCon.value());
                 if (lus_exp) {
                     auto validated = config::validate_terminalPaletteSameness(3, lus_exp.value().palette);
                     if (not validated.has_value()) {
@@ -224,7 +224,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                             if (setSchemeFromTermOrDefault()) {
                                 nonDifferentiated.colScheme.name = config::fromTerminalSchemeName;
                                 auto upsertedSchm =
-                                    config::db::upsert_scheme16(dbConn.value(), nonDifferentiated.colScheme);
+                                    config::db::upsert_scheme16(dbCon.value(), nonDifferentiated.colScheme);
                             }
                             else {
                                 nonDifferentiated.additionalInfo.push_back(std::string(
@@ -237,10 +237,10 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                 else if (lus_exp.error() == config::dbErr::notFound) {
                     if (setSchemeFromTermOrDefault()) {
                         nonDifferentiated.colScheme.name = "__fromTerminalScheme";
-                        auto upsertedSchm = config::db::upsert_scheme16(dbConn.value(), nonDifferentiated.colScheme);
+                        auto upsertedSchm = config::db::upsert_scheme16(dbCon.value(), nonDifferentiated.colScheme);
 
                         if (upsertedSchm) {
-                            auto res = config::db::update_default(dbConn.value(), upsertedSchm.value());
+                            auto res = config::db::update_default(dbCon.value(), upsertedSchm.value());
                         }
                     }
                     else {
@@ -294,9 +294,8 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
         nonDifferentiated.htmlMode_bool       = (not ap.get<bool>("-j"));
         nonDifferentiated.htmlModeCanvas_bool = ap.get<bool>("-j");
 
-        auto dbConn = config::db::get_configConnection();
-        if (dbConn.has_value() && config::db::validate_configDB(dbConn.value())) {
-            auto exp_fallBack_font = incom::terminal_plot::config::db::get_default_font(dbConn.value());
+        if (dbCon.has_value() && config::db::validate_configDB(dbCon.value())) {
+            auto exp_fallBack_font = incom::terminal_plot::config::db::get_default_font(dbCon.value());
 
             // Happy path
             if (exp_fallBack_font.has_value()) {
@@ -334,7 +333,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                             if (auto sanitized = sanitize_fontOTS(extracted.value().front())) {
                                 // Put the fallback into configDB
                                 if (auto dfExp = incom::terminal_plot::config::db::set_default_font(
-                                        dbConn.value(), sanitized.value())) {
+                                        dbCon.value(), sanitized.value())) {
                                     // Only if that succeeds do we set that font as 'last resort'
                                     nonDifferentiated.htmlMode_ttfs_lastResort.push_back(extracted.value().front());
                                     // std::cout << "LastResort set from download\n";
@@ -549,11 +548,11 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
     return std::vector<DesiredPlot::DP_CtorStruct>{DesiredPlot::DP_CtorStruct{.plot_type_name = std::nullopt}};
 }
 
-std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse::ArgumentParser const &setup_ap) {
+std::expected<std::vector<std::string>, incerr_c> process_setupCommand(
+    argparse::ArgumentParser const &setup_ap, std::expected<sqlpp::sqlite3::connection, incerr_c> &dbCon) {
     std::expected<std::vector<std::string>, incerr_c> res{};
 
-    auto dbConn = config::db::get_configConnection();
-    if (not dbConn.has_value()) { return std::unexpected(incerr_c::make(incplot::config::dbErr::connectionError)); }
+    if (not dbCon.has_value()) { return std::unexpected(incerr_c::make(incplot::config::dbErr::connectionError)); }
 
     if (auto optVal = setup_ap.present<std::string>("-g")) {
         auto const &schmNameRef = optVal.value();
@@ -575,7 +574,7 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
         }
         schm_opt->name = schmNameRef;
 
-        if (auto maybe_alreadyExists = incplot::config::db::check_schemeExistsInDB(dbConn.value(), schm_opt.value())) {
+        if (auto maybe_alreadyExists = incplot::config::db::check_schemeExistsInDB(dbCon.value(), schm_opt.value())) {
             // If the optional inside the expected has value
             if (maybe_alreadyExists.value()) {
                 res->push_back(std::format("Identical scheme already exists.\nScheme name: {}\n\n",
@@ -583,7 +582,7 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
             }
             // If the optional is empty
             else {
-                auto upsertRes = incom::terminal_plot::config::db::upsert_scheme16(dbConn.value(), schm_opt.value());
+                auto upsertRes = incom::terminal_plot::config::db::upsert_scheme16(dbCon.value(), schm_opt.value());
 
                 if (upsertRes.has_value()) {
                     res->push_back(std::format("Scheme inserted\nNew scheme ID: {}\nNew scheme name: {}",
@@ -618,7 +617,7 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
 
                     if (auto sanitized = download_usingCPR(uri).and_then(sanitize_fontOTS)) {
                         //  Input the found font into the database
-                        if (auto dfExp = config::db::set_default_font(dbConn.value(), sanitized.value())) {}
+                        if (auto dfExp = config::db::set_default_font(dbCon.value(), sanitized.value())) {}
                         else { return std::unexpected(incerr_c::make(dfExp.error())); }
                     }
                     else { return std::unexpected(sanitized.error()); }
@@ -632,7 +631,7 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
                             if (auto res = incstd::filesys::get_file_bytes(pthToFont.generic_string())) {
                                 if (auto sanitized = sanitize_fontOTS(res.value())) {
                                     //  Input the found font into the database
-                                    if (auto dfExp = config::db::set_default_font(dbConn.value(), sanitized.value())) {}
+                                    if (auto dfExp = config::db::set_default_font(dbCon.value(), sanitized.value())) {}
                                     else { return std::unexpected(incerr_c::make(dfExp.error())); }
                                 }
                                 else { return std::unexpected(sanitized.error()); }
@@ -682,7 +681,7 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
                             if (fontOK) {
                                 if (auto fnt = incfontdisc::load_font_data(matched->font.id)) {
                                     //  Input the found font into the database
-                                    if (auto dfExp = config::db::set_default_font(dbConn.value(), fnt.value())) {
+                                    if (auto dfExp = config::db::set_default_font(dbCon.value(), fnt.value())) {
                                         res->push_back(std::format(
                                             "{}{} : {} {}", "Font: "sv, matched->font.family, matched->font.style,
                                             "was stored in the database as a fallback font for future use"sv));
@@ -707,7 +706,7 @@ std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse:
         }
         else {
             // This is 'removing' the default font from the database (to allow redownloading the default one)
-            if (auto remExp = config::db::remove_default_font(dbConn.value())) {
+            if (auto remExp = config::db::remove_default_font(dbCon.value())) {
                 res->push_back(std::format("Fallback font was removed.\nThis allows re-downloading of the default "
                                            "fallback when using '-o' or '-j' arguments."));
             }

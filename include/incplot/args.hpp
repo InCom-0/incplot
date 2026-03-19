@@ -6,6 +6,7 @@
 #include <cpr/cpr.h>
 #include <opentype-sanitiser.h>
 #include <ots-memory-stream.h>
+#include <sqlpp23/sqlite3/sqlite3.h>
 
 #include <incplot-lib/desired_plot.hpp>
 #include <incplot-lib/err.hpp>
@@ -19,10 +20,12 @@ namespace terminal_plot {
 namespace cl_args {
 namespace incplot = incom::terminal_plot;
 
-std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStructs(argparse::ArgumentParser const &ap);
+std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStructs(
+    argparse::ArgumentParser const &ap, std::expected<sqlpp::sqlite3::connection, incerr_c> &dbCon);
 std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStructs();
 
-std::expected<std::vector<std::string>, incerr_c> process_setupCommand(argparse::ArgumentParser const &setup_ap);
+std::expected<std::vector<std::string>, incerr_c> process_setupCommand(
+    argparse::ArgumentParser const &setup_ap, std::expected<sqlpp::sqlite3::connection, incerr_c> &dbCon);
 
 void finishAp(argparse::ArgumentParser &out_ap, argparse::ArgumentParser &subap_setup);
 void populateAp(argparse::ArgumentParser &out_ap, int argc, const char *const *argv);

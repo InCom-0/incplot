@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cpr/error.h>
+#include <format>
 #include <incerr.hpp>
 #include <incplot-lib/config.hpp>
 #include <incstd/incstd_console.hpp>
@@ -55,6 +56,13 @@ enum class dbErr : size_t {
 };
 
 } // namespace config
+
+inline std::string to_string(incerr_c const &error) {
+    return std::format("{}\n\n{}{}\n{}{}\n{}{}\n", "Error occurred during evaluation of command line arguments.",
+                       "The error category is: "sv, error.category().name(), "The error code is: "sv, error.message(),
+                       "Error comment: "sv, error.get_customMessage());
+}
+
 
 } // namespace terminal_plot
 } // namespace incom

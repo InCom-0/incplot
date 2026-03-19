@@ -602,7 +602,7 @@ constexpr uint32_t encode_color(inccol::inc_sRGB const &srgb) {
 }
 
 std::expected<fs::path, incerr_c> getPath_configDB() {
-    auto const localDataDir = incstd::filesys::locations::data_dir()
+    auto const localDataDir = incstd::filesys::locations::data_dir(false)
                                   .transform([](auto const &pth) { return pth.generic_string(); })
                                   .value_or("../");
 
@@ -618,10 +618,6 @@ std::expected<fs::path, incerr_c> getPath_configSeedDB() {
 
 std::expected<bool, incerr_c> check_is_configDBCurrent(fs::path const &configDB, fs::path const &seedConfigDB) {
     namespace fs = std::filesystem;
-
-    std::error_code ec;
-    if (not fs::exists(configDB, ec)) { return std::unexpected(incerr_c::make(dbErr::notFound)); }
-    if (not fs::exists(seedConfigDB, ec)) { return std::unexpected(incerr_c::make(dbErr::seedNotFound)); }
 
     auto userDb_exp = create_dbConnection_ro(configDB);
     if (not userDb_exp.has_value()) { return std::unexpected(userDb_exp.error()); }
@@ -643,15 +639,19 @@ std::expected<sqlpp::sqlite3::connection, incerr_c> get_configConnection() {
     auto configSeedDBpth = getPath_configSeedDB();
     if (not configSeedDBpth.has_value()) { return std::unexpected(std::move(configSeedDBpth.error())); }
 
-    auto checkRes = check_is_configDBCurrent(configDBpth.value(), configSeedDBpth.value());
-    if (not checkRes.has_value()) { return std::unexpected(std::move(checkRes.error())); }
-
-    if (not checkRes.value()) {
-        if (auto copyRes = detail::copy_seedToUserDb(configSeedDBpth.value(), configDBpth.value()); not copyRes) {
-            return std::unexpected(std::move(copyRes.error()));
-        }
+    if (not fs::exists(configSeedDBpth.value())) { return std::unexpected(incerr_c::make(dbErr::notFound)); }
+    if (fs::exists(configDBpth.value())) {
+        auto checkRes = check_is_configDBCurrent(configDBpth.value(), configSeedDBpth.value());
+        if (not checkRes.has_value()) { return std::unexpected(std::move(checkRes.error())); }
+        if (checkRes.value() == true) { return create_dbConnection_rw(configDBpth.value()); }
     }
 
+    // We overwrite the configDB with configSeedDB
+    if (auto copyRes = detail::copy_seedToUserDb(configSeedDBpth.value(), configDBpth.value()); not copyRes) {
+        return std::unexpected(std::move(copyRes.error()));
+    }
+
+    // ... and we return connection to it
     return create_dbConnection_rw(configDBpth.value());
 }
 
