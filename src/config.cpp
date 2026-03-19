@@ -143,6 +143,34 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
         return true;
     };
 
+#if defined(_WIN32)
+    class ScopedStdoutToConsole {
+    public:
+        ScopedStdoutToConsole() {
+            oldOut_ = GetStdHandle(STD_OUTPUT_HANDLE);
+            conOut_ = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                  OPEN_EXISTING, 0, nullptr);
+
+            if (conOut_ != INVALID_HANDLE_VALUE) {
+                // Make indicators' GetStdHandle(STD_OUTPUT_HANDLE) see a console
+                switched_ = SetStdHandle(STD_OUTPUT_HANDLE, conOut_) != 0;
+            }
+        }
+
+        ~ScopedStdoutToConsole() {
+            if (switched_ && oldOut_ && oldOut_ != INVALID_HANDLE_VALUE) { SetStdHandle(STD_OUTPUT_HANDLE, oldOut_); }
+            if (conOut_ != INVALID_HANDLE_VALUE) { CloseHandle(conOut_); }
+        }
+
+        [[nodiscard]] bool is_active() const { return switched_; }
+
+    private:
+        HANDLE oldOut_{INVALID_HANDLE_VALUE};
+        HANDLE conOut_{INVALID_HANDLE_VALUE};
+        bool   switched_{false};
+    };
+#endif
+
     using namespace indicators;
 
     ProgressBar bar{option::BarWidth{50},
@@ -156,7 +184,8 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
                     option::ShowRemainingTime{true},
                     option::ShowPercentage{true},
                     option::PrefixText{"Downloading: "},
-                    option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}};
+                    option::FontStyles{std::vector<FontStyle>{FontStyle::bold}},
+                    option::Stream{std::cerr}};
 
     auto cb_progress = [&](cpr::cpr_off_t downloadTotal, cpr::cpr_off_t downloadNow, cpr::cpr_off_t, cpr::cpr_off_t,
                            intptr_t) -> bool {
@@ -171,14 +200,22 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
 
     cpr::Session session;
     session.SetUrl(cpr::Url{url});
-    if (indicator) { session.SetProgressCallback(cpr::ProgressCallback{cb_progress, 0}); }
 
     std::vector<std::byte> res{};
     if (auto resLength = session.GetDownloadFileLength(); resLength > 0) {
+
+#if defined(_WIN32)
+        std::optional<ScopedStdoutToConsole> stdoutHack;
+        if (indicator) {
+            stdoutHack.emplace();
+            indicator = stdoutHack->is_active();
+        }
+#endif
+        if (indicator) { session.SetProgressCallback(cpr::ProgressCallback{cb_progress, 0}); }
         res.reserve(static_cast<size_t>(resLength));
-        show_console_cursor(false);
+        if (indicator) { show_console_cursor(false); }
         session.Download(cpr::WriteCallback{cb_writer, reinterpret_cast<intptr_t>(&res)});
-        show_console_cursor(true);
+        if (indicator) { show_console_cursor(true); }
     }
     return res;
 }
