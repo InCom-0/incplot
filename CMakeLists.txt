@@ -225,6 +225,10 @@ if(incplot_PORTABLE_LAYOUT)
     install(TARGETS incplot
         RUNTIME DESTINATION ${incplot_PORTABLE_LAYOUT_INSTALL_DIR}
     )
+    install(FILES $<TARGET_RUNTIME_DLLS:incplot>
+        DESTINATION ${incplot_PORTABLE_LAYOUT_INSTALL_DIR}
+        OPTIONAL
+    )
 
     install(FILES data/configDB.seed.sqlite DESTINATION "${incplot_PORTABLE_LAYOUT_INSTALL_DIR}")
     install(FILES README.md DESTINATION ${incplot_PORTABLE_LAYOUT_INSTALL_DIR})
@@ -233,6 +237,10 @@ if(incplot_PORTABLE_LAYOUT)
 else()
     install(TARGETS incplot
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+    install(FILES $<TARGET_RUNTIME_DLLS:incplot>
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        OPTIONAL
     )
 
     install(FILES data/configDB.seed.sqlite DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/")
