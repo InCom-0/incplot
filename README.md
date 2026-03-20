@@ -27,8 +27,10 @@ Can also generate identical looking plot in HTML purely using text.<br><br>
 ## Installation ##
 To quickly install incplot:
 ```bash
-# Linux and macOS
-brew install --cask InCom-0/incom/incplot
+# Linux --- packages in popular distributions will be made available soon
+
+# MacOS --- brew formula will be made availbale soon
+
 # Windows (with Scoop)
 scoop bucket add incoms https://github.com/InCom-0/ScoopBucket_InCom
 scoop install incoms/incplot
@@ -151,7 +153,7 @@ Incplot uses the same color schemes for HTML output as for the regular output to
 
 Most of technical details of how the tool works under the hood are described in [incplot-lib](https://github.com/InCom-0/incplot-lib) which is the underlying library implementing all the core features except those that are directly related to running in the terminal.<br><br>
 In order to provide some of the more advanced features not commonly (or at all) found in other similar tools incplot employs a moderate number of direct and transitive dependencies.<br>
-<i>Note: The CMake build system of the project is setup such that it can build and use its entire dependency tree if need be (eg. on native Windows)</i>
+<i>Note: CMake build system of the project is setup such that it can build and use its entire dependency tree if need be (eg. on native Windows)</i>
 
 <details>
 <summary>Dependencies</summary>
