@@ -91,7 +91,7 @@ jobs:
       id: build
       run: |
         printf 'version<<END\n' >> $GITHUB_OUTPUT
-        ./build/incplot --version | head -n 1 >> $GITHUB_OUTPUT
+        ./build/stage/incplot.exe --version | head -n 1 >> $GITHUB_OUTPUT
         printf 'END\n' >> $GITHUB_OUTPUT
 
 
