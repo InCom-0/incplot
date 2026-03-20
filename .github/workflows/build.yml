@@ -22,7 +22,7 @@ jobs:
         mode: ["cxx23"]
         build-type: ["Release", "Debug"]
         target: ["all"]
-        cmake-override: ["-Dincplot_USE_LOCAL_PACKAGES=OFF"]
+        cmake-override: ["-DCPM_USE_LOCAL_PACKAGES=OFF -Dincplot_PORTABLE_LAYOUT=ON"]
         include:
           - compiler: "MSVC"
             compiler-ver: "19"
