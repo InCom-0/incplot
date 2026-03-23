@@ -113,6 +113,5 @@ CPMAddPackage(
     "libarchive_sb_ENABLE_TEST OFF"
     "libarchive_sb_ENABLE_COVERAGE OFF"
     "libarchive_sb_ENABLE_INSTALL OFF"
-    FORCE TRUE
     NAME libarchive_superbuild
 )
