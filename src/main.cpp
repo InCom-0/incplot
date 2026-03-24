@@ -20,11 +20,6 @@ int main(int argc, char *argv[]) {
     using namespace std::literals;
     namespace conf = incplot::config;
 
-
-    auto cnf = incplot::config::get_pth2InstalledRes(
-        incplot::platform_folders::rel_datadir, incplot::platform_folders::install_datadir,
-        incplot::config::configDBFileName, "incplot"sv, incplot::config::devBuildMarkerFilename);
-
     // Create and populate ArgumentParser
     argparse::ArgumentParser ap(std::string(incplot::config::appName),
                                 std::string(incom::terminal_plot::version::medium), argparse::default_arguments::all);
@@ -43,7 +38,7 @@ int main(int argc, char *argv[]) {
 
     if (ap.is_subcommand_used(subap_setup)) {
         if (auto setupCommand_res = incplot::cl_args::process_setupCommand(subap_setup, dbCon)) {
-            for (auto const &oneLine : setupCommand_res.value()) { std::cout << oneLine << '\n'; }
+            for (auto const &oneLine : setupCommand_res.value()) { std::print(stderr, "{}\n", oneLine); }
             return 0;
         }
         else {
@@ -64,7 +59,7 @@ int main(int argc, char *argv[]) {
         std::exit(1);
     }
 
- 
+
     // STDIN IS IN TERMINAL (that is there is no input 'piped in')
     if (incom::standard::console::is_stdin_inTerminal()) {
         std::print(stderr, "{}\n{}\n{}\n\n{}\n", "The user needs to 'pipe in' data on standard input\n",

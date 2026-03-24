@@ -228,7 +228,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                             }
                             else {
                                 nonDifferentiated.additionalInfo.push_back(std::string(
-                                    "Error encountered while querying terminal for colors.\nUsing fall default color "
+                                    "Error encountered while querying terminal for colors.\nUsing fallback default color "
                                     "scheme."));
                             }
                         }
@@ -245,7 +245,7 @@ std::expected<std::vector<DesiredPlot::DP_CtorStruct>, incerr_c> get_dpCtorStruc
                     }
                     else {
                         nonDifferentiated.additionalInfo.push_back(std::string(
-                            "Error encountered while querying terminal for colors.\nUsing fall default color "
+                            "Error encountered while querying terminal for colors.\nUsing fallback default color "
                             "scheme."));
                     }
                 }
