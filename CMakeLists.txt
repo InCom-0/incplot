@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.30...4.2)
 
 project(incplot
     HOMEPAGE_URL "https://github.com/InCom-0/incplot"
-    VERSION "1.0.0"
+    VERSION "1.0.1"
     DESCRIPTION
     "CLI tool for drawing great looking plots in the terminal focused on user ergonomics and simplicity."
     LANGUAGES CXX)
