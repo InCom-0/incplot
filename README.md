@@ -25,18 +25,23 @@ Can also generate identical looking plot in HTML purely using text.<br><br>
 
 
 ## Installation ##
-To quickly install incplot:
+### Linux ###
+Package is currently available in: [Arch Linux (AUR)](https://aur.archlinux.org/packages/incplot)
+
+
+### MacOS ###
 ```bash
-# Linux --- packages in popular distributions will be made available soon
-
 # MacOS --- brew formula will be made availbale soon
+```
 
+### Windows ###
+```bash
 # Windows (with Scoop)
 scoop bucket add incoms https://github.com/InCom-0/ScoopBucket_InCom
 scoop install incoms/incplot
 ```
 
-Windows binaries are also provided [releases](https://github.com/InCom-0/incplot/releases/) in the repository itself.
+Windows binaries are also provided in [releases](https://github.com/InCom-0/incplot/releases/) in the github [repository](https://github.com/InCom-0/incplot) itself.
 
 
 ## Features ##
