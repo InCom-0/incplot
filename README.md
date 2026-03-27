@@ -34,11 +34,10 @@ Package is currently available in: [Arch Linux (AUR)](https://aur.archlinux.org/
 brew install InCom-0/incom/incplot
 ```
 
-
-
 ### MacOS ###
 ```bash
-# MacOS --- brew formula will be made availbale soon
+# MacOS
+brew install InCom-0/incom/incplot
 ```
 
 ### Windows ###
