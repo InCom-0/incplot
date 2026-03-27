@@ -1,0 +1,34 @@
+name: Homebrew installation test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  brew-install:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-26 (arm64)
+            runner: macos-26
+          - name: ubuntu-latest (x86_64)
+            runner: ubuntu-latest
+          - name: ubuntu-latest (arm64)
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Set up Homebrew PATH on Linux
+        if: runner.os == 'Linux'
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          echo "HOMEBREW_PREFIX=$HOMEBREW_PREFIX" >> "$GITHUB_ENV"
+          echo "$HOMEBREW_PREFIX/bin" >> "$GITHUB_PATH"
+          echo "$HOMEBREW_PREFIX/sbin" >> "$GITHUB_PATH"
+
+      - name: Verify brew availability
+        run: brew --version
+
+      - name: Install incplot formula
+        run: brew install incom-0/incom/incplot
