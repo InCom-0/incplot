@@ -28,6 +28,13 @@ Can also generate identical looking plot in HTML purely using text.<br><br>
 ### Linux ###
 Package is currently available in: [Arch Linux (AUR)](https://aur.archlinux.org/packages/incplot)
 
+```bash
+# Linux (other distributions)
+# Note that using Homebrew to install incplot means that its dependencies will also be obtained through Homebrew.
+brew install InCom-0/incom/incplot
+```
+
+
 
 ### MacOS ###
 ```bash
