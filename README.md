@@ -30,7 +30,7 @@ Package is currently available in: [Arch Linux (AUR)](https://aur.archlinux.org/
 
 ```bash
 # Linux (other distributions)
-# Note that using Homebrew to install incplot means that its dependencies will also be obtained through Homebrew.
+# Note that Homebrew will install its own versions of all dependencies (separate from system libs)
 brew install InCom-0/incom/incplot
 ```
 
