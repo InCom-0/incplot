@@ -36,6 +36,14 @@ jobs:
           setup-cpp: true
           compiler: gcc-14
 
+      - name: Set GCC14 as default gcc/g++ on Linux
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          ln -sf "$(command -v gcc-14)" "$HOME/.local/bin/gcc"
+          ln -sf "$(command -v g++-14)" "$HOME/.local/bin/g++"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Verify brew availability
         run: brew --version
 
