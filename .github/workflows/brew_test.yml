@@ -48,4 +48,14 @@ jobs:
         run: brew --version
 
       - name: Install incplot formula
+        if: runner.os == 'Linux'
+        env:
+          HOMEBREW_CC: gcc-14
+          HOMEBREW_CXX: g++-14
+        run: |
+          brew config
+          brew install --build-from-source incom-0/incom/incplot
+
+      - name: Install incplot formula (macOS)
+        if: runner.os == 'macOS'
         run: brew install incom-0/incom/incplot
