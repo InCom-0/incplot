@@ -16,7 +16,7 @@
 <div align="center">
 Incplot is a command like tool for drawing great looking plots in the terminal using unicode characters.<br>
 Automatically infers what to display and how based on the data piped in.<br>
-Can also generate identical looking plot in HTML purely using text.<br><br>
+Can also generate <a href="https://incom-0.github.io/incplot/">identical looking plot in HTML</a> purely using text.<br><br>
 'As quick and as easy as possible' visualization of small to moderate sized data and information.
 </div>
 
