@@ -7,14 +7,16 @@
   <style>
     :root {
       color-scheme: light;
+      --bg: #141414;
+      --main: #bab7b6;
     }
 
     body {
       margin: 0;
       padding: 24px;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: #f7f7f7;
-      color: #1f1f1f;
+      background: var(--bg);
+      color: var(--main);
     }
 
     h1 {
@@ -29,8 +31,8 @@
     }
 
     .card {
-      background: #ffffff;
-      border: 1px solid #d8d8d8;
+      background: #1c1c1c;
+      border: 1px solid #2a2a2a;
       border-radius: 8px;
       overflow: hidden;
     }
@@ -39,8 +41,9 @@
       margin: 0;
       padding: 10px 12px;
       font-size: 16px;
-      border-bottom: 1px solid #ececec;
-      background: #fafafa;
+      border-bottom: 1px solid #2a2a2a;
+      background: #202020;
+      color: var(--main);
     }
 
     iframe {
@@ -57,27 +60,27 @@
 
   <div class="grid">
     <section class="card">
-      <h2>BarHM</h2>
+      <h2>Bar Horizontal (Multi)</h2>
       <iframe src="html_output/BarHM.html" loading="lazy" title="BarHM"></iframe>
     </section>
 
     <section class="card">
-      <h2>BarHS</h2>
+      <h2>Bar Horizontal (Stacked)</h2>
       <iframe src="html_output/BarHS.html" loading="lazy" title="BarHS"></iframe>
     </section>
 
     <section class="card">
-      <h2>BarVM</h2>
+      <h2>Bar Vertical (Multi)</h2>
       <iframe src="html_output/BarVM.html" loading="lazy" title="BarVM"></iframe>
     </section>
 
     <section class="card">
-      <h2>multiline</h2>
+      <h2>Multi-line Plot</h2>
       <iframe src="html_output/multiline.html" loading="lazy" title="multiline"></iframe>
     </section>
 
     <section class="card">
-      <h2>scatter</h2>
+      <h2>Scatter Plot</h2>
       <iframe src="html_output/scatter.html" loading="lazy" title="scatter"></iframe>
     </section>
   </div>
