@@ -1,0 +1,46 @@
+# CMake related
+build*/
+!build2/
+CMakeUserPresets.json
+CMakeFiles/
+cmake/config/auto
+
+# CLion
+.idea/
+cmake-build*/
+
+# VS Code
+.vscode/
+.cache/
+
+# VS
+.vs/
+CMakeSettings.json
+CMakeUserPresets.json
+out/
+
+
+# Compiler/linker output.
+#
+*.d
+*.t
+*.i
+*.i.*
+*.ii
+*.ii.*
+*.o
+*.obj
+*.gcm
+*.pcm
+*.ifc
+*.so
+*.dll
+*.a
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.exe
+*.exe.dlls/
+*.exe.manifest
+*.pc
