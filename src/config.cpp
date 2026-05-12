@@ -171,7 +171,7 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
 
             switched_ = (::dup2(conOut_, STDOUT_FILENO) != -1);
 #else
-        switched_ = false;
+            switched_ = false;
 #endif
         }
 
@@ -186,7 +186,7 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
             if (conOut_ != -1) { (void)::close(conOut_); }
             if (oldOut_ != -1) { (void)::close(oldOut_); }
 #else
-        // No-op on unsupported platforms.
+            // No-op on unsupported platforms.
 #endif
         }
 
@@ -200,10 +200,10 @@ std::vector<std::byte> download_fileRaw(std::string_view url, bool indicator) {
         int oldOut_{-1};
         int conOut_{-1};
 #else
-    int oldOut_{-1};
-    int conOut_{-1};
+        int oldOut_{-1};
+        int conOut_{-1};
 #endif
-        bool   switched_{false};
+        bool switched_{false};
     };
 
     using namespace indicators;
@@ -364,8 +364,8 @@ std::string get_showInternalSchemes() {
     return get_showScheme(defaultScheme16).append("\n").append(get_showScheme(other_sources::monochrome));
 }
 std::string get_showCongfigDBSchemes(sqlpp::sqlite3::connection &db) {
-    std::string        res;
-    sqltables::Schemes sch{};
+    std::string res;
+    auto        sch = sqltables::Schemes();
 
     for (auto const &schm_row : db(sqlpp::select(sch.schemeId, sch.name).from(sch).where(true))) {
         if (schm_row.name == fromTerminalSchemeName) { continue; }
@@ -402,9 +402,9 @@ std::expected<T, dbErr> get_defaultScheme(sqlpp::sqlite3::connection &db) {
     T res{};
     using namespace sqltables;
 
-    DefaultScheme ds{};
-    SchemePalette sp{};
-    Schemes       sch{};
+    auto ds  = DefaultScheme();
+    auto sp  = SchemePalette();
+    auto sch = Schemes();
 
     for (size_t i = 0; auto const &dsID : db(sqlpp::select(ds.schemeId).from(ds))) {
         if (i++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
@@ -446,7 +446,7 @@ std::expected<T, dbErr> get_defaultScheme(sqlpp::sqlite3::connection &db) {
 
 std::expected<size_t, dbErr> get_schemeID(sqlpp::sqlite3::connection &db, std::string const &schemeName) {
     using namespace sqltables;
-    Schemes sch{};
+    auto sch = Schemes();
     for (auto const &schm : db(sqlpp::select(sch.schemeId).from(sch).where(sch.name == schemeName))) {
         return schm.schemeId.value();
     }
@@ -458,8 +458,8 @@ std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, size_t scheme
     T res{};
     using namespace sqltables;
 
-    SchemePalette sp{};
-    Schemes       sch{};
+    auto sp  = SchemePalette();
+    auto sch = Schemes();
 
     {
         size_t j = 0;
@@ -502,8 +502,8 @@ std::expected<T, dbErr> get_scheme(sqlpp::sqlite3::connection &db, size_t scheme
 template <typename T>
 std::expected<size_t, dbErr> upsert_scheme(sqlpp::sqlite3::connection &db, T const &scheme) {
     using namespace sqltables;
-    SchemePalette sp{};
-    Schemes       sch{};
+    auto sp  = SchemePalette();
+    auto sch = Schemes();
 
     // Upsert into the 'schemes' table
     for (size_t i = 0; auto const &schID : db(sqlpp::sqlite3::insert_into(sch)
@@ -539,8 +539,8 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB_T(sqlpp:
                                                                           T const                    &scheme) {
     using namespace sqltables;
 
-    SchemePalette sp{};
-    Schemes       sch{};
+    auto sp  = SchemePalette();
+    auto sch = Schemes();
 
     // For all color schemes
     for (auto const &schm :
@@ -742,7 +742,7 @@ bool validate_SQLite_tableColNamesTypes(sqlpp::sqlite3::connection &db, std::str
     // Table of 'tableName' does not exist in the db
     if (not validate_SQLite_tableExistence(db, tableName)) { return false; };
 
-    auto pragmaInfo = incom::terminal_plot::config::sqltables::PragmaTableInfo{};
+    auto pragmaInfo = incom::terminal_plot::config::sqltables::PragmaTableInfo();
     auto rrr        = db(sqlpp::statement_t{} << sqlpp::verbatim("PRAGMA table_info(" + tableName + ");")
                                               << with_result_type_of(select(all_of(pragmaInfo))));
 
@@ -799,8 +799,8 @@ std::expected<size_t, dbErr> upsert_scheme16(sqlpp::sqlite3::connection &dbConn,
 
 std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, std::string const &name) {
     using namespace sqltables;
-    Schemes       sch{};
-    DefaultScheme dsch{};
+    auto sch  = sqltables::Schemes();
+    auto dsch = sqltables::DefaultScheme();
 
     for (size_t id = 0; auto const &row : dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.name == name))) {
         if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
@@ -815,8 +815,8 @@ std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, 
 }
 std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, size_t const schm_id) {
     using namespace sqltables;
-    Schemes       sch{};
-    DefaultScheme dsch{};
+    auto sch  = sqltables::Schemes();
+    auto dsch = sqltables::DefaultScheme();
 
     for (size_t      id = 0;
          auto const &row :
@@ -836,8 +836,8 @@ std::expected<size_t, dbErr> update_default(sqlpp::sqlite3::connection &dbConn, 
 std::expected<bool, dbErr> clear_defaultScheme(sqlpp::sqlite3::connection &dbConn) {
     using namespace sqltables;
 
-    DefaultScheme ds{};
-    bool          res = false;
+    auto ds  = sqltables::DefaultScheme();
+    bool res = false;
     for (size_t j = 0; auto const &defSchm : dbConn(sqlpp::select(ds.id, ds.schemeId).from(ds).where(true))) {
         if (j++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
         res = defSchm.schemeId.has_value();
@@ -853,8 +853,8 @@ std::expected<bool, dbErr> clear_defaultScheme(sqlpp::sqlite3::connection &dbCon
 std::expected<size_t, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &dbConn) {
     using namespace sqltables;
 
-    DefaultScheme ds{};
-    Schemes       sch{};
+    auto ds  = sqltables::DefaultScheme();
+    auto sch = sqltables::Schemes();
     for (size_t j = 0; auto const &defSchm : dbConn(sqlpp::select(ds.id, ds.schemeId).from(ds).where(true))) {
         if (j++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
         else if (not defSchm.schemeId.has_value()) { return std::unexpected(dbErr::missingData); }
@@ -868,7 +868,7 @@ std::expected<size_t, dbErr> delete_defaultScheme(sqlpp::sqlite3::connection &db
 
 std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, std::string const &name) {
     using namespace sqltables;
-    Schemes sch{};
+    auto sch = sqltables::Schemes();
 
     for (size_t id = 0; auto const &row : dbConn(sqlpp::select(sch.schemeId).from(sch).where(sch.name == name))) {
         if (id++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
@@ -883,7 +883,7 @@ std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, s
 }
 std::expected<size_t, dbErr> delete_scheme(sqlpp::sqlite3::connection &dbConn, size_t const schm_id) {
     using namespace sqltables;
-    Schemes sch{};
+    auto sch = sqltables::Schemes();
 
     for (size_t      i = 0;
          auto const &row :
@@ -912,7 +912,7 @@ std::expected<std::optional<std::string>, dbErr> check_schemeExistsInDB(sqlpp::s
 
 std::expected<std::vector<std::byte>, dbErr> get_default_font(sqlpp::sqlite3::connection &dbConn) {
     using namespace sqltables;
-    DefaultFont df{};
+    auto df = DefaultFont();
 
     for (size_t i = 0; auto const &dfID : dbConn(sqlpp::select(df.content).from(df))) {
         if (i++ != 0) { return std::unexpected(dbErr::impossibleNumberOfRecords); }
@@ -928,7 +928,7 @@ std::expected<std::vector<std::byte>, dbErr> get_default_font(sqlpp::sqlite3::co
 
 std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn, std::span<std::byte> ttf_font_raw) {
     using namespace sqltables;
-    DefaultFont dfnt_tbl{};
+    auto dfnt_tbl = DefaultFont();
 
     auto rs = dbConn(sqlpp::sqlite3::update(dfnt_tbl)
                          .set(dfnt_tbl.content = std::span<std::uint8_t>(
@@ -941,7 +941,7 @@ std::expected<size_t, dbErr> set_default_font(sqlpp::sqlite3::connection &dbConn
 
 std::expected<size_t, dbErr> remove_default_font(sqlpp::sqlite3::connection &dbConn) {
     using namespace sqltables;
-    DefaultFont dfnt_tbl{};
+    auto dfnt_tbl = DefaultFont();
 
     auto rs = dbConn(sqlpp::sqlite3::update(dfnt_tbl).set(dfnt_tbl.content = std::nullopt).where(true));
 

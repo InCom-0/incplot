@@ -30,7 +30,7 @@ namespace incom::terminal_plot::config::sqltables {
     using _required_insert_columns = sqlpp::detail::type_set<
                sqlpp::column_t<sqlpp::table_t<DefaultFont_>, Id>>;
   };
-  using DefaultFont = ::sqlpp::table_t<DefaultFont_>;
+  using DefaultFont = sqlpp::table_t<DefaultFont_>;
   
   struct DefaultScheme_ {
     struct Id {
@@ -50,7 +50,7 @@ namespace incom::terminal_plot::config::sqltables {
                SchemeId>;
     using _required_insert_columns = sqlpp::detail::type_set<>;
   };
-  using DefaultScheme = ::sqlpp::table_t<DefaultScheme_>;
+  using DefaultScheme = sqlpp::table_t<DefaultScheme_>;
 
   struct SchemePalette_ {
     struct SchemeId {
@@ -79,7 +79,7 @@ namespace incom::terminal_plot::config::sqltables {
                sqlpp::column_t<sqlpp::table_t<SchemePalette_>, IndexInPalette>,
                sqlpp::column_t<sqlpp::table_t<SchemePalette_>, Color>>;
   };
-  using SchemePalette = ::sqlpp::table_t<SchemePalette_>;
+  using SchemePalette = sqlpp::table_t<SchemePalette_>;
 
   struct Schemes_ {
     struct SchemeId {
@@ -128,7 +128,7 @@ namespace incom::terminal_plot::config::sqltables {
                sqlpp::column_t<sqlpp::table_t<Schemes_>, CursorColor>,
                sqlpp::column_t<sqlpp::table_t<Schemes_>, SelColor>>;
   };
-  using Schemes = ::sqlpp::table_t<Schemes_>;
+  using Schemes = sqlpp::table_t<Schemes_>;
 
   struct PragmaTableInfo_ {
   // Column definitions
