@@ -217,6 +217,10 @@ jobs:
       - name: "🧰 Checkout"
         uses: actions/checkout@v5
 
+      - name: Silence homebrew aws tap warning
+        run: |
+          brew untap aws/tap
+
       - name: Setup Cpp
         uses: aminya/setup-cpp@v1
         with:
